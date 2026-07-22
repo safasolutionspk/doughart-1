@@ -5,17 +5,15 @@ import type { PaymentMethod, PublicOrderPayload } from "@/lib/api";
 import type { CheckoutDraftForm } from "./draft";
 
 export type CheckoutOrderItem = {
-  cakeName: string;
+  cakeSlug: string;
   quantity: number;
-  unitPrice?: number;
   notes?: string;
 };
 
 function cartItemsToOrderItems(cartItems: CartItem[]): CheckoutOrderItem[] {
   return cartItems.map((item) => ({
-    cakeName: item.name,
+    cakeSlug: item.cakeSlug,
     quantity: item.quantity,
-    unitPrice: item.unitPrice,
     notes: item.notes,
   }));
 }

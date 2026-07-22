@@ -105,6 +105,15 @@ export const listPublicCakesQuerySchema = z.object({
     .transform((val) => (val === undefined ? undefined : val === "true")),
 });
 
+export const listPopularCakesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(24).default(12),
+});
+
+export const listAdminPopularCakesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 export const listCakesQuerySchema = z.object({
   search: z.string().optional(),
   categoryId: z.string().optional(),

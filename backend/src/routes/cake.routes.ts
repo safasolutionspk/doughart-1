@@ -6,6 +6,7 @@ import {
   getPublicCakeBySlug,
   listCakes,
   listPublicCakes,
+  listPublicPopularCakes,
   updateCake,
 } from "../controllers/cake.controller";
 import { auditLog } from "../middleware/auditLog";
@@ -17,6 +18,7 @@ import {
   cakeSlugParamSchema,
   createCakeSchema,
   listCakesQuerySchema,
+  listPopularCakesQuerySchema,
   listPublicCakesQuerySchema,
   updateCakeSchema,
 } from "../validators/cake.validator";
@@ -25,6 +27,11 @@ const router = Router();
 const adminAuth = [authenticateAdmin, auditLog, adminWriteLimiter] as const;
 
 router.get("/public", validate(listPublicCakesQuerySchema, "query"), listPublicCakes);
+router.get(
+  "/public/popular",
+  validate(listPopularCakesQuerySchema, "query"),
+  listPublicPopularCakes,
+);
 router.get(
   "/public/:slug",
   validate(cakeSlugParamSchema, "params"),

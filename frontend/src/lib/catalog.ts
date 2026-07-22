@@ -41,6 +41,14 @@ export type PublicCake = {
   sortOrder: number;
 };
 
+export type PopularitySource = "purchases" | "mixed" | "fallback";
+
+export type PublicPopularCake = PublicCake & {
+  rank: number;
+  totalQuantitySold: number;
+  source: PopularitySource;
+};
+
 type ApiGetCache = "default" | "no-store";
 
 async function apiGet<T>(
@@ -108,6 +116,15 @@ export async function fetchPublicCakeBySlug(
   slug: string,
 ): Promise<PublicCake | null> {
   return apiGet<PublicCake>(`/api/cakes/public/${encodeURIComponent(slug)}`);
+}
+
+export async function fetchPopularCakes(
+  limit = 12,
+): Promise<PublicPopularCake[] | null> {
+  const safeLimit = Math.min(24, Math.max(1, limit));
+  return apiGet<PublicPopularCake[]>(
+    `/api/cakes/public/popular?limit=${safeLimit}`,
+  );
 }
 
 export function getCategoryRef(cake: PublicCake): CategoryRef {

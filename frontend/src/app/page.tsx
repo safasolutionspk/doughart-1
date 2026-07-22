@@ -6,6 +6,7 @@ import { CustomCakeBuilder } from "@/components/sections/CustomCakeBuilder";
 import { FeatureStrip } from "@/components/sections/FeatureStrip";
 import { Gallery } from "@/components/sections/Gallery";
 import { Hero } from "@/components/sections/Hero";
+import { MostPopularItems } from "@/components/sections/MostPopularItems";
 import { Newsletter } from "@/components/sections/Newsletter";
 import { OrderProcess } from "@/components/sections/OrderProcess";
 import { Reviews } from "@/components/sections/Reviews";
@@ -57,6 +58,7 @@ export default function Home() {
         <Hero />
         <FeatureStrip />
         <CakeCategories />
+        <MostPopularItems />
         <CustomCakeBuilder />
         <OrderProcess />
         <Reviews />

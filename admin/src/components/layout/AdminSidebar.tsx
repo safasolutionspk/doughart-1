@@ -50,6 +50,7 @@ const ordersNav: NavItem[] = [
 const catalogNav: NavItem[] = [
   { href: "/dashboard/categories", label: "Categories" },
   { href: "/dashboard/cakes", label: "Cakes" },
+  { href: "/dashboard/popular-items", label: "Popular Items" },
   { href: "/dashboard/reviews", label: "Reviews" },
   { href: "/dashboard/gallery", label: "Gallery" },
 ];

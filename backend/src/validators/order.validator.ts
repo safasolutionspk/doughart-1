@@ -45,6 +45,17 @@ export const createOrderSchema = z.object({
   gatewayResponse: z.record(z.unknown()).optional(),
 });
 
+/** Client catalog line identifiers only — name/price resolved server-side */
+const publicCatalogItemSchema = z.object({
+  cakeSlug: z
+    .string()
+    .min(1)
+    .max(120)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid cake slug"),
+  quantity: z.coerce.number().int().min(1).max(99).default(1),
+  notes: z.string().max(500).optional(),
+});
+
 /** Public website form payload */
 export const publicCreateOrderSchema = z
   .object({
@@ -70,12 +81,15 @@ export const publicCreateOrderSchema = z
       .max(120)
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
       .optional(),
+    /** Cart/catalog line refs (slug + qty). Name and price are ignored by the server. */
+    items: z.array(publicCatalogItemSchema).max(50).optional(),
     proofImage: z.string().max(500).optional(),
     referenceImage: z.string().max(500).optional(),
   })
   .superRefine((data, ctx) => {
     const isCatalogCheckout =
       Boolean(data.cakeSlug?.trim()) ||
+      (data.items?.length ?? 0) > 0 ||
       data.notes?.includes("[Cart order]") ||
       data.cakeType.trim().startsWith("Cart order");
 
@@ -163,6 +177,13 @@ export const publicCreateOrderSchema = z
     paymentStatus: "pending" as const,
     cakeSlug: data.cakeSlug?.trim() || undefined,
     proofImage: data.proofImage?.trim() || undefined,
+    catalogItems: (data.items ?? [])
+      .map((item) => ({
+        cakeSlug: item.cakeSlug.trim(),
+        quantity: item.quantity,
+        notes: item.notes?.trim() || undefined,
+      }))
+      .filter((item) => item.cakeSlug.length > 0),
     items: [] as z.infer<typeof createOrderSchema>["items"],
     totalAmount: 0,
   }));

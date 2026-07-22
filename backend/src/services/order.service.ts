@@ -277,30 +277,91 @@ function toAdminOrderResponse<T extends { customerId?: unknown }>(
   };
 }
 
+type CatalogLineRef = {
+  cakeSlug: string;
+  quantity: number;
+  notes?: string;
+};
+
+async function resolveCatalogOrderItems(
+  catalogItems: CatalogLineRef[],
+  cakeSlug?: string,
+): Promise<{
+  items: Array<{
+    cakeId: string;
+    cakeName: string;
+    quantity: number;
+    unitPrice: number;
+    notes?: string;
+  }>;
+  cakeType: string;
+  totalAmount: number;
+}> {
+  const lineRefs: CatalogLineRef[] =
+    catalogItems.length > 0
+      ? catalogItems
+      : cakeSlug
+        ? [{ cakeSlug, quantity: 1 }]
+        : [];
+
+  if (lineRefs.length === 0) {
+    return { items: [], cakeType: "", totalAmount: 0 };
+  }
+
+  const uniqueSlugs = [...new Set(lineRefs.map((line) => line.cakeSlug))];
+  const cakes = await Cake.find({
+    slug: { $in: uniqueSlugs },
+    isActive: true,
+  }).lean();
+
+  const cakeBySlug = new Map(cakes.map((cake) => [cake.slug, cake]));
+
+  for (const slug of uniqueSlugs) {
+    if (!cakeBySlug.has(slug)) {
+      throw ApiError.badRequest("Selected cake is no longer available");
+    }
+  }
+
+  const items = lineRefs.map((line) => {
+    const cake = cakeBySlug.get(line.cakeSlug)!;
+    return {
+      cakeId: String(cake._id),
+      cakeName: cake.name,
+      quantity: line.quantity,
+      unitPrice: cake.price,
+      notes: line.notes,
+    };
+  });
+
+  const totalAmount = items.reduce(
+    (sum, item) => sum + item.unitPrice * item.quantity,
+    0,
+  );
+  const cakeType =
+    items.length === 1
+      ? items[0].cakeName
+      : `Cart order (${items.length} items)`;
+
+  return { items, cakeType, totalAmount };
+}
+
 export async function createOrder(
   input: PublicCreateOrderInput,
   customerId?: string,
 ): Promise<PublicOrderResponse> {
   assertPaymentMethodAllowed(input.paymentMethod);
 
-  const { cakeSlug, ...orderInput } = input;
+  const { cakeSlug, catalogItems, ...orderInput } = input;
 
-  if (cakeSlug) {
-    const cake = await Cake.findOne({ slug: cakeSlug, isActive: true }).lean();
-    if (!cake) {
-      throw ApiError.badRequest("Selected cake is no longer available");
-    }
+  const resolvedCatalog = await resolveCatalogOrderItems(
+    catalogItems ?? [],
+    cakeSlug,
+  );
 
-    orderInput.cakeType = cake.name;
-    orderInput.totalAmount = cake.price;
-    orderInput.items = [
-      {
-        cakeId: String(cake._id),
-        cakeName: cake.name,
-        quantity: 1,
-        unitPrice: cake.price,
-      },
-    ];
+  if (resolvedCatalog.items.length > 0) {
+    orderInput.cakeType = resolvedCatalog.cakeType;
+    orderInput.totalAmount = resolvedCatalog.totalAmount;
+    orderInput.items = resolvedCatalog.items;
   }
 
   const items =

@@ -115,6 +115,7 @@ const orderSchema = new Schema<IOrderDocument>(
 );
 
 orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ status: 1, paymentStatus: 1, "items.cakeId": 1 });
 orderSchema.index({ customerEmail: 1 });
 orderSchema.index({ customerPhone: 1, orderNumber: 1 });
 orderSchema.index({ tenantId: 1 });

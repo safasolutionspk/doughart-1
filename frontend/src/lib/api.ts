@@ -10,9 +10,9 @@ export type PaymentMethod =
   | "online_payment_advance";
 
 export type PublicOrderLineItem = {
-  cakeName: string;
+  /** Catalog slug — backend resolves cakeId/name/price from the database */
+  cakeSlug: string;
   quantity: number;
-  unitPrice?: number;
   notes?: string;
 };
 

@@ -22,9 +22,11 @@ const cardButtonClassName =
 
 type CakeCardProps = {
   cake: PublicCake;
+  /** When false, omits the description line (homepage popular section). Default true. */
+  showDescription?: boolean;
 };
 
-export async function CakeCard({ cake }: CakeCardProps) {
+export async function CakeCard({ cake, showDescription = true }: CakeCardProps) {
   const category = getCategoryRef(cake);
   const { apiImage, fallback } = getCakeImageSrc(cake.image, category.slug);
   const displayImage = apiImage ?? fallback;
@@ -59,9 +61,11 @@ export async function CakeCard({ cake }: CakeCardProps) {
               {cake.name}
             </h3>
           </Link>
-          <p className={catalogCardDescriptionClassName}>
-            {cake.description?.trim() || "\u00a0"}
-          </p>
+          {showDescription ? (
+            <p className={catalogCardDescriptionClassName}>
+              {cake.description?.trim() || "\u00a0"}
+            </p>
+          ) : null}
           <p className="shrink-0 pt-0.5 font-display text-xs font-semibold text-brand-primary sm:text-sm">
             {formatPrice(cake.price)}
           </p>

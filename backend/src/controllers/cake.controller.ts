@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import * as cakeService from "../services/cake.service";
+import * as popularityService from "../services/popularity.service";
 import { sendSuccess } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { getValidatedParam, getValidatedQuery } from "../utils/validatedRequest";
@@ -11,6 +12,17 @@ export const listPublicCakes = asyncHandler(async (req: Request, res: Response) 
   );
   sendSuccess(res, cakes, "Cakes retrieved");
 });
+
+export const listPublicPopularCakes = asyncHandler(
+  async (req: Request, res: Response) => {
+    const query = getValidatedQuery<{ limit: number }>(req);
+    const cakes = await popularityService.listPublicPopularCakes(
+      query.limit,
+      req.tenantContext,
+    );
+    sendSuccess(res, cakes, "Popular cakes retrieved");
+  },
+);
 
 export const getPublicCakeBySlug = asyncHandler(async (req: Request, res: Response) => {
   const cake = await cakeService.getPublicCakeBySlug(
