@@ -42,7 +42,7 @@ export async function MostPopularItems() {
           </Button>
         </div>
 
-        <div className="mt-7">
+        <div className="mt-7 min-w-0">
           <PopularItemsCarousel>
             {cakes.map((cake, index) => (
               <Reveal
@@ -52,9 +52,9 @@ export async function MostPopularItems() {
                 direction="up"
                 variant="card"
                 className={cn(
-                  "w-[11.5rem] min-w-[11.5rem] shrink-0 snap-start",
-                  "sm:w-[13rem] sm:min-w-[13rem]",
-                  "lg:w-[14.5rem] lg:min-w-[14.5rem]",
+                  "w-[min(20rem,calc(100vw-2.5rem))] max-w-full shrink-0 snap-start",
+                  "sm:w-[13rem] sm:max-w-none",
+                  "lg:w-[14.5rem]",
                 )}
               >
                 <CakeCard cake={cake} showDescription={false} />

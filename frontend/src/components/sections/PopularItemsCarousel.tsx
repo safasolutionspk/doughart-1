@@ -27,7 +27,7 @@ export function PopularItemsCarousel({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative min-w-0", className)}>
       <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden items-center lg:flex">
         <button
           type="button"
@@ -52,11 +52,14 @@ export function PopularItemsCarousel({
       <div
         ref={scrollerRef}
         className={cn(
-          "-mx-4 flex gap-3 overflow-x-auto px-4 pb-2",
-          "snap-x snap-mandatory scroll-smooth",
+          // Cancel section-container gutters, then restore equal start/end insets.
+          "-mx-4 flex flex-nowrap gap-3 overflow-x-auto ps-4 pe-0 pb-2",
+          "snap-x snap-mandatory scroll-smooth scroll-ps-4 scroll-pe-4",
           "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-          "sm:gap-4",
-          "lg:mx-0 lg:gap-5 lg:px-12",
+          // Trailing inset via ::after (flex overflow ignores end padding in some browsers).
+          "after:w-4 after:shrink-0 after:content-['']",
+          "sm:-mx-6 sm:gap-4 sm:ps-6 sm:scroll-ps-6 sm:scroll-pe-6 sm:after:w-6",
+          "lg:mx-0 lg:gap-5 lg:ps-12 lg:scroll-ps-12 lg:scroll-pe-12 lg:after:w-12",
         )}
       >
         {children}
