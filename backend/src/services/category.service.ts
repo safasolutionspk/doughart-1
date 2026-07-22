@@ -88,6 +88,24 @@ export async function listCategories(
     ]);
   }
 
+  // Include protected Combo Offers even when it is still legacy-unscoped.
+  if (scope && page === 1 && !search) {
+    const combo = await findComboOffersCategory(tenantContext);
+    if (
+      combo &&
+      (isActive === undefined || combo.isActive === isActive) &&
+      !categories.some((category) => String(category._id) === String(combo._id))
+    ) {
+      const merged = [combo, ...categories].sort(
+        (a, b) =>
+          (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+          String(a.name).localeCompare(String(b.name)),
+      );
+      categories = merged.slice(0, limit) as typeof categories;
+      total += 1;
+    }
+  }
+
   return {
     categories,
     pagination: {
@@ -191,7 +209,29 @@ export async function updateCategory(
   });
 
   if (isProtectedSystemCategory(targetCategory)) {
-    throw ApiError.forbidden("The Combo Offers category cannot be edited.");
+    const forbiddenKeys = (
+      ["name", "slug", "description", "isActive", "sortOrder"] as const
+    ).filter((key) => input[key] !== undefined);
+    if (forbiddenKeys.length > 0) {
+      throw ApiError.forbidden(
+        "Only the Combo Offers category image can be updated.",
+      );
+    }
+    if (!Object.prototype.hasOwnProperty.call(input, "image")) {
+      throw ApiError.badRequest(
+        "Provide an image field to update the Combo Offers category.",
+      );
+    }
+    targetCategory.image = input.image;
+    try {
+      await targetCategory.save();
+      return targetCategory.toObject();
+    } catch (error) {
+      if ((error as { code?: number }).code === 11000) {
+        throw ApiError.conflict("A category with this slug already exists");
+      }
+      throw error;
+    }
   }
 
   if (scope) {
@@ -244,16 +284,42 @@ export async function listPublicCategories(tenantContext?: RequestTenantContext)
     ? applyCatalogScope({ isActive: true }, scope)
     : { isActive: true };
 
-  const categories = await Category.find(filter)
+  let categories = await Category.find(filter)
     .sort({ sortOrder: 1, name: 1 })
     .select("name slug description image sortOrder")
     .lean();
 
   if (categories.length === 0 && scope) {
-    return Category.find(applyLegacyCatalogFallback({ isActive: true }))
+    categories = await Category.find(applyLegacyCatalogFallback({ isActive: true }))
       .sort({ sortOrder: 1, name: 1 })
       .select("name slug description image sortOrder")
       .lean();
+  }
+
+  // Always surface the protected Combo Offers category even if it was created
+  // without tenant/workspace scope (legacy) while other categories are scoped.
+  const combo = await findComboOffersCategory(tenantContext);
+  if (
+    combo &&
+    combo.isActive &&
+    !categories.some((category) => category.slug === combo.slug)
+  ) {
+    const merged = [
+      ...categories,
+      {
+        _id: combo._id,
+        name: combo.name,
+        slug: combo.slug,
+        description: combo.description,
+        image: combo.image,
+        sortOrder: combo.sortOrder,
+      },
+    ].sort(
+      (a, b) =>
+        (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+        String(a.name).localeCompare(String(b.name)),
+    );
+    return merged as typeof categories;
   }
 
   return categories;

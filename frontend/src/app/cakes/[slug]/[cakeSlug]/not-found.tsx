@@ -15,7 +15,7 @@ export default function CakeNotFound() {
       title="Cake not found"
       description="We couldn't find this cake. It may have been removed or the link is incorrect."
       primaryHref="/cakes/all"
-      primaryLabel="Browse all cakes"
+      primaryLabel="Browse all menu"
     />
   );
 }

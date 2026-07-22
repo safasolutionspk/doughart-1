@@ -50,6 +50,10 @@ type AggRow = {
   latestCategorySlug?: string;
 };
 
+/**
+ * Aggregate purchase stats ranked primarily by distinct successful orders.
+ * One order counts once per cake even if quantity > 1 or the cake appears twice.
+ */
 async function aggregatePurchaseStats(
   tenantContext?: RequestTenantContext,
 ): Promise<PopularCakeStats[]> {
@@ -67,7 +71,37 @@ async function aggregatePurchaseStats(
     {
       $match: {
         "items.cakeId": { $exists: true, $ne: null },
-        "items.categorySlug": { $ne: COMBO_OFFERS_CATEGORY.slug },
+      },
+    },
+    {
+      $lookup: {
+        from: "cakes",
+        localField: "items.cakeId",
+        foreignField: "_id",
+        as: "cakeDoc",
+      },
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "cakeDoc.categoryId",
+        foreignField: "_id",
+        as: "categoryDoc",
+      },
+    },
+    {
+      $addFields: {
+        resolvedCategorySlug: {
+          $ifNull: [
+            "$items.categorySlug",
+            { $arrayElemAt: ["$categoryDoc.slug", 0] },
+          ],
+        },
+      },
+    },
+    {
+      $match: {
+        resolvedCategorySlug: { $ne: COMBO_OFFERS_CATEGORY.slug },
       },
     },
     {
@@ -81,7 +115,7 @@ async function aggregatePurchaseStats(
         lastPurchasedAt: { $max: "$createdAt" },
         latestCakeName: { $last: "$items.cakeName" },
         latestUnitPrice: { $last: "$items.unitPrice" },
-        latestCategorySlug: { $last: "$items.categorySlug" },
+        latestCategorySlug: { $last: "$resolvedCategorySlug" },
       },
     },
     {
@@ -97,9 +131,8 @@ async function aggregatePurchaseStats(
     },
     {
       $sort: {
-        totalQuantitySold: -1,
-        totalRevenue: -1,
         successfulOrderCount: -1,
+        totalRevenue: -1,
         lastPurchasedAt: -1,
         _id: 1,
       },
@@ -211,7 +244,12 @@ export async function listPublicPopularCakes(
       continue;
     }
     purchased.push(
-      toPublicCakeShape(cake, purchased.length + 1, row.totalQuantitySold, "purchases"),
+      toPublicCakeShape(
+        cake,
+        purchased.length + 1,
+        row.totalQuantitySold,
+        "purchases",
+      ),
     );
     usedIds.add(row.cakeId);
   }
@@ -247,60 +285,110 @@ export async function listPublicPopularCakes(
   return combined.map((cake) => ({ ...cake, source }));
 }
 
+type LeanAdminCake = {
+  _id: Types.ObjectId;
+  name: string;
+  slug: string;
+  image?: string;
+  price: number;
+  isActive: boolean;
+  categoryId?: { slug?: string } | Types.ObjectId | null;
+};
+
+function compareAdminRows(
+  a: {
+    successfulOrderCount: number;
+    totalRevenue: number;
+    lastPurchasedAt: Date | null;
+    cakeId: string;
+  },
+  b: {
+    successfulOrderCount: number;
+    totalRevenue: number;
+    lastPurchasedAt: Date | null;
+    cakeId: string;
+  },
+): number {
+  if (b.successfulOrderCount !== a.successfulOrderCount) {
+    return b.successfulOrderCount - a.successfulOrderCount;
+  }
+  if (b.totalRevenue !== a.totalRevenue) {
+    return b.totalRevenue - a.totalRevenue;
+  }
+  const aTime = a.lastPurchasedAt ? a.lastPurchasedAt.getTime() : 0;
+  const bTime = b.lastPurchasedAt ? b.lastPurchasedAt.getTime() : 0;
+  if (bTime !== aTime) {
+    return bTime - aTime;
+  }
+  return a.cakeId.localeCompare(b.cakeId);
+}
+
+/**
+ * Admin reporting: every non-combo Cake, with purchase stats merged (zeros when none).
+ */
 export async function listAdminPopularCakes(
   page: number,
   limit: number,
   tenantContext?: RequestTenantContext,
 ): Promise<AdminPopularCakesResult> {
-  const stats = await aggregatePurchaseStats(tenantContext);
+  const scope = buildCakeScopeFilter(tenantContext);
 
-  const ids = stats.map((row) => new Types.ObjectId(row.cakeId));
-  const cakes = await Cake.find({ _id: { $in: ids } })
-    .populate("categoryId", "slug")
-    .select("name slug image price isActive categoryId")
-    .lean();
-  const cakeById = new Map(cakes.map((cake) => [String(cake._id), cake]));
+  const [stats, cakes] = await Promise.all([
+    aggregatePurchaseStats(tenantContext),
+    Cake.find({ ...scope })
+      .populate("categoryId", "slug")
+      .select("name slug image price isActive categoryId")
+      .lean<LeanAdminCake[]>(),
+  ]);
 
-  const filteredStats = stats.filter((row) => {
-    const cake = cakeById.get(row.cakeId);
-    if (!cake) {
-      return true;
-    }
+  const statsById = new Map(stats.map((row) => [row.cakeId, row]));
+
+  const reportable = cakes.filter((cake) => {
     const category = cake.categoryId as { slug?: string } | null | undefined;
     return !isComboCategory(category);
   });
 
-  const total = filteredStats.length;
-  const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
-  const start = (page - 1) * limit;
-  const pageStats = filteredStats.slice(start, start + limit);
-
-  if (pageStats.length === 0) {
+  const merged = reportable.map((cake) => {
+    const cakeId = String(cake._id);
+    const row = statsById.get(cakeId);
     return {
-      rows: [],
-      pagination: { page, limit, total, totalPages },
-    };
-  }
-
-  const rows: AdminPopularCakeRow[] = pageStats.map((row, index) => {
-    const cake = cakeById.get(row.cakeId);
-    return {
-      rank: start + index + 1,
-      cakeId: row.cakeId,
-      name: cake?.name ?? row.latestCakeName ?? "Unknown product",
-      image: cake?.image,
-      price: cake?.price ?? row.latestUnitPrice ?? 0,
-      totalQuantitySold: row.totalQuantitySold,
-      successfulOrderCount: row.successfulOrderCount,
-      totalRevenue: row.totalRevenue,
-      lastPurchasedAt: row.lastPurchasedAt
-        ? new Date(row.lastPurchasedAt).toISOString()
-        : null,
-      isActive: cake ? Boolean(cake.isActive) : null,
-      cakeExists: Boolean(cake),
-      slug: cake?.slug,
+      cakeId,
+      name: cake.name,
+      image: cake.image,
+      price: cake.price,
+      totalQuantitySold: row?.totalQuantitySold ?? 0,
+      successfulOrderCount: row?.successfulOrderCount ?? 0,
+      totalRevenue: row?.totalRevenue ?? 0,
+      lastPurchasedAt: row?.lastPurchasedAt ?? null,
+      isActive: Boolean(cake.isActive),
+      cakeExists: true,
+      slug: cake.slug,
     };
   });
+
+  merged.sort(compareAdminRows);
+
+  const total = merged.length;
+  const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+  const start = (page - 1) * limit;
+  const pageRows = merged.slice(start, start + limit);
+
+  const rows: AdminPopularCakeRow[] = pageRows.map((row, index) => ({
+    rank: start + index + 1,
+    cakeId: row.cakeId,
+    name: row.name,
+    image: row.image,
+    price: row.price,
+    totalQuantitySold: row.totalQuantitySold,
+    successfulOrderCount: row.successfulOrderCount,
+    totalRevenue: row.totalRevenue,
+    lastPurchasedAt: row.lastPurchasedAt
+      ? new Date(row.lastPurchasedAt).toISOString()
+      : null,
+    isActive: row.isActive,
+    cakeExists: true,
+    slug: row.slug,
+  }));
 
   return {
     rows,

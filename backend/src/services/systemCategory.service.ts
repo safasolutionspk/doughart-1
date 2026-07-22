@@ -22,6 +22,8 @@ export type SystemCategoryDoc = {
   isActive: boolean;
   sortOrder: number;
   isSystem: boolean;
+  tenantId?: mongoose.Types.ObjectId;
+  workspaceId?: mongoose.Types.ObjectId;
 };
 
 function buildScopedFilter(
@@ -76,6 +78,7 @@ export async function requireComboOffersCategory(
 /**
  * Idempotent ensure for the protected Combo Offers category.
  * Safe to call repeatedly; does not create duplicates.
+ * Preserves any existing owner-uploaded image.
  */
 export async function ensureComboOffersCategory(
   tenantContext?: RequestTenantContext,
@@ -97,19 +100,40 @@ export async function ensureComboOffersCategory(
       doc.name = COMBO_OFFERS_CATEGORY.name;
       dirty = true;
     }
+    if (doc.slug !== COMBO_OFFERS_CATEGORY.slug) {
+      doc.slug = COMBO_OFFERS_CATEGORY.slug;
+      dirty = true;
+    }
     if (!doc.isActive) {
       doc.isActive = true;
       dirty = true;
     }
-    if (scope) {
-      doc.tenantId = new mongoose.Types.ObjectId(scope.tenantId);
-      doc.workspaceId = new mongoose.Types.ObjectId(scope.workspaceId);
+    if (doc.sortOrder !== COMBO_OFFERS_CATEGORY.sortOrder) {
+      doc.sortOrder = COMBO_OFFERS_CATEGORY.sortOrder;
       dirty = true;
+    }
+    if (scope) {
+      const nextTenant = new mongoose.Types.ObjectId(scope.tenantId);
+      const nextWorkspace = new mongoose.Types.ObjectId(scope.workspaceId);
+      if (
+        String(doc.tenantId ?? "") !== String(nextTenant) ||
+        String(doc.workspaceId ?? "") !== String(nextWorkspace)
+      ) {
+        doc.tenantId = nextTenant;
+        doc.workspaceId = nextWorkspace;
+        dirty = true;
+      }
     }
     if (dirty) {
       await doc.save();
+      console.log(
+        `[system-categories] Repaired Combo Offers category (${COMBO_OFFERS_CATEGORY.slug})`,
+      );
       return doc.toObject() as SystemCategoryDoc;
     }
+    console.log(
+      `[system-categories] Combo Offers category ready (${COMBO_OFFERS_CATEGORY.slug})`,
+    );
     return existing;
   }
 
@@ -128,11 +152,17 @@ export async function ensureComboOffersCategory(
           }
         : {}),
     });
+    console.log(
+      `[system-categories] Created Combo Offers category (${COMBO_OFFERS_CATEGORY.slug})`,
+    );
     return created.toObject() as SystemCategoryDoc;
   } catch (error) {
     if ((error as { code?: number }).code === 11000) {
       const raced = await findComboOffersCategory(tenantContext);
       if (raced) {
+        console.log(
+          `[system-categories] Combo Offers category already existed (${COMBO_OFFERS_CATEGORY.slug})`,
+        );
         return raced;
       }
     }

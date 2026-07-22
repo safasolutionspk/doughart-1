@@ -49,7 +49,7 @@ export const cakeCategories: HomepageCategory[] = [
   },
   {
     id: "all",
-    title: "All Cakes",
+    title: "All Menu",
     imageFallback: siteImages.categories.all,
     href: "/cakes/all",
     sortOrder: 4,

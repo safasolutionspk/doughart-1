@@ -1,11 +1,14 @@
 import { connectDatabase } from "../config/database";
 import { ensureComboOffersCategory } from "../services/systemCategory.service";
+import { resolveTenantContext } from "../services/tenantContext.service";
 
 async function main() {
   await connectDatabase();
-  const category = await ensureComboOffersCategory();
+  const tenantContext = await resolveTenantContext();
+  const category = await ensureComboOffersCategory(tenantContext);
   console.log(
-    `System category ready: ${category.name} (${category.slug}) id=${String(category._id)}`,
+    `System category ready: ${category.name} (${category.slug}) id=${String(category._id)} ` +
+      `scoped=${Boolean(category.tenantId && category.workspaceId)}`,
   );
   process.exit(0);
 }

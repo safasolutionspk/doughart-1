@@ -59,9 +59,16 @@ export function CategoryGridCard({
 
         <div className="mt-auto flex gap-1.5 pt-3">
           {isProtected ? (
-            <p className="text-[11px] text-brand-muted">
-              Protected system category
-            </p>
+            <Link
+              href={`/dashboard/categories/${category._id}/edit`}
+              onClick={onEditClick}
+              className={cn(
+                "admin-btn-secondary !h-8 flex-1 !px-2 !text-[11px]",
+                isEditPending && "pointer-events-none opacity-60",
+              )}
+            >
+              {isEditPending ? "…" : "Edit Image"}
+            </Link>
           ) : (
             <>
               <Link

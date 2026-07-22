@@ -72,11 +72,8 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
         if (cancelled) {
           return;
         }
-        if (isSystemCategory(category)) {
-          setIsProtected(true);
-          setError("The Combo Offers category is protected and cannot be edited.");
-          return;
-        }
+        const protectedCategory = isSystemCategory(category);
+        setIsProtected(protectedCategory);
         setForm({
           name: category.name,
           slug: category.slug,
@@ -108,37 +105,43 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isProtected) {
-      return;
-    }
     setIsSaving(true);
     setError(null);
 
-    const description = clampDescription(form.description.trim(), CATEGORY_DESCRIPTION_MAX);
-    const descriptionError = descriptionLengthError(
-      description,
-      CATEGORY_DESCRIPTION_MAX,
-    );
-    if (descriptionError) {
-      setError(descriptionError);
-      setIsSaving(false);
-      return;
-    }
-
-    const payload = {
-      name: form.name.trim(),
-      slug: form.slug.trim() || undefined,
-      description: description || undefined,
-      image: normalizeStoredImagePath(form.image),
-      isActive: form.isActive,
-      sortOrder: Number(form.sortOrder) || 0,
-    };
-
     try {
-      if (isEdit && categoryId) {
-        await updateCategory(categoryId, payload);
+      if (isProtected && isEdit && categoryId) {
+        await updateCategory(categoryId, {
+          image: normalizeStoredImagePath(form.image) ?? "",
+        });
       } else {
-        await createCategory(payload);
+        const description = clampDescription(
+          form.description.trim(),
+          CATEGORY_DESCRIPTION_MAX,
+        );
+        const descriptionError = descriptionLengthError(
+          description,
+          CATEGORY_DESCRIPTION_MAX,
+        );
+        if (descriptionError) {
+          setError(descriptionError);
+          setIsSaving(false);
+          return;
+        }
+
+        const payload = {
+          name: form.name.trim(),
+          slug: form.slug.trim() || undefined,
+          description: description || undefined,
+          image: normalizeStoredImagePath(form.image),
+          isActive: form.isActive,
+          sortOrder: Number(form.sortOrder) || 0,
+        };
+
+        if (isEdit && categoryId) {
+          await updateCategory(categoryId, payload);
+        } else {
+          await createCategory(payload);
+        }
       }
       router.push("/dashboard/categories");
       router.refresh();
@@ -164,21 +167,101 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
 
   if (isProtected) {
     return (
-      <div className="mx-auto w-full max-w-lg space-y-4 px-1">
+      <div className="mx-auto w-full max-w-lg px-1">
         <Link
           href="/dashboard/categories"
           className="text-sm font-medium text-brand-primary hover:text-brand-button-hover"
         >
           ← Back to categories
         </Link>
-        <div className="admin-card mt-6 space-y-3 !p-6">
-          <h1 className="font-display text-xl font-bold text-brand-brown">
-            Protected category
-          </h1>
-          <p className="text-sm text-brand-muted" role="alert">
-            {error ??
-              "The Combo Offers category is a system category and cannot be edited or deleted."}
-          </p>
+
+        <div className="admin-card mt-6 space-y-6 !p-6 sm:!p-8">
+          <div className="text-center">
+            <p className="inline-flex rounded-full border border-brand-border/70 bg-brand-pink-lighter/60 px-2.5 py-0.5 text-[11px] font-semibold text-brand-muted">
+              System · Protected
+            </p>
+            <h1 className="mt-3 font-display text-2xl font-bold text-brand-brown sm:text-3xl">
+              Edit Combo Offers Image
+            </h1>
+            <p className="mt-2 text-sm text-brand-muted">
+              Name, slug, and active state are locked. Only the category image
+              can be updated.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-brand-border/70 bg-brand-pink-lighter/40 px-4 py-3 text-sm text-brand-brown">
+            <p>
+              <span className="font-semibold">Name:</span> {form.name}
+            </p>
+            <p className="mt-1">
+              <span className="font-semibold">Slug:</span> /{form.slug}
+            </p>
+            <p className="mt-1">
+              <span className="font-semibold">Status:</span>{" "}
+              {form.isActive ? "Active" : "Inactive"}
+            </p>
+          </div>
+
+          <div
+            className={cn(
+              "relative mx-auto aspect-[4/3] w-full max-w-sm overflow-hidden rounded-2xl border-2 border-dashed bg-brand-pink-lighter/50",
+              showPreview ? "border-brand-primary/60" : "border-brand-primary",
+            )}
+          >
+            {showPreview ? (
+              <CatalogImage
+                image={form.image}
+                alt="Category preview"
+                fill
+                cacheKey={form.image || "empty"}
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
+                <span className="text-4xl text-brand-primary/30" aria-hidden>
+                  🖼
+                </span>
+                <p className="text-sm font-medium text-brand-muted">
+                  No image yet — storefront uses the generic fallback
+                </p>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <ImageUploadField
+              id="category-image"
+              label="Upload image"
+              value={form.image}
+              onChange={(image) =>
+                setForm({ ...form, image: normalizeStoredImagePath(image) ?? "" })
+              }
+              disabled={isSaving}
+              hideInlinePreview
+              fieldClassName={fieldClassName}
+            />
+
+            {error && (
+              <p className="text-center text-sm text-red-700" role="alert">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="admin-btn-primary h-12 w-full rounded-2xl text-base font-semibold disabled:opacity-60"
+            >
+              {isSaving ? "Saving…" : "Update Image"}
+            </button>
+
+            <Link
+              href="/dashboard/categories"
+              className="admin-btn-secondary flex h-11 w-full items-center justify-center rounded-2xl text-sm"
+            >
+              Cancel
+            </Link>
+          </form>
         </div>
       </div>
     );

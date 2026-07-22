@@ -15,7 +15,7 @@ export function ShopNotFound({
   title,
   description,
   primaryHref = "/cakes/all",
-  primaryLabel = "Browse all cakes",
+  primaryLabel = "Browse all menu",
   secondaryHref = "/",
   secondaryLabel = "Back to home",
 }: ShopNotFoundProps) {

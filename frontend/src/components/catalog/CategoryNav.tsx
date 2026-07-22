@@ -15,7 +15,7 @@ export function CategoryNav({ categories, activeSlug }: CategoryNavProps) {
       slug: category.slug,
       label: category.name,
     })),
-    { slug: ALL_SLUG, label: "All Cakes" },
+    { slug: ALL_SLUG, label: "All Menu" },
   ];
 
   return (

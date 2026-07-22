@@ -52,7 +52,7 @@ export function CategoryTabs({ categories, activeSlug }: CategoryTabsProps) {
       )}
       aria-label="Filter by category"
     >
-      <CategoryTab slug={ALL_SLUG} label="All Cakes" activeSlug={activeSlug} delay={0} />
+      <CategoryTab slug={ALL_SLUG} label="All Menu" activeSlug={activeSlug} delay={0} />
       {categories.map((category, index) => (
         <CategoryTab
           key={category._id}

@@ -110,8 +110,8 @@ export function PopularItemsListView() {
   if (viewState.type === "empty") {
     return (
       <EmptyState
-        title="No purchase rankings yet"
-        description="Popular items appear here after confirmed catalog orders with cake IDs are recorded."
+        title="No cakes to rank"
+        description="Non-combo cakes from the catalog appear here with successful-order counts. Add cakes on the Cakes page."
       />
     );
   }
@@ -127,8 +127,7 @@ export function PopularItemsListView() {
               <th className="px-4 py-3 font-semibold">Rank</th>
               <th className="px-4 py-3 font-semibold">Product</th>
               <th className="px-4 py-3 font-semibold">Price</th>
-              <th className="px-4 py-3 font-semibold">Qty sold</th>
-              <th className="px-4 py-3 font-semibold">Orders</th>
+              <th className="px-4 py-3 font-semibold">Successful Orders</th>
               <th className="px-4 py-3 font-semibold">Revenue</th>
               <th className="px-4 py-3 font-semibold">Last purchase</th>
               <th className="px-4 py-3 font-semibold">Status</th>
@@ -164,8 +163,9 @@ export function PopularItemsListView() {
                 <td className="px-4 py-3">
                   {formatAnalyticsCurrency(row.price)}
                 </td>
-                <td className="px-4 py-3">{row.totalQuantitySold}</td>
-                <td className="px-4 py-3">{row.successfulOrderCount}</td>
+                <td className="px-4 py-3 font-semibold">
+                  {row.successfulOrderCount}
+                </td>
                 <td className="px-4 py-3">
                   {formatAnalyticsCurrency(row.totalRevenue)}
                 </td>
@@ -211,13 +211,7 @@ export function PopularItemsListView() {
             </div>
             <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-brand-muted">
               <div>
-                <dt>Qty sold</dt>
-                <dd className="font-semibold text-brand-brown">
-                  {row.totalQuantitySold}
-                </dd>
-              </div>
-              <div>
-                <dt>Orders</dt>
+                <dt>Successful Orders</dt>
                 <dd className="font-semibold text-brand-brown">
                   {row.successfulOrderCount}
                 </dd>
@@ -228,7 +222,7 @@ export function PopularItemsListView() {
                   {formatAnalyticsCurrency(row.totalRevenue)}
                 </dd>
               </div>
-              <div>
+              <div className="col-span-2">
                 <dt>Last purchase</dt>
                 <dd className="font-semibold text-brand-brown">
                   {formatDateTime(row.lastPurchasedAt)}

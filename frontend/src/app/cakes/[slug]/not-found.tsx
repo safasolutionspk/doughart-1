@@ -15,7 +15,7 @@ export default function CategoryNotFound() {
       title="Category not found"
       description="This cake category doesn't exist or is no longer available. Browse our full catalog or pick another category."
       primaryHref="/cakes/all"
-      primaryLabel="Browse all cakes"
+      primaryLabel="Browse all menu"
     />
   );
 }

@@ -22,7 +22,7 @@ function getCategoryTitle(
   categories: Awaited<ReturnType<typeof fetchPublicCategories>>,
 ): string {
   if (slug === ALL_SLUG) {
-    return "All Cakes";
+    return "All Menu";
   }
   const match = categories.find((category) => category.slug === slug);
   if (match) {
@@ -133,7 +133,7 @@ export default async function CakesCategoryPage({ params }: PageProps) {
                 primaryHref="/custom-cake"
                 primaryLabel="Request a custom cake"
                 secondaryHref="/cakes/all"
-                secondaryLabel="Browse all cakes"
+                secondaryLabel="Browse all menu"
               />
             ) : (
               <ul className="mt-6 grid grid-cols-2 items-stretch gap-2 sm:gap-2.5 md:grid-cols-3 md:gap-3 lg:grid-cols-4 lg:gap-3">

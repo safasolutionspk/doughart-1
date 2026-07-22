@@ -2,10 +2,12 @@ import { createApp } from "./app";
 import { connectDatabase } from "./config/database";
 import { env } from "./config/env";
 import { ensureComboOffersCategory } from "./services/systemCategory.service";
+import { resolveTenantContext } from "./services/tenantContext.service";
 
 async function bootstrap() {
   await connectDatabase();
-  await ensureComboOffersCategory();
+  const tenantContext = await resolveTenantContext();
+  await ensureComboOffersCategory(tenantContext);
 
   const app = createApp();
 

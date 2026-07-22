@@ -15,7 +15,7 @@ export function ShopEmptyState({
   primaryHref = "/custom-cake",
   primaryLabel = "Request a custom cake",
   secondaryHref = "/cakes/all",
-  secondaryLabel = "Browse all cakes",
+  secondaryLabel = "Browse all menu",
 }: ShopEmptyStateProps) {
   return (
     <div className="mx-auto mt-10 max-w-md rounded-2xl border border-brand-border/80 bg-white px-6 py-10 text-center shadow-sm sm:mt-12 sm:px-8 sm:py-12">

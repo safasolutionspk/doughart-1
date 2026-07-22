@@ -26,7 +26,7 @@ export async function MostPopularItems() {
           <SectionAnimatedHeader
             eyebrow="Customer favourites"
             title="Most Popular Items"
-            description="Ranked by real purchases — our most-loved cakes, ready for your celebration."
+            description="Ranked by successful orders — our most-loved cakes, ready for your celebration."
             titleAs="h2"
             titleId="most-popular-heading"
             align="start"
@@ -68,7 +68,7 @@ export async function MostPopularItems() {
             href="/cakes/all"
             className="text-sm font-semibold text-brand-primary underline-offset-2 hover:underline"
           >
-            View all cakes
+            View all menu
           </Link>
         </p>
       </div>
