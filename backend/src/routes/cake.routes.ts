@@ -1,13 +1,19 @@
 import { Router } from "express";
 import {
   createCake,
+  createComboOffer,
   deleteCake,
+  deleteComboOffer,
   getCake,
+  getComboOffer,
   getPublicCakeBySlug,
   listCakes,
+  listComboOffers,
   listPublicCakes,
+  listPublicComboOffers,
   listPublicPopularCakes,
   updateCake,
+  updateComboOffer,
 } from "../controllers/cake.controller";
 import { auditLog } from "../middleware/auditLog";
 import { authenticateAdmin } from "../middleware/auth";
@@ -17,10 +23,13 @@ import {
   cakeIdParamSchema,
   cakeSlugParamSchema,
   createCakeSchema,
+  createComboCakeSchema,
   listCakesQuerySchema,
   listPopularCakesQuerySchema,
   listPublicCakesQuerySchema,
+  listPublicComboOffersQuerySchema,
   updateCakeSchema,
+  updateComboCakeSchema,
 } from "../validators/cake.validator";
 
 const router = Router();
@@ -33,9 +42,46 @@ router.get(
   listPublicPopularCakes,
 );
 router.get(
+  "/public/combo-offers",
+  validate(listPublicComboOffersQuerySchema, "query"),
+  listPublicComboOffers,
+);
+router.get(
   "/public/:slug",
   validate(cakeSlugParamSchema, "params"),
   getPublicCakeBySlug,
+);
+
+router.get(
+  "/combo-offers",
+  ...adminAuth,
+  validate(listCakesQuerySchema, "query"),
+  listComboOffers,
+);
+router.post(
+  "/combo-offers",
+  ...adminAuth,
+  validate(createComboCakeSchema),
+  createComboOffer,
+);
+router.get(
+  "/combo-offers/:id",
+  ...adminAuth,
+  validate(cakeIdParamSchema, "params"),
+  getComboOffer,
+);
+router.patch(
+  "/combo-offers/:id",
+  ...adminAuth,
+  validate(cakeIdParamSchema, "params"),
+  validate(updateComboCakeSchema),
+  updateComboOffer,
+);
+router.delete(
+  "/combo-offers/:id",
+  ...adminAuth,
+  validate(cakeIdParamSchema, "params"),
+  deleteComboOffer,
 );
 
 router.get("/", ...adminAuth, validate(listCakesQuerySchema, "query"), listCakes);

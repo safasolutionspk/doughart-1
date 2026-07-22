@@ -109,6 +109,46 @@ export const listPopularCakesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(24).default(12),
 });
 
+export const listPublicComboOffersQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(24).default(12),
+});
+
+/** Create/update combo offers without client-controlled categoryId. */
+const comboCakeBodySchema = cakeBodySchema.omit({
+  categoryId: true,
+  category: true,
+});
+
+export const createComboCakeSchema = comboCakeBodySchema.transform((data) => ({
+  name: data.name,
+  slug: data.slug,
+  description: data.description,
+  price: data.price,
+  image: data.image,
+  isActive: data.isActive ?? true,
+  isFeatured: data.isFeatured ?? false,
+  isCustomizable: data.isCustomizable ?? data.customizable ?? false,
+  sortOrder: data.sortOrder ?? 0,
+}));
+
+export const updateComboCakeSchema = updateCakeBodySchema
+  .omit({ categoryId: true, category: true })
+  .transform((data) => ({
+    ...(data.name !== undefined ? { name: data.name } : {}),
+    ...(data.slug !== undefined ? { slug: data.slug } : {}),
+    ...(data.description !== undefined ? { description: data.description } : {}),
+    ...(data.price !== undefined ? { price: data.price } : {}),
+    ...(data.image !== undefined ? { image: data.image } : {}),
+    ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+    ...(data.isFeatured !== undefined ? { isFeatured: data.isFeatured } : {}),
+    ...(data.isCustomizable !== undefined || data.customizable !== undefined
+      ? {
+          isCustomizable: data.isCustomizable ?? data.customizable ?? false,
+        }
+      : {}),
+    ...(data.sortOrder !== undefined ? { sortOrder: data.sortOrder } : {}),
+  }));
+
 export const listAdminPopularCakesQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -141,5 +181,7 @@ export const listCakesQuerySchema = z.object({
 
 export type CreateCakeInput = z.infer<typeof createCakeSchema>;
 export type UpdateCakeInput = z.infer<typeof updateCakeSchema>;
+export type CreateComboCakeInput = z.infer<typeof createComboCakeSchema>;
+export type UpdateComboCakeInput = z.infer<typeof updateComboCakeSchema>;
 export type ListCakesQuery = z.infer<typeof listCakesQuerySchema>;
 export type ListPublicCakesQuery = z.infer<typeof listPublicCakesQuerySchema>;

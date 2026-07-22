@@ -13,9 +13,15 @@ type CakeGridCardProps = {
   cake: Cake;
   onDelete: () => void;
   isDeleting: boolean;
+  editHrefBase?: string;
 };
 
-export function CakeGridCard({ cake, onDelete, isDeleting }: CakeGridCardProps) {
+export function CakeGridCard({
+  cake,
+  onDelete,
+  isDeleting,
+  editHrefBase = "/dashboard/cakes",
+}: CakeGridCardProps) {
   const flags: string[] = [];
   if (cake.isFeatured) {
     flags.push("Featured");
@@ -62,7 +68,7 @@ export function CakeGridCard({ cake, onDelete, isDeleting }: CakeGridCardProps) 
 
         <div className="mt-auto flex gap-1.5 pt-3">
           <Link
-            href={`/dashboard/cakes/${cake._id}/edit`}
+            href={`${editHrefBase}/${cake._id}/edit`}
             className="admin-btn-secondary !h-8 flex-1 !px-2 !text-[11px]"
           >
             Edit

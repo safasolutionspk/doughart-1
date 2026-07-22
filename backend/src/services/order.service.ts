@@ -312,7 +312,9 @@ async function resolveCatalogOrderItems(
   const cakes = await Cake.find({
     slug: { $in: uniqueSlugs },
     isActive: true,
-  }).lean();
+  })
+    .populate("categoryId", "slug")
+    .lean();
 
   const cakeBySlug = new Map(cakes.map((cake) => [cake.slug, cake]));
 
@@ -324,12 +326,14 @@ async function resolveCatalogOrderItems(
 
   const items = lineRefs.map((line) => {
     const cake = cakeBySlug.get(line.cakeSlug)!;
+    const category = cake.categoryId as { slug?: string } | null | undefined;
     return {
       cakeId: String(cake._id),
       cakeName: cake.name,
       quantity: line.quantity,
       unitPrice: cake.price,
       notes: line.notes,
+      ...(category?.slug ? { categorySlug: category.slug } : {}),
     };
   });
 

@@ -15,6 +15,7 @@ type CategoryGridCardProps = {
   isDeleting: boolean;
   isEditPending: boolean;
   onEditClick: () => void;
+  isProtected?: boolean;
 };
 
 export function CategoryGridCard({
@@ -23,6 +24,7 @@ export function CategoryGridCard({
   isDeleting,
   isEditPending,
   onEditClick,
+  isProtected = false,
 }: CategoryGridCardProps) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-brand-border/60 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
@@ -42,6 +44,11 @@ export function CategoryGridCard({
               {category.name}
             </h2>
             <p className="mt-0.5 truncate text-[10px] text-brand-muted">/{category.slug}</p>
+            {isProtected ? (
+              <p className="mt-1 inline-flex rounded-full border border-brand-border/70 bg-brand-pink-lighter/60 px-2 py-0.5 text-[10px] font-semibold text-brand-muted">
+                System
+              </p>
+            ) : null}
           </div>
           <ActiveBadge active={category.isActive} />
         </div>
@@ -51,24 +58,32 @@ export function CategoryGridCard({
         </p>
 
         <div className="mt-auto flex gap-1.5 pt-3">
-          <Link
-            href={`/dashboard/categories/${category._id}/edit`}
-            onClick={onEditClick}
-            className={cn(
-              "admin-btn-secondary !h-8 flex-1 !px-2 !text-[11px]",
-              isEditPending && "pointer-events-none opacity-60",
-            )}
-          >
-            {isEditPending ? "…" : "Edit"}
-          </Link>
-          <button
-            type="button"
-            onClick={onDelete}
-            disabled={isDeleting}
-            className="inline-flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
-          >
-            {isDeleting ? "…" : "Delete"}
-          </button>
+          {isProtected ? (
+            <p className="text-[11px] text-brand-muted">
+              Protected system category
+            </p>
+          ) : (
+            <>
+              <Link
+                href={`/dashboard/categories/${category._id}/edit`}
+                onClick={onEditClick}
+                className={cn(
+                  "admin-btn-secondary !h-8 flex-1 !px-2 !text-[11px]",
+                  isEditPending && "pointer-events-none opacity-60",
+                )}
+              >
+                {isEditPending ? "…" : "Edit"}
+              </Link>
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={isDeleting}
+                className="inline-flex h-8 items-center justify-center rounded-full px-2.5 text-[11px] font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+              >
+                {isDeleting ? "…" : "Delete"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </article>

@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, LoadingList } from "@/components/catalog/ListSt
 import { deleteCategory, fetchCategories } from "@/lib/catalog/client";
 import { CATEGORIES_REFRESH_EVENT } from "@/lib/catalog/events";
 import type { Category, CategoryListResponse } from "@/lib/catalog/types";
+import { isSystemCategory } from "@/lib/catalog/types";
 
 type ViewState =
   | { type: "loading" }
@@ -104,6 +105,10 @@ export function CategoriesListView() {
 
   async function handleDelete() {
     if (!deleteTarget) {
+      return;
+    }
+    if (isSystemCategory(deleteTarget)) {
+      setDeleteError("The Combo Offers category cannot be deleted.");
       return;
     }
     const targetId = deleteTarget._id;
@@ -208,6 +213,7 @@ export function CategoriesListView() {
                   isDeleting={deletingId === category._id}
                   isEditPending={pendingEditId === category._id}
                   onEditClick={() => setPendingEditId(category._id)}
+                  isProtected={isSystemCategory(category)}
                 />
               </li>
             ))}

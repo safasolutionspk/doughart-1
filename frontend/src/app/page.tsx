@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { CakeCategories } from "@/components/sections/CakeCategories";
+import { ComboOffersSection } from "@/components/sections/ComboOffersSection";
 import { CustomCakeBuilder } from "@/components/sections/CustomCakeBuilder";
 import { FeatureStrip } from "@/components/sections/FeatureStrip";
 import { Gallery } from "@/components/sections/Gallery";
@@ -60,6 +61,7 @@ export default function Home() {
         <CakeCategories />
         <MostPopularItems />
         <CustomCakeBuilder />
+        <ComboOffersSection />
         <OrderProcess />
         <Reviews />
         <Gallery />

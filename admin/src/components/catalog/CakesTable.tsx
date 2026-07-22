@@ -10,9 +10,15 @@ type CakesTableProps = {
   cakes: Cake[];
   onDelete: (cake: Cake) => void;
   deletingId: string | null;
+  editHrefBase?: string;
 };
 
-export function CakesTable({ cakes, onDelete, deletingId }: CakesTableProps) {
+export function CakesTable({
+  cakes,
+  onDelete,
+  deletingId,
+  editHrefBase = "/dashboard/cakes",
+}: CakesTableProps) {
   return (
     <div className="admin-table-wrap hidden lg:block">
       <table className="min-w-full divide-y divide-brand-border/50 text-sm">
@@ -69,7 +75,7 @@ export function CakesTable({ cakes, onDelete, deletingId }: CakesTableProps) {
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
                   <Link
-                    href={`/dashboard/cakes/${cake._id}/edit`}
+                    href={`${editHrefBase}/${cake._id}/edit`}
                     className="admin-btn-secondary !h-8 !px-3 !text-xs"
                   >
                     Edit

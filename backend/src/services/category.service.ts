@@ -8,6 +8,13 @@ import {
   applyLegacyCatalogFallback,
   resolveCatalogScope,
 } from "./catalogScope.service";
+import {
+  assertNotDuplicateSystemCategoryIdentity,
+  assertSystemCategoryDeletable,
+  assertSystemCategoryMutable,
+  findComboOffersCategory,
+  isProtectedSystemCategory,
+} from "./systemCategory.service";
 import type {
   CreateCategoryInput,
   ListCategoriesQuery,
@@ -34,6 +41,9 @@ async function resolveUniqueSlug(baseSlug: string, excludeId?: string): Promise<
   }
 }
 
+const ADMIN_CATEGORY_SELECT =
+  "name slug description image isActive sortOrder isSystem createdAt updatedAt";
+
 export async function listCategories(
   query: ListCategoriesQuery,
   tenantContext?: RequestTenantContext,
@@ -59,7 +69,7 @@ export async function listCategories(
       .sort({ sortOrder: 1, name: 1 })
       .skip(skip)
       .limit(limit)
-      .select("name slug description image isActive sortOrder createdAt updatedAt")
+      .select(ADMIN_CATEGORY_SELECT)
       .lean(),
     Category.countDocuments(filter),
   ]);
@@ -72,7 +82,7 @@ export async function listCategories(
         .sort({ sortOrder: 1, name: 1 })
         .skip(skip)
         .limit(limit)
-        .select("name slug description image isActive sortOrder createdAt updatedAt")
+        .select(ADMIN_CATEGORY_SELECT)
         .lean(),
       Category.countDocuments(legacyFilter),
     ]);
@@ -125,12 +135,18 @@ export async function createCategory(
     throw ApiError.badRequest("Unable to generate a valid slug");
   }
 
+  assertNotDuplicateSystemCategoryIdentity({
+    name: input.name,
+    slug: baseSlug,
+  });
+
   const slug = await resolveUniqueSlug(baseSlug);
 
   try {
     return await Category.create({
       ...input,
       slug,
+      isSystem: false,
       ...(scope
         ? {
             tenantId: scope.tenantId,
@@ -168,6 +184,16 @@ export async function updateCategory(
     throw ApiError.notFound("Category not found");
   }
 
+  assertSystemCategoryMutable(targetCategory, {
+    name: input.name,
+    slug: input.slug,
+    isActive: input.isActive,
+  });
+
+  if (isProtectedSystemCategory(targetCategory)) {
+    throw ApiError.forbidden("The Combo Offers category cannot be edited.");
+  }
+
   if (scope) {
     targetCategory.tenantId = new mongoose.Types.ObjectId(scope.tenantId);
     targetCategory.workspaceId = new mongoose.Types.ObjectId(scope.workspaceId);
@@ -190,7 +216,15 @@ export async function updateCategory(
   }
 
   if (input.slug !== undefined) {
-    targetCategory.slug = await resolveUniqueSlug(slugify(input.slug), id);
+    const nextSlug = slugify(input.slug);
+    const combo = await findComboOffersCategory(tenantContext);
+    if (combo && String(combo._id) !== id) {
+      assertNotDuplicateSystemCategoryIdentity({
+        name: input.name ?? targetCategory.name,
+        slug: nextSlug,
+      });
+    }
+    targetCategory.slug = await resolveUniqueSlug(nextSlug, id);
   }
 
   try {
@@ -245,6 +279,8 @@ export async function deleteCategory(
   if (!targetCategory) {
     throw ApiError.notFound("Category not found");
   }
+
+  assertSystemCategoryDeletable(targetCategory);
 
   const cakesCount = await Cake.countDocuments(
     scope

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { COMBO_OFFERS_CATEGORY, isComboOffersSlug } from "../constants/systemCategories";
 import { Cake, Order } from "../models";
 import type { RequestTenantContext } from "../types/tenantContext";
 import {
@@ -34,6 +35,10 @@ function buildCakeScopeFilter(
   return buildOrderScopeFilter(tenantContext);
 }
 
+function isComboCategory(category: { slug?: string } | null | undefined): boolean {
+  return isComboOffersSlug(category?.slug);
+}
+
 type AggRow = {
   _id: Types.ObjectId;
   totalQuantitySold: number;
@@ -42,6 +47,7 @@ type AggRow = {
   lastPurchasedAt: Date | null;
   latestCakeName?: string;
   latestUnitPrice?: number;
+  latestCategorySlug?: string;
 };
 
 async function aggregatePurchaseStats(
@@ -61,6 +67,7 @@ async function aggregatePurchaseStats(
     {
       $match: {
         "items.cakeId": { $exists: true, $ne: null },
+        "items.categorySlug": { $ne: COMBO_OFFERS_CATEGORY.slug },
       },
     },
     {
@@ -74,6 +81,7 @@ async function aggregatePurchaseStats(
         lastPurchasedAt: { $max: "$createdAt" },
         latestCakeName: { $last: "$items.cakeName" },
         latestUnitPrice: { $last: "$items.unitPrice" },
+        latestCategorySlug: { $last: "$items.categorySlug" },
       },
     },
     {
@@ -84,6 +92,7 @@ async function aggregatePurchaseStats(
         lastPurchasedAt: 1,
         latestCakeName: 1,
         latestUnitPrice: 1,
+        latestCategorySlug: 1,
       },
     },
     {
@@ -97,15 +106,17 @@ async function aggregatePurchaseStats(
     },
   ]);
 
-  return rows.map((row) => ({
-    cakeId: String(row._id),
-    totalQuantitySold: row.totalQuantitySold,
-    totalRevenue: row.totalRevenue,
-    successfulOrderCount: row.successfulOrderCount,
-    lastPurchasedAt: row.lastPurchasedAt,
-    latestCakeName: row.latestCakeName,
-    latestUnitPrice: row.latestUnitPrice,
-  }));
+  return rows
+    .filter((row) => !isComboOffersSlug(row.latestCategorySlug))
+    .map((row) => ({
+      cakeId: String(row._id),
+      totalQuantitySold: row.totalQuantitySold,
+      totalRevenue: row.totalRevenue,
+      successfulOrderCount: row.successfulOrderCount,
+      lastPurchasedAt: row.lastPurchasedAt,
+      latestCakeName: row.latestCakeName,
+      latestUnitPrice: row.latestUnitPrice,
+    }));
 }
 
 type LeanPublicCake = {
@@ -130,13 +141,17 @@ async function loadActivePublicCakes(
   tenantContext?: RequestTenantContext,
 ): Promise<LeanPublicCake[]> {
   const scope = buildCakeScopeFilter(tenantContext);
-  return Cake.find({ ...scope, isActive: true })
+  const cakes = await Cake.find({ ...scope, isActive: true })
     .populate("categoryId", "name slug")
     .select(
       "name slug description image categoryId price isCustomizable isFeatured sortOrder createdAt",
     )
     .sort({ isFeatured: -1, sortOrder: 1, createdAt: -1, _id: 1 })
     .lean<LeanPublicCake[]>();
+
+  return cakes.filter(
+    (cake) => cake.categoryId?._id && !isComboCategory(cake.categoryId),
+  );
 }
 
 function toPublicCakeShape(
@@ -192,7 +207,7 @@ export async function listPublicPopularCakes(
       break;
     }
     const cake = activeById.get(row.cakeId);
-    if (!cake || !cake.categoryId?._id) {
+    if (!cake || !cake.categoryId?._id || isComboCategory(cake.categoryId)) {
       continue;
     }
     purchased.push(
@@ -238,10 +253,27 @@ export async function listAdminPopularCakes(
   tenantContext?: RequestTenantContext,
 ): Promise<AdminPopularCakesResult> {
   const stats = await aggregatePurchaseStats(tenantContext);
-  const total = stats.length;
+
+  const ids = stats.map((row) => new Types.ObjectId(row.cakeId));
+  const cakes = await Cake.find({ _id: { $in: ids } })
+    .populate("categoryId", "slug")
+    .select("name slug image price isActive categoryId")
+    .lean();
+  const cakeById = new Map(cakes.map((cake) => [String(cake._id), cake]));
+
+  const filteredStats = stats.filter((row) => {
+    const cake = cakeById.get(row.cakeId);
+    if (!cake) {
+      return true;
+    }
+    const category = cake.categoryId as { slug?: string } | null | undefined;
+    return !isComboCategory(category);
+  });
+
+  const total = filteredStats.length;
   const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
   const start = (page - 1) * limit;
-  const pageStats = stats.slice(start, start + limit);
+  const pageStats = filteredStats.slice(start, start + limit);
 
   if (pageStats.length === 0) {
     return {
@@ -249,12 +281,6 @@ export async function listAdminPopularCakes(
       pagination: { page, limit, total, totalPages },
     };
   }
-
-  const ids = pageStats.map((row) => new Types.ObjectId(row.cakeId));
-  const cakes = await Cake.find({ _id: { $in: ids } })
-    .select("name slug image price isActive")
-    .lean();
-  const cakeById = new Map(cakes.map((cake) => [String(cake._id), cake]));
 
   const rows: AdminPopularCakeRow[] = pageStats.map((row, index) => {
     const cake = cakeById.get(row.cakeId);

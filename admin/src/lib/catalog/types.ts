@@ -13,6 +13,7 @@ export type Category = {
   image?: string;
   isActive: boolean;
   sortOrder: number;
+  isSystem?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -63,4 +64,8 @@ export function getCategoryId(categoryId: Cake["categoryId"]): string {
     return categoryId;
   }
   return categoryId._id;
+}
+
+export function isSystemCategory(category: Category): boolean {
+  return Boolean(category.isSystem) || category.slug === "combo-offers";
 }

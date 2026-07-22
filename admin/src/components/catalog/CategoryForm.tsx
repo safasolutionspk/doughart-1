@@ -10,6 +10,7 @@ import {
   updateCategory,
 } from "@/lib/catalog/client";
 import { CATEGORIES_REFRESH_EVENT } from "@/lib/catalog/events";
+import { isSystemCategory } from "@/lib/catalog/types";
 import { CatalogImage } from "@/components/catalog/CatalogImage";
 import { DescriptionTextarea } from "@/components/catalog/DescriptionTextarea";
 import { ImageUploadField } from "@/components/upload/ImageUploadField";
@@ -52,6 +53,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
   const [isLoading, setIsLoading] = useState(isEdit);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProtected, setIsProtected] = useState(false);
 
   const showPreview = hasStoredImage(form.image);
 
@@ -68,6 +70,11 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
       try {
         const category = await fetchCategory(id);
         if (cancelled) {
+          return;
+        }
+        if (isSystemCategory(category)) {
+          setIsProtected(true);
+          setError("The Combo Offers category is protected and cannot be edited.");
           return;
         }
         setForm({
@@ -93,7 +100,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
       }
     }
 
-    load();
+    void load();
     return () => {
       cancelled = true;
     };
@@ -101,6 +108,9 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isProtected) {
+      return;
+    }
     setIsSaving(true);
     setError(null);
 
@@ -148,6 +158,28 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
         <div className="mx-auto h-10 w-56 animate-pulse rounded-lg bg-brand-pink-lighter" />
         <div className="h-48 animate-pulse rounded-2xl border-2 border-dashed border-brand-border bg-brand-pink-lighter" />
         <div className="h-80 animate-pulse rounded-2xl bg-brand-pink-lighter" />
+      </div>
+    );
+  }
+
+  if (isProtected) {
+    return (
+      <div className="mx-auto w-full max-w-lg space-y-4 px-1">
+        <Link
+          href="/dashboard/categories"
+          className="text-sm font-medium text-brand-primary hover:text-brand-button-hover"
+        >
+          ← Back to categories
+        </Link>
+        <div className="admin-card mt-6 space-y-3 !p-6">
+          <h1 className="font-display text-xl font-bold text-brand-brown">
+            Protected category
+          </h1>
+          <p className="text-sm text-brand-muted" role="alert">
+            {error ??
+              "The Combo Offers category is a system category and cannot be edited or deleted."}
+          </p>
+        </div>
       </div>
     );
   }

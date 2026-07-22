@@ -9,6 +9,8 @@ export interface ICategory {
   image?: string;
   isActive: boolean;
   sortOrder: number;
+  /** Built-in category: name/slug/active locked; not deletable. */
+  isSystem: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -25,6 +27,7 @@ const categorySchema = new Schema<ICategoryDocument>(
     image: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
+    isSystem: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

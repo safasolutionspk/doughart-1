@@ -130,6 +130,16 @@ export async function fetchPopularCakes(
   );
 }
 
+export async function fetchComboOffers(
+  limit = 12,
+): Promise<PublicCake[] | null> {
+  const safeLimit = Math.min(24, Math.max(1, limit));
+  return apiGet<PublicCake[]>(
+    `/api/cakes/public/combo-offers?limit=${safeLimit}`,
+    "no-store",
+  );
+}
+
 export function getCategoryRef(cake: PublicCake): CategoryRef {
   return cake.categoryId;
 }

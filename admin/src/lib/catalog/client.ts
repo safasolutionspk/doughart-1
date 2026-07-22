@@ -153,3 +153,70 @@ export async function deleteCake(id: string): Promise<void> {
   const response = await adminFetch(`/api/cakes/${id}`, { method: "DELETE" });
   await parseAdminJson<{ id: string }>(response);
 }
+
+type ComboCakePayload = {
+  name: string;
+  slug?: string;
+  description?: string;
+  price: number;
+  image?: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  isCustomizable: boolean;
+  sortOrder: number;
+};
+
+export async function fetchComboOffers(params?: {
+  search?: string;
+  isActive?: boolean | "";
+  isFeatured?: boolean | "";
+  page?: number;
+  limit?: number;
+}): Promise<CakeListResponse> {
+  const query = buildQuery({
+    search: params?.search,
+    isActive: params?.isActive === "" ? undefined : params?.isActive,
+    isFeatured: params?.isFeatured === "" ? undefined : params?.isFeatured,
+    page: params?.page,
+    limit: params?.limit ?? 20,
+  });
+  const response = await adminFetch(`/api/cakes/combo-offers${query}`, {
+    cache: "no-store",
+  });
+  return parseAdminJson<CakeListResponse>(response);
+}
+
+export async function fetchComboOffer(id: string): Promise<Cake> {
+  const response = await adminFetch(`/api/cakes/combo-offers/${id}`, {
+    cache: "no-store",
+  });
+  return parseAdminJson<Cake>(response);
+}
+
+export async function createComboOffer(payload: ComboCakePayload): Promise<Cake> {
+  const response = await adminFetch("/api/cakes/combo-offers", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseAdminJson<Cake>(response);
+}
+
+export async function updateComboOffer(
+  id: string,
+  payload: Partial<ComboCakePayload>,
+): Promise<Cake> {
+  const response = await adminFetch(`/api/cakes/combo-offers/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseAdminJson<Cake>(response);
+}
+
+export async function deleteComboOffer(id: string): Promise<void> {
+  const response = await adminFetch(`/api/cakes/combo-offers/${id}`, {
+    method: "DELETE",
+  });
+  await parseAdminJson<{ id: string }>(response);
+}

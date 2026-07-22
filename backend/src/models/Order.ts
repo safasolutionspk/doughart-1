@@ -9,6 +9,8 @@ export interface IOrderItem {
   quantity: number;
   unitPrice: number;
   notes?: string;
+  /** Snapshot of catalog category slug at order time (e.g. combo-offers). */
+  categorySlug?: string;
 }
 
 export interface IOrder {
@@ -57,6 +59,7 @@ const orderItemSchema = new Schema<IOrderItem>(
     quantity: { type: Number, required: true, min: 1, default: 1 },
     unitPrice: { type: Number, required: true, min: 0, default: 0 },
     notes: { type: String, trim: true },
+    categorySlug: { type: String, trim: true, lowercase: true },
   },
   { _id: false },
 );
