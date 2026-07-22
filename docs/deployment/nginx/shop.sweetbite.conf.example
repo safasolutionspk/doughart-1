@@ -1,0 +1,43 @@
+# Nginx — Public shop (sweetbite.com → Next.js frontend :3000)
+# If frontend is on Vercel, point DNS to Vercel instead and skip this file.
+#
+# Install: sudo cp shop.sweetbite.conf.example /etc/nginx/sites-available/sweetbite-shop
+# SSL:     sudo certbot --nginx -d sweetbite.com -d www.sweetbite.com
+
+upstream sweetbite_frontend {
+    server 127.0.0.1:3000;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    server_name sweetbite.com www.sweetbite.com;
+    return 301 https://sweetbite.com$request_uri;
+}
+
+server {
+    listen 80;
+    server_name www.sweetbite.com;
+    return 301 https://sweetbite.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name sweetbite.com;
+
+    ssl_certificate     /etc/letsencrypt/live/sweetbite.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sweetbite.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://sweetbite_frontend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

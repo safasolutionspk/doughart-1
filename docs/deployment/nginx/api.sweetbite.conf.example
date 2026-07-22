@@ -1,0 +1,52 @@
+# Nginx — API (api.sweetbite.com → backend :5000)
+# Install: sudo cp api.sweetbite.conf.example /etc/nginx/sites-available/sweetbite-api
+#          sudo ln -s /etc/nginx/sites-available/sweetbite-api /etc/nginx/sites-enabled/
+# SSL:     sudo certbot --nginx -d api.sweetbite.com
+
+# CORS is handled by Express (backend CORS_ORIGIN). Do not add duplicate
+# Access-Control-* headers here unless you know they match exactly.
+
+upstream sweetbite_api {
+    server 127.0.0.1:5000;
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    server_name api.sweetbite.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.sweetbite.com;
+
+    # Certbot fills these after: certbot --nginx -d api.sweetbite.com
+    ssl_certificate     /etc/letsencrypt/live/api.sweetbite.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.sweetbite.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    client_max_body_size 6M;
+
+    location / {
+        proxy_pass http://sweetbite_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection "";
+        proxy_read_timeout 120s;
+        proxy_send_timeout 120s;
+    }
+
+    location /uploads/ {
+        proxy_pass http://sweetbite_api;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+}
