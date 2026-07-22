@@ -122,8 +122,11 @@ export async function fetchPopularCakes(
   limit = 12,
 ): Promise<PublicPopularCake[] | null> {
   const safeLimit = Math.min(24, Math.max(1, limit));
+  // Always read current Cake image/name after Admin updates (homepage categories
+  // already use no-store; popular must not lag one Data Cache generation behind).
   return apiGet<PublicPopularCake[]>(
     `/api/cakes/public/popular?limit=${safeLimit}`,
+    "no-store",
   );
 }
 
