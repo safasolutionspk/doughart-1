@@ -37,11 +37,11 @@ export async function CakeCategories() {
 
         <ul
           className={cn(
-            "mt-8 -mx-4 flex gap-5 overflow-x-auto px-4 pb-2",
+            "mt-8 -mx-4 flex flex-nowrap gap-5 overflow-x-auto px-4 pb-2",
             "snap-x snap-mandatory scroll-smooth",
             "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
             "sm:gap-6",
-            "lg:mx-0 lg:grid lg:grid-cols-5 lg:gap-8 lg:overflow-visible lg:px-0 lg:pb-0",
+            "lg:mx-0 lg:gap-8 lg:px-0",
           )}
         >
           {categories.map((category, index) => (
@@ -50,7 +50,7 @@ export async function CakeCategories() {
               className={cn(
                 "w-[7.5rem] min-w-[7.5rem] shrink-0 snap-center",
                 "sm:w-[8.5rem] sm:min-w-[8.5rem]",
-                "lg:w-full lg:min-w-0 lg:max-w-[11rem] lg:justify-self-center",
+                "lg:w-[11rem] lg:min-w-[11rem]",
               )}
             >
               <Reveal delay={capStaggerDelay(index, 0.1)} direction="up" variant="card">
