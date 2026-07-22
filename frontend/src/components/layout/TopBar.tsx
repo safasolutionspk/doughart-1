@@ -4,7 +4,7 @@ import { siteConfig } from "@/lib/site";
 export function TopBar() {
   return (
     <div
-      className="border-b border-brand-border/50 bg-brand-pink-lighter text-brand-muted"
+      className="border-b border-brand-border/40 bg-[#FFF8FA] text-brand-muted"
       aria-label="Store utilities"
     >
       <div className="section-container flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-1.5 text-[0.6875rem] sm:py-2 sm:text-xs">

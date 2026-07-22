@@ -18,7 +18,7 @@ export async function MostPopularItems() {
   return (
     <section
       id="most-popular"
-      className="section-anchor scroll-mt-20 bg-brand-pink-lighter py-8 sm:py-10 lg:scroll-mt-24 lg:py-12"
+      className="section-anchor scroll-mt-20 bg-[#FFF8FA] py-8 sm:py-10 lg:scroll-mt-24 lg:py-12"
       aria-labelledby="most-popular-heading"
     >
       <div className="section-container">

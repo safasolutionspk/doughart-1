@@ -17,4 +17,10 @@ export const features = [
     description: "Handcrafted in our bakery with attention to every detail.",
     icon: "love" as const,
   },
+  {
+    id: "secure",
+    title: "Safe Ordering",
+    description: "Secure checkout and clear order tracking from start to finish.",
+    icon: "secure" as const,
+  },
 ] as const;

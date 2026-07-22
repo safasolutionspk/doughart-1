@@ -7,7 +7,7 @@ export function FeatureStrip() {
   return (
     <section
       id="about"
-      className="section-anchor border-y border-brand-border/40 bg-brand-pink-lighter"
+      className="section-anchor border-y border-brand-border/30 bg-[#FFF8FA]"
       aria-labelledby="about-heading"
     >
       <h2 id="about-heading" className="sr-only">
@@ -16,31 +16,38 @@ export function FeatureStrip() {
       <div className="section-container">
         <ul
           className={cn(
-            "grid grid-cols-1 divide-y divide-brand-border/50",
-            "sm:grid-cols-3 sm:divide-x sm:divide-y-0",
+            "grid grid-cols-2 gap-px",
+            "sm:grid-cols-4 sm:divide-x sm:divide-brand-border/40 sm:gap-0",
           )}
         >
           {features.map((feature, index) => (
-            <li key={feature.id} className="min-w-0">
+            <li
+              key={feature.id}
+              className={cn(
+                "min-w-0 bg-[#FFF8FA]",
+                "border-b border-brand-border/30 odd:border-r sm:border-0 sm:odd:border-0",
+                index >= 2 && "border-b-0 sm:border-b-0",
+              )}
+            >
               <Reveal
-                delay={capStaggerDelay(index, 0.06)}
+                delay={capStaggerDelay(index, 0.05)}
                 direction="up"
                 variant="text"
                 className="h-full"
               >
                 <div
                   className={cn(
-                    "flex h-full items-start gap-2.5 px-1 py-3",
-                    "sm:px-4 sm:py-3.5",
-                    "lg:px-5 lg:py-4",
+                    "flex h-full flex-col items-start gap-2 px-3 py-3.5",
+                    "sm:flex-row sm:items-start sm:gap-2.5 sm:px-3 sm:py-3.5",
+                    "lg:gap-3 lg:px-4 lg:py-4",
                   )}
                 >
                   <FeatureIcon name={feature.icon} />
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-display text-xs font-semibold leading-snug text-brand-brown sm:text-sm">
+                    <h3 className="font-display text-[0.8125rem] font-semibold leading-snug text-brand-brown sm:text-sm">
                       {feature.title}
                     </h3>
-                    <p className="mt-0.5 line-clamp-2 text-[0.6875rem] leading-snug text-brand-muted sm:text-xs">
+                    <p className="mt-0.5 line-clamp-2 text-[0.625rem] leading-snug text-brand-muted sm:text-[0.6875rem] lg:text-xs">
                       {feature.description}
                     </p>
                   </div>
@@ -58,8 +65,9 @@ type FeatureIconName = (typeof features)[number]["icon"];
 
 function FeatureIcon({ name }: { name: FeatureIconName }) {
   const wrapperClass = cn(
-    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-    "border border-brand-border/60 bg-white text-brand-primary",
+    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+    "border border-brand-border/50 bg-white text-brand-primary/90",
+    "sm:h-8 sm:w-8",
   );
   const iconClass = "h-3.5 w-3.5";
 
@@ -97,6 +105,15 @@ function FeatureIcon({ name }: { name: FeatureIconName }) {
         <span className={wrapperClass} aria-hidden>
           <svg className={iconClass} viewBox="0 0 24 24" {...strokeProps}>
             <path d="M12 20.5s-6-4.35-6-9.5a4.5 4.5 0 018.5-2.5A4.5 4.5 0 0118 11c0 5.15-6 9.5-6 9.5z" />
+          </svg>
+        </span>
+      );
+    case "secure":
+      return (
+        <span className={wrapperClass} aria-hidden>
+          <svg className={iconClass} viewBox="0 0 24 24" {...strokeProps}>
+            <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+            <path d="M9.5 12.2l1.7 1.7 3.5-3.6" />
           </svg>
         </span>
       );

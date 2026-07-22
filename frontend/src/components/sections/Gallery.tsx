@@ -17,7 +17,7 @@ export function Gallery() {
       id="gallery"
       className={cn(
         "section-anchor relative overflow-hidden py-10 sm:py-12",
-        !waveBg && "bg-brand-pink-lighter",
+        !waveBg && "bg-[#FFF8FA]",
       )}
       aria-labelledby="gallery-heading"
       style={

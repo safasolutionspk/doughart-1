@@ -6,9 +6,10 @@ import { cn } from "@/lib/cn";
 
 const heroCopy = {
   eyebrow: "Made With Love",
-  headline: "Custom Cakes For Every Occasion",
+  headlineLine1: "Celebrate Life's",
+  headlineLine2: "Sweetest Moments",
   description:
-    "From intimate birthdays to grand celebrations — handcrafted with premium ingredients and designs tailored to your story.",
+    "Custom cakes made with premium ingredients and thoughtful design — crafted for birthdays, weddings, and every celebration in between.",
 } as const;
 
 export function Hero() {
@@ -45,6 +46,8 @@ export function Hero() {
             sizes="100vw"
             className="hidden object-cover object-[68%_center] lg:block"
           />
+          {/* Soft blush wash for readable typography without dark pink overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-brand-pink-lighter/35 to-transparent lg:from-white/55 lg:via-brand-pink-lighter/20" />
         </div>
       </Reveal>
 
@@ -57,7 +60,8 @@ export function Hero() {
       >
         <HeroContent
           eyebrow={heroCopy.eyebrow}
-          headline={heroCopy.headline}
+          headlineLine1={heroCopy.headlineLine1}
+          headlineLine2={heroCopy.headlineLine2}
           description={heroCopy.description}
         />
       </div>

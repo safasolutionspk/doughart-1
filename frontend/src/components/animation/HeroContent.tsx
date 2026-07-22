@@ -5,9 +5,9 @@ import { Reveal } from "@/components/animation/Reveal";
 import { cn } from "@/lib/cn";
 
 const heroBtnClass =
-  "shadow-[0_4px_14px_rgba(231,84,128,0.28)] hover:shadow-[0_8px_22px_rgba(231,84,128,0.42)]";
+  "shadow-[0_3px_12px_rgba(231,84,128,0.18)] hover:shadow-[0_6px_18px_rgba(231,84,128,0.28)]";
 
-/** Staggered mount delays for the ~5s hero text sequence */
+/** Staggered mount delays for the hero text sequence */
 const HERO_TEXT_DELAYS = {
   eyebrow: 0,
   heading: 0.8,
@@ -17,16 +17,22 @@ const HERO_TEXT_DELAYS = {
 
 type HeroContentProps = {
   eyebrow: string;
-  headline: string;
+  headlineLine1: string;
+  headlineLine2: string;
   description: string;
 };
 
-export function HeroContent({ eyebrow, headline, description }: HeroContentProps) {
+export function HeroContent({
+  eyebrow,
+  headlineLine1,
+  headlineLine2,
+  description,
+}: HeroContentProps) {
   return (
     <div
       className={cn(
-        "max-w-[11.25rem] sm:max-w-[12.75rem]",
-        "lg:max-w-2xl",
+        "max-w-[15.5rem] sm:max-w-[20rem]",
+        "lg:max-w-xl xl:max-w-2xl",
       )}
     >
       <Reveal
@@ -35,11 +41,10 @@ export function HeroContent({ eyebrow, headline, description }: HeroContentProps
         variant="hero-text"
         as="p"
         className={cn(
-          "w-full max-lg:text-[1.125rem] max-lg:font-semibold",
-          "font-script italic text-brand-primary",
-          "text-brand-button-hover",
-          "lg:text-2xl lg:font-normal lg:text-brand-primary",
-          "xl:text-3xl",
+          "w-full font-sans text-[0.625rem] font-semibold uppercase tracking-[0.18em]",
+          "text-brand-primary/90",
+          "sm:text-[0.6875rem]",
+          "lg:text-xs lg:tracking-[0.2em]",
         )}
       >
         {eyebrow}
@@ -52,22 +57,30 @@ export function HeroContent({ eyebrow, headline, description }: HeroContentProps
         as="h1"
         id="hero-heading"
         className={cn(
-          "mt-3 block w-full font-display font-bold leading-[1.18] tracking-tight text-balance text-brand-brown",
-          "text-[1.125rem] sm:mt-3.5 sm:text-[1.25rem]",
-          "lg:mt-4 lg:text-4xl lg:leading-tight",
-          "xl:text-5xl",
+          "mt-2.5 block w-full font-display font-bold leading-[1.12] tracking-tight",
+          "text-3xl sm:mt-3 sm:text-4xl sm:leading-[1.12]",
+          "md:text-5xl",
+          "lg:mt-4 lg:text-5xl lg:leading-[1.1]",
+          "xl:text-[3.25rem]",
         )}
       >
-        {headline}
+        <span className="block text-brand-brown">{headlineLine1}</span>
+        <span className="block text-brand-primary">{headlineLine2}</span>
       </Reveal>
 
       <Reveal
         mount
         delay={HERO_TEXT_DELAYS.description}
         variant="hero-text"
-        className="mt-4 hidden max-w-lg lg:block"
+        className="mt-3 max-w-[14.5rem] sm:mt-3.5 sm:max-w-sm lg:mt-5 lg:max-w-md"
       >
-        <p className="text-base leading-relaxed text-brand-muted lg:text-xl">
+        <p
+          className={cn(
+            "text-sm leading-snug text-brand-muted/95",
+            "sm:text-sm sm:leading-relaxed",
+            "lg:text-base xl:text-lg",
+          )}
+        >
           {description}
         </p>
       </Reveal>
@@ -76,14 +89,14 @@ export function HeroContent({ eyebrow, headline, description }: HeroContentProps
         mount
         delay={HERO_TEXT_DELAYS.buttons}
         variant="hero-text"
-        className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5 lg:mt-7 lg:gap-2.5"
+        className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5 lg:mt-7 lg:gap-3"
       >
         <Button
           href="/custom-cake"
           size="sm"
           className={cn(
-            "h-7 min-w-0 px-3 text-[0.625rem] font-semibold sm:h-8 sm:px-3.5 sm:text-[0.6875rem]",
-            "lg:h-10 lg:min-w-[8rem] lg:px-5 lg:text-sm",
+            "h-8 min-w-0 px-3.5 text-[0.6875rem] font-semibold sm:h-9 sm:px-4 sm:text-xs",
+            "lg:h-10 lg:min-w-[9rem] lg:px-5 lg:text-sm",
             heroBtnClass,
           )}
         >
@@ -94,13 +107,14 @@ export function HeroContent({ eyebrow, headline, description }: HeroContentProps
           variant="outline"
           size="sm"
           className={cn(
-            "h-7 min-w-0 border-brand-primary/85 bg-white/75 px-3 text-[0.625rem] text-brand-primary backdrop-blur-[1px]",
-            "sm:h-8 sm:px-3.5 sm:text-[0.6875rem]",
-            "lg:h-10 lg:min-w-[8rem] lg:px-5 lg:text-sm lg:bg-transparent",
+            "h-8 min-w-0 border-brand-primary/70 bg-white/80 px-3.5 text-[0.6875rem] text-brand-primary backdrop-blur-[1px]",
+            "hover:bg-brand-pink-lighter/80",
+            "sm:h-9 sm:px-4 sm:text-xs",
+            "lg:h-10 lg:min-w-[9rem] lg:px-5 lg:text-sm lg:bg-white/60",
             heroBtnClass,
           )}
         >
-          Browse Cakes
+          Browse Menu
         </Button>
       </Reveal>
     </div>
