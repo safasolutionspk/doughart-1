@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/animation/Reveal";
 import { capStaggerDelay } from "@/lib/animation/constants";
 import { features } from "@/lib/features";
@@ -8,58 +7,44 @@ export function FeatureStrip() {
   return (
     <section
       id="about"
-      className="section-anchor overflow-hidden border-y border-brand-border/40 bg-white/80 py-4 sm:section-padding"
+      className="section-anchor border-y border-brand-border/40 bg-brand-pink-lighter"
       aria-labelledby="about-heading"
     >
       <h2 id="about-heading" className="sr-only">
         About DoughArt
       </h2>
-      <div className="section-container min-w-0 overflow-hidden">
+      <div className="section-container">
         <ul
           className={cn(
-            "snap-carousel items-stretch",
-            "sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0",
+            "grid grid-cols-1 divide-y divide-brand-border/50",
+            "sm:grid-cols-3 sm:divide-x sm:divide-y-0",
           )}
         >
           {features.map((feature, index) => (
-            <li
-              key={feature.id}
-              className={cn(
-                "snap-carousel-item flex shrink-0 snap-center",
-                "w-[13.75rem] min-w-[13.125rem] max-w-[15rem]",
-                "sm:w-full sm:min-w-0 sm:max-w-none",
-              )}
-            >
-              <Reveal delay={capStaggerDelay(index, 0.1)} direction="up" variant="card" className="h-full w-full">
-                <Card
-                padding="none"
-                className={cn(
-                  "card-premium h-full w-full border-brand-border/50",
-                  "bg-gradient-to-b from-white to-brand-pink-lighter/50",
-                  "rounded-2xl p-3 text-center shadow-sm",
-                  "sm:p-5 sm:text-left",
-                )}
+            <li key={feature.id} className="min-w-0">
+              <Reveal
+                delay={capStaggerDelay(index, 0.06)}
+                direction="up"
+                variant="text"
+                className="h-full"
               >
-                <div className="flex h-full flex-col items-center sm:items-start">
+                <div
+                  className={cn(
+                    "flex h-full items-start gap-2.5 px-1 py-3",
+                    "sm:px-4 sm:py-3.5",
+                    "lg:px-5 lg:py-4",
+                  )}
+                >
                   <FeatureIcon name={feature.icon} />
-                  <h3
-                    className={cn(
-                      "mt-2 line-clamp-2 font-display text-sm font-semibold text-brand-brown",
-                      "sm:mt-3 sm:text-base lg:text-lg",
-                    )}
-                  >
-                    {feature.title}
-                  </h3>
-                  <p
-                    className={cn(
-                      "mt-1 line-clamp-2 text-[0.6875rem] leading-snug text-brand-muted",
-                      "sm:mt-1.5 sm:line-clamp-none sm:text-xs lg:text-sm",
-                    )}
-                  >
-                    {feature.description}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display text-xs font-semibold leading-snug text-brand-brown sm:text-sm">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-0.5 line-clamp-2 text-[0.6875rem] leading-snug text-brand-muted sm:text-xs">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-              </Card>
               </Reveal>
             </li>
           ))}
@@ -73,10 +58,10 @@ type FeatureIconName = (typeof features)[number]["icon"];
 
 function FeatureIcon({ name }: { name: FeatureIconName }) {
   const wrapperClass = cn(
-    "category-hover-lift flex shrink-0 items-center justify-center rounded-full bg-brand-pink-light shadow-sm shadow-brand-primary/10",
-    "h-8 w-8 sm:h-11 sm:w-11",
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+    "border border-brand-border/60 bg-white text-brand-primary",
   );
-  const iconClass = cn("text-brand-primary h-4 w-4 sm:h-5 sm:w-5");
+  const iconClass = "h-3.5 w-3.5";
 
   const strokeProps = {
     fill: "none" as const,

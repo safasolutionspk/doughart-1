@@ -54,7 +54,7 @@ export function Newsletter() {
   return (
     <section
       id="blog"
-      className="section-anchor section-padding bg-brand-cream"
+      className="section-anchor section-padding bg-white"
       aria-labelledby="newsletter-heading"
     >
       <h2 id="blog-heading" className="sr-only">

@@ -8,7 +8,7 @@ export function OrderProcess() {
   return (
     <section
       id="order"
-      className="section-anchor section-padding bg-gradient-to-b from-white to-brand-pink-lighter/30"
+      className="section-anchor section-padding bg-brand-pink-lighter"
       aria-labelledby="order-heading"
     >
       <div className="section-container">

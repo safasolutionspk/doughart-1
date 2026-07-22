@@ -18,7 +18,7 @@ export async function ComboOffersSection() {
   return (
     <section
       id="combo-offers"
-      className="section-anchor scroll-mt-20 bg-gradient-to-b from-white via-brand-pink-lighter/20 to-brand-cream py-8 sm:py-10 lg:scroll-mt-24 lg:py-12"
+      className="section-anchor scroll-mt-20 bg-white py-8 sm:py-10 lg:scroll-mt-24 lg:py-12"
       aria-labelledby="combo-offers-heading"
     >
       <div className="section-container">

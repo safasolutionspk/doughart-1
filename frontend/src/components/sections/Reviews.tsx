@@ -9,7 +9,7 @@ export async function Reviews() {
   return (
     <section
       id="reviews"
-      className="section-anchor section-padding bg-brand-pink-lighter/25"
+      className="section-anchor section-padding bg-white"
       aria-labelledby="reviews-heading"
     >
       <div className="section-container">

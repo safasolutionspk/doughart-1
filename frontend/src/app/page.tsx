@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { TopBar } from "@/components/layout/TopBar";
 import { CakeCategories } from "@/components/sections/CakeCategories";
 import { ComboOffersSection } from "@/components/sections/ComboOffersSection";
 import { CustomCakeBuilder } from "@/components/sections/CustomCakeBuilder";
@@ -49,6 +50,7 @@ export default function Home() {
           __html: JSON.stringify(bakeryStructuredData),
         }}
       />
+      <TopBar />
       <Header />
       <main
         id="home"

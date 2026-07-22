@@ -21,7 +21,7 @@ export async function CakeCategories() {
   return (
     <section
       id="cakes"
-      className="section-anchor scroll-mt-20 bg-gradient-to-b from-brand-pink-lighter/60 via-brand-cream to-brand-pink-lighter/40 py-8 sm:py-10 lg:scroll-mt-24 lg:py-11"
+      className="section-anchor scroll-mt-20 bg-white py-8 sm:py-10 lg:scroll-mt-24 lg:py-11"
       aria-labelledby="cakes-heading"
     >
       <div className="section-container">
