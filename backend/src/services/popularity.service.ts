@@ -1,5 +1,4 @@
 import { Types } from "mongoose";
-import { COMBO_OFFERS_CATEGORY, isComboOffersSlug } from "../constants/systemCategories";
 import { Cake, Order } from "../models";
 import type { RequestTenantContext } from "../types/tenantContext";
 import {
@@ -35,10 +34,6 @@ function buildCakeScopeFilter(
   return buildOrderScopeFilter(tenantContext);
 }
 
-function isComboCategory(category: { slug?: string } | null | undefined): boolean {
-  return isComboOffersSlug(category?.slug);
-}
-
 type AggRow = {
   _id: Types.ObjectId;
   totalQuantitySold: number;
@@ -47,12 +42,12 @@ type AggRow = {
   lastPurchasedAt: Date | null;
   latestCakeName?: string;
   latestUnitPrice?: number;
-  latestCategorySlug?: string;
 };
 
 /**
  * Aggregate purchase stats ranked primarily by distinct successful orders.
  * One order counts once per cake even if quantity > 1 or the cake appears twice.
+ * Includes Combo Offer products alongside normal cakes.
  */
 async function aggregatePurchaseStats(
   tenantContext?: RequestTenantContext,
@@ -74,37 +69,6 @@ async function aggregatePurchaseStats(
       },
     },
     {
-      $lookup: {
-        from: "cakes",
-        localField: "items.cakeId",
-        foreignField: "_id",
-        as: "cakeDoc",
-      },
-    },
-    {
-      $lookup: {
-        from: "categories",
-        localField: "cakeDoc.categoryId",
-        foreignField: "_id",
-        as: "categoryDoc",
-      },
-    },
-    {
-      $addFields: {
-        resolvedCategorySlug: {
-          $ifNull: [
-            "$items.categorySlug",
-            { $arrayElemAt: ["$categoryDoc.slug", 0] },
-          ],
-        },
-      },
-    },
-    {
-      $match: {
-        resolvedCategorySlug: { $ne: COMBO_OFFERS_CATEGORY.slug },
-      },
-    },
-    {
       $group: {
         _id: "$items.cakeId",
         totalQuantitySold: { $sum: "$items.quantity" },
@@ -115,7 +79,6 @@ async function aggregatePurchaseStats(
         lastPurchasedAt: { $max: "$createdAt" },
         latestCakeName: { $last: "$items.cakeName" },
         latestUnitPrice: { $last: "$items.unitPrice" },
-        latestCategorySlug: { $last: "$resolvedCategorySlug" },
       },
     },
     {
@@ -126,7 +89,6 @@ async function aggregatePurchaseStats(
         lastPurchasedAt: 1,
         latestCakeName: 1,
         latestUnitPrice: 1,
-        latestCategorySlug: 1,
       },
     },
     {
@@ -139,17 +101,15 @@ async function aggregatePurchaseStats(
     },
   ]);
 
-  return rows
-    .filter((row) => !isComboOffersSlug(row.latestCategorySlug))
-    .map((row) => ({
-      cakeId: String(row._id),
-      totalQuantitySold: row.totalQuantitySold,
-      totalRevenue: row.totalRevenue,
-      successfulOrderCount: row.successfulOrderCount,
-      lastPurchasedAt: row.lastPurchasedAt,
-      latestCakeName: row.latestCakeName,
-      latestUnitPrice: row.latestUnitPrice,
-    }));
+  return rows.map((row) => ({
+    cakeId: String(row._id),
+    totalQuantitySold: row.totalQuantitySold,
+    totalRevenue: row.totalRevenue,
+    successfulOrderCount: row.successfulOrderCount,
+    lastPurchasedAt: row.lastPurchasedAt,
+    latestCakeName: row.latestCakeName,
+    latestUnitPrice: row.latestUnitPrice,
+  }));
 }
 
 type LeanPublicCake = {
@@ -182,9 +142,7 @@ async function loadActivePublicCakes(
     .sort({ isFeatured: -1, sortOrder: 1, createdAt: -1, _id: 1 })
     .lean<LeanPublicCake[]>();
 
-  return cakes.filter(
-    (cake) => cake.categoryId?._id && !isComboCategory(cake.categoryId),
-  );
+  return cakes.filter((cake) => Boolean(cake.categoryId?._id));
 }
 
 function toPublicCakeShape(
@@ -240,7 +198,7 @@ export async function listPublicPopularCakes(
       break;
     }
     const cake = activeById.get(row.cakeId);
-    if (!cake || !cake.categoryId?._id || isComboCategory(cake.categoryId)) {
+    if (!cake || !cake.categoryId?._id) {
       continue;
     }
     purchased.push(
@@ -324,7 +282,7 @@ function compareAdminRows(
 }
 
 /**
- * Admin reporting: every non-combo Cake, with purchase stats merged (zeros when none).
+ * Admin reporting: every Cake (including Combo Offers), with purchase stats merged.
  */
 export async function listAdminPopularCakes(
   page: number,
@@ -343,12 +301,7 @@ export async function listAdminPopularCakes(
 
   const statsById = new Map(stats.map((row) => [row.cakeId, row]));
 
-  const reportable = cakes.filter((cake) => {
-    const category = cake.categoryId as { slug?: string } | null | undefined;
-    return !isComboCategory(category);
-  });
-
-  const merged = reportable.map((cake) => {
+  const merged = cakes.map((cake) => {
     const cakeId = String(cake._id);
     const row = statsById.get(cakeId);
     return {

@@ -111,7 +111,7 @@ export function PopularItemsListView() {
     return (
       <EmptyState
         title="No cakes to rank"
-        description="Non-combo cakes from the catalog appear here with successful-order counts. Add cakes on the Cakes page."
+        description="Cakes and Combo Offers from the catalog appear here with successful-order counts. Add products on the Cakes or Combo Offers pages."
       />
     );
   }
