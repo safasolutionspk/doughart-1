@@ -33,6 +33,8 @@ export function HeroContent({
       className={cn(
         "max-w-[15.5rem] sm:max-w-[20rem]",
         "lg:max-w-xl xl:max-w-2xl",
+        /* Soft shadow only — readability over photo, no solid panel */
+        "[text-shadow:0_1px_10px_rgba(255,255,255,0.55)]",
       )}
     >
       <Reveal
@@ -41,10 +43,10 @@ export function HeroContent({
         variant="hero-text"
         as="p"
         className={cn(
-          "w-full font-sans text-[0.625rem] font-semibold uppercase tracking-[0.18em]",
-          "text-brand-primary/90",
-          "sm:text-[0.6875rem]",
-          "lg:text-xs lg:tracking-[0.2em]",
+          "w-full whitespace-nowrap font-sans text-xs font-semibold uppercase tracking-[0.16em]",
+          "text-brand-primary",
+          "sm:text-[0.8125rem] sm:tracking-[0.18em]",
+          "lg:text-sm lg:tracking-[0.2em]",
         )}
       >
         {eyebrow}
@@ -76,7 +78,7 @@ export function HeroContent({
       >
         <p
           className={cn(
-            "text-sm leading-snug text-brand-muted/95",
+            "text-sm leading-snug text-brand-brown/80",
             "sm:text-sm sm:leading-relaxed",
             "lg:text-base xl:text-lg",
           )}

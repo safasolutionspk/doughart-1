@@ -46,8 +46,8 @@ export function Hero() {
             sizes="100vw"
             className="hidden object-cover object-[68%_center] lg:block"
           />
-          {/* Soft blush wash for readable typography without dark pink overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-brand-pink-lighter/35 to-transparent lg:from-white/55 lg:via-brand-pink-lighter/20" />
+          {/* Subtle left wash only — keeps cake visible; no solid/dark text panel */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/40 via-white/12 to-transparent lg:from-white/30 lg:via-white/8 lg:to-transparent" />
         </div>
       </Reveal>
 

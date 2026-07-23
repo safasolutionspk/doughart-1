@@ -60,7 +60,7 @@ export function Header() {
               height={225}
               unoptimized
               priority
-              className="h-9 w-auto max-w-[9.5rem] object-contain object-left sm:h-10 sm:max-w-[11rem] lg:h-11 lg:max-w-[12rem]"
+              className="h-11 w-auto max-w-[11.5rem] object-contain object-left sm:h-12 sm:max-w-[13.5rem] lg:h-[3.25rem] lg:max-w-[15rem]"
             />
           </Link>
 
