@@ -56,19 +56,18 @@ export function CustomCakeBuilderAnimated() {
         "lg:min-h-[40rem] lg:py-16 xl:min-h-[44rem] xl:py-20",
       )}
     >
-      {/* Overlay copy — left of composition; cake stays visible on the right */}
+      {/* Text directly over the image — left side; no panel, wash, or text-shadow */}
       <div
         className={cn(
           "relative min-w-0 max-w-[17.5rem]",
           "sm:max-w-sm md:max-w-md",
           "lg:max-w-lg",
-          "[text-shadow:0_1px_12px_rgba(255,255,255,0.55)]",
         )}
       >
         <CustomCakeHeading id="custom-cakes-heading" />
 
         <Reveal direction="up" delay={0.3}>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-brand-brown/80 sm:mt-3.5 sm:text-[0.9375rem] lg:text-base">
+          <p className="mt-3 max-w-md text-sm font-medium leading-relaxed text-brand-brown sm:mt-3.5 sm:text-[0.9375rem] lg:text-base">
             {customCakeCopy.description}
           </p>
         </Reveal>
@@ -86,7 +85,7 @@ export function CustomCakeBuilderAnimated() {
           <Button
             href={customCakeCopy.ctaHref}
             size="sm"
-            className="mt-5 h-9 w-fit text-sm shadow-md shadow-brand-primary/25 sm:mt-6 sm:h-10 sm:px-5 lg:mt-7"
+            className="mt-5 h-9 w-fit text-sm sm:mt-6 sm:h-10 sm:px-5 lg:mt-7"
           >
             {customCakeCopy.ctaLabel}
           </Button>

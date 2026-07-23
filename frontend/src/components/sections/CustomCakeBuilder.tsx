@@ -6,10 +6,10 @@ export function CustomCakeBuilder() {
   return (
     <section
       id="custom-cakes"
-      className="section-anchor relative min-h-[28rem] overflow-hidden bg-[#FFF8F9] sm:min-h-[34rem] lg:min-h-[40rem] xl:min-h-[44rem]"
+      className="section-anchor relative min-h-[28rem] overflow-hidden sm:min-h-[34rem] lg:min-h-[40rem] xl:min-h-[44rem]"
       aria-labelledby="custom-cakes-heading"
     >
-      {/* Full-bleed image — text overlays this plane */}
+      {/* Full-bleed image only — no wash, gradient, blur, or cover layer */}
       <div className="absolute inset-0" aria-hidden>
         <SafeImage
           src={siteImages.customCake}
@@ -17,11 +17,8 @@ export function CustomCakeBuilder() {
           alt=""
           fill
           sizes="100vw"
-          className="object-cover object-[72%_center] sm:object-[68%_center] lg:object-[62%_center]"
+          className="object-cover object-[72%_center] opacity-100 sm:object-[68%_center] lg:object-[62%_center]"
         />
-        {/* Soft left wash for readable overlay — no harsh black panel */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/88 via-white/55 to-transparent sm:from-white/82 sm:via-white/40 sm:to-transparent lg:from-white/78 lg:via-white/28 lg:to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F9]/70 via-transparent to-white/20 sm:from-[#FFF8F9]/40 lg:from-transparent" />
       </div>
 
       <CustomCakeBuilderAnimated />

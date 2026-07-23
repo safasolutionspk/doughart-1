@@ -41,7 +41,7 @@ export function AnimatedCustomCakeSteps({
         >
           <span
             className={cn(
-              "relative z-10 flex shrink-0 items-center justify-center rounded-full bg-brand-primary font-bold text-white shadow-md shadow-brand-primary/30",
+              "relative z-10 flex shrink-0 items-center justify-center rounded-full bg-brand-primary font-bold text-white",
               compact
                 ? "h-6 w-6 text-[0.5625rem] sm:h-[1.375rem] sm:w-[1.375rem] sm:text-[0.625rem]"
                 : "h-7 w-7 text-[0.6875rem] lg:h-8 lg:w-8 lg:text-xs",
@@ -52,7 +52,7 @@ export function AnimatedCustomCakeSteps({
           <div className="min-w-0 pt-0.5 text-left">
             <h3
               className={cn(
-                "font-display font-semibold leading-tight text-brand-brown",
+                "font-display font-bold leading-tight text-brand-brown",
                 compact ? "text-[0.5625rem] sm:text-[0.625rem]" : "text-xs lg:text-sm",
               )}
             >
@@ -60,7 +60,7 @@ export function AnimatedCustomCakeSteps({
             </h3>
             <p
               className={cn(
-                "mt-0.5 leading-snug text-brand-muted",
+                "mt-0.5 font-medium leading-snug text-brand-brown/85",
                 compact
                   ? "text-[0.625rem] sm:text-[0.6875rem]"
                   : "text-[0.6875rem] sm:text-xs lg:text-xs",
