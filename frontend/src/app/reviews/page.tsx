@@ -22,7 +22,7 @@ export default async function ReviewsPage() {
           <SectionAnimatedHeader
             eyebrow={reviewsCopy.subtitle}
             title={reviewsCopy.heading}
-            description="Kind words from couples, families, and friends who trusted DoughArt for their special day."
+            description={reviewsCopy.subtitle}
             titleAs="h1"
             align="center"
             className="max-w-xl"

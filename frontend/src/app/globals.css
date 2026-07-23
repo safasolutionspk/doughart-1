@@ -223,6 +223,11 @@ body {
   .hero-image-float {
     animation: hero-image-float 8s ease-in-out infinite;
   }
+
+  .animate-reviews-marquee {
+    animation: reviews-marquee-rtl 45s linear infinite;
+    will-change: transform;
+  }
 }
 
 @keyframes word-reveal {
@@ -365,6 +370,16 @@ body {
   }
 }
 
+/* Cards travel right → left; English text inside cards stays LTR */
+@keyframes reviews-marquee-rtl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-word-reveal,
   .animate-reveal-text,
@@ -377,6 +392,7 @@ body {
   .animate-hero-text-reveal,
   .animate-reveal-fade,
   .animate-reveal-scale,
+  .animate-reviews-marquee,
   .reveal-up,
   .reveal-up-delay-1,
   .reveal-up-delay-2,

@@ -1,6 +1,6 @@
 export const reviewsCopy = {
-  subtitle: "Our Happy Customers",
-  heading: "Loved By Hundreds Of Happy Customers",
+  subtitle: "Sweet words from customers who celebrated with DoughArt.",
+  heading: "Loved by Our Customers",
 } as const;
 
 export type StaticReview = {
@@ -36,29 +36,44 @@ export type DisplayReview = {
 export const customerReviews: StaticReview[] = [
   {
     id: "review-1",
-    name: "Sarah Mitchell",
-    role: "Bride",
-    initials: "SM",
-    avatar: "/images/real/review-1.jpg",
-    text: "Our wedding cake was absolutely stunning — guests are still talking about it weeks later. DoughArt made our vision come true.",
+    name: "Ayesha K.",
+    initials: "AK",
+    text: "The cake looked beautiful and tasted fresh. The design matched what I requested perfectly.",
     rating: 5,
   },
   {
     id: "review-2",
-    name: "James & Priya K.",
-    role: "Parents",
-    initials: "JP",
-    avatar: "/images/real/review-2.jpg",
-    text: "Ordered a custom birthday cake for our daughter and it exceeded every expectation. Beautiful design and incredible taste.",
+    name: "Hira M.",
+    initials: "HM",
+    text: "Ordering was simple, and the cake arrived on time for our family celebration.",
     rating: 5,
   },
   {
     id: "review-3",
-    name: "Emily Rodriguez",
-    role: "Customer",
-    initials: "ER",
-    avatar: "/images/real/review-3.jpg",
-    text: "Professional, friendly, and on time. The anniversary cake was elegant, delicious, and packaged with such care. Highly recommend!",
+    name: "Sana A.",
+    initials: "SA",
+    text: "The finishing was neat, the flavour was balanced, and everyone enjoyed it.",
+    rating: 5,
+  },
+  {
+    id: "review-4",
+    name: "Maryam R.",
+    initials: "MR",
+    text: "DoughArt turned our idea into a lovely custom cake that felt made for our moment.",
+    rating: 5,
+  },
+  {
+    id: "review-5",
+    name: "Zainab F.",
+    initials: "ZF",
+    text: "Every detail was handled carefully, and the final cake looked elegant and well presented.",
+    rating: 5,
+  },
+  {
+    id: "review-6",
+    name: "Mahnoor S.",
+    initials: "MS",
+    text: "Fresh, beautifully decorated, and packed with care. The whole experience felt smooth.",
     rating: 5,
   },
 ];
@@ -121,9 +136,14 @@ export async function fetchPublicReviews(): Promise<PublicReview[]> {
   }
 }
 
-export async function getDisplayReviews(limit = 3): Promise<DisplayReview[]> {
+export async function getDisplayReviews(limit = 6): Promise<DisplayReview[]> {
   const all = await getAllDisplayReviews();
   return all.slice(0, limit);
+}
+
+/** Homepage carousel uses curated static demos so old API/demo names are never shown. */
+export function getHomepageDisplayReviews(): DisplayReview[] {
+  return customerReviews.map(staticToDisplayReview);
 }
 
 export async function getAllDisplayReviews(): Promise<DisplayReview[]> {
