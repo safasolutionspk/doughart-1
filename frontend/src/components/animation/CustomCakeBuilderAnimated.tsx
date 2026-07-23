@@ -5,9 +5,7 @@ import { AnimatedCustomCakeSteps } from "@/components/animation/AnimatedCustomCa
 import { Reveal } from "@/components/animation/Reveal";
 import { WordReveal } from "@/components/animation/WordReveal";
 import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
-import { SafeImage } from "@/components/ui/SafeImage";
 import { customCakeCopy } from "@/lib/customCake";
-import { siteImages } from "@/lib/images";
 import { cn } from "@/lib/cn";
 
 function HeartIcon({ className }: { className?: string }) {
@@ -51,57 +49,47 @@ function CustomCakeHeading({ id }: { id?: string }) {
 
 export function CustomCakeBuilderAnimated() {
   return (
-    <div className="section-container relative z-10 py-10 sm:py-12 lg:py-16 xl:py-20">
+    <div
+      className={cn(
+        "section-container relative z-10 flex min-h-[28rem] items-center",
+        "py-10 sm:min-h-[34rem] sm:py-12",
+        "lg:min-h-[40rem] lg:py-16 xl:min-h-[44rem] xl:py-20",
+      )}
+    >
+      {/* Overlay copy — left of composition; cake stays visible on the right */}
       <div
         className={cn(
-          "grid w-full items-center gap-8",
-          "grid-cols-1",
-          "md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:gap-10",
-          "lg:gap-12 xl:gap-16",
+          "relative min-w-0 max-w-[17.5rem]",
+          "sm:max-w-sm md:max-w-md",
+          "lg:max-w-lg",
+          "[text-shadow:0_1px_12px_rgba(255,255,255,0.55)]",
         )}
       >
-        {/* Text block — left on tablet/desktop, first on mobile */}
-        <div className="relative z-10 min-w-0 order-1">
-          <CustomCakeHeading id="custom-cakes-heading" />
+        <CustomCakeHeading id="custom-cakes-heading" />
 
-          <Reveal direction="up" delay={0.3}>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-brand-muted sm:mt-3.5 sm:text-[0.9375rem] lg:text-base">
-              {customCakeCopy.description}
-            </p>
-          </Reveal>
+        <Reveal direction="up" delay={0.3}>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-brand-brown/80 sm:mt-3.5 sm:text-[0.9375rem] lg:text-base">
+            {customCakeCopy.description}
+          </p>
+        </Reveal>
 
-          <Reveal direction="up" delay={0.4} className="mt-5 sm:mt-6">
-            <AnimatedCustomCakeSteps />
-          </Reveal>
-
-          <Reveal direction="up" delay={0.55}>
-            <Button
-              href={customCakeCopy.ctaHref}
-              size="sm"
-              className="mt-6 h-9 w-fit text-sm shadow-md shadow-brand-primary/25 sm:mt-7 sm:h-10 sm:px-5"
-            >
-              {customCakeCopy.ctaLabel}
-            </Button>
-          </Reveal>
-        </div>
-
-        {/* Image — right on tablet/desktop, below text on mobile */}
-        <Reveal
-          delay={0.2}
-          direction="scale"
-          className="relative z-[5] order-2 flex w-full items-center justify-center md:justify-end"
-        >
-          <div className="relative w-full max-w-[22rem] sm:max-w-[26rem] md:max-w-none lg:max-w-[32rem]">
-            <SafeImage
-              src={siteImages.customCake}
-              fallbackSrc={siteImages.customCakeFallback}
-              alt="Custom cake design preview"
-              width={640}
-              height={720}
-              className="mx-auto h-auto w-full object-contain object-center drop-shadow-[0_18px_40px_rgba(231,84,128,0.14)]"
-              sizes="(max-width: 767px) 90vw, (max-width: 1023px) 45vw, 512px"
-            />
+        <Reveal direction="up" delay={0.4} className="mt-4 sm:mt-5 lg:mt-6">
+          <div className="sm:hidden">
+            <AnimatedCustomCakeSteps compact />
           </div>
+          <div className="hidden sm:block">
+            <AnimatedCustomCakeSteps />
+          </div>
+        </Reveal>
+
+        <Reveal direction="up" delay={0.55}>
+          <Button
+            href={customCakeCopy.ctaHref}
+            size="sm"
+            className="mt-5 h-9 w-fit text-sm shadow-md shadow-brand-primary/25 sm:mt-6 sm:h-10 sm:px-5 lg:mt-7"
+          >
+            {customCakeCopy.ctaLabel}
+          </Button>
         </Reveal>
       </div>
     </div>

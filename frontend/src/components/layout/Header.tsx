@@ -46,10 +46,19 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-brand-border/70 bg-white/95 shadow-sm shadow-brand-primary/5 backdrop-blur-md">
-        <div className="section-container flex min-w-0 items-center justify-between gap-2 py-2.5 sm:gap-3 sm:py-3">
+        <div className="section-container flex min-w-0 items-center justify-between gap-2 py-2 sm:gap-3 sm:py-2.5">
           <Link
             href="/"
-            className="group flex min-w-0 shrink-0 items-center"
+            className={cn(
+              "group flex shrink-0 items-center justify-center",
+              "h-14 min-w-[7.5rem] px-2.5 sm:h-16 sm:min-w-[9rem] sm:px-3.5",
+              "lg:h-[4.25rem] lg:min-w-[10.5rem] lg:px-4",
+              "rounded-2xl border border-brand-border/70",
+              "bg-gradient-to-b from-white via-brand-pink-lighter/35 to-brand-pink-lighter/55",
+              "shadow-sm shadow-brand-primary/10",
+              "transition-[box-shadow,border-color] duration-200",
+              "hover:border-brand-primary/35 hover:shadow-md hover:shadow-brand-primary/15",
+            )}
             onClick={closeMenu}
             aria-label={`${siteConfig.name} home`}
           >
@@ -60,7 +69,7 @@ export function Header() {
               height={225}
               unoptimized
               priority
-              className="h-11 w-auto max-w-[11.5rem] object-contain object-left sm:h-12 sm:max-w-[13.5rem] lg:h-[3.25rem] lg:max-w-[15rem]"
+              className="h-12 w-auto max-h-[3rem] object-contain object-center sm:h-14 sm:max-h-[3.5rem] lg:h-16 lg:max-h-16"
             />
           </Link>
 

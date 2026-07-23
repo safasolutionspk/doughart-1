@@ -58,7 +58,14 @@ export function AnimatedCustomCakeSteps({
             >
               {step.title}
             </h3>
-            <p className="mt-0.5 text-[0.6875rem] leading-snug text-brand-muted sm:text-xs lg:text-xs">
+            <p
+              className={cn(
+                "mt-0.5 leading-snug text-brand-muted",
+                compact
+                  ? "text-[0.625rem] sm:text-[0.6875rem]"
+                  : "text-[0.6875rem] sm:text-xs lg:text-xs",
+              )}
+            >
               {step.description}
             </p>
           </div>
