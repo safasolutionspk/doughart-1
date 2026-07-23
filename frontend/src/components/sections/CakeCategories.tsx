@@ -7,7 +7,8 @@ import { getHomepageCategories, type HomepageCategory } from "@/lib/categories";
 import { cn } from "@/lib/cn";
 
 const categoryCircleClassName = cn(
-  "image-zoom-wrap relative aspect-square w-full overflow-hidden rounded-full",
+  "image-zoom-wrap relative aspect-square overflow-hidden rounded-full",
+  "h-[7.5rem] w-[7.5rem] sm:h-[8.5rem] sm:w-[8.5rem] lg:h-[11rem] lg:w-[11rem]",
   "bg-brand-pink-lighter",
   "ring-1 ring-brand-border/60",
   "shadow-sm shadow-brand-primary/10",
@@ -35,30 +36,33 @@ export async function CakeCategories() {
           className="max-w-xl"
         />
 
-        <ul
+        <div
           className={cn(
-            "mt-8 -mx-4 flex flex-nowrap gap-5 overflow-x-auto px-4 pb-2",
+            "mt-8 -mx-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pb-2",
             "snap-x snap-mandatory scroll-smooth",
             "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            "sm:gap-6",
-            "lg:mx-0 lg:gap-8 lg:px-0",
+            "lg:mx-0 lg:px-0",
           )}
         >
-          {categories.map((category, index) => (
-            <li
-              key={category.id}
-              className={cn(
-                "w-[7.5rem] min-w-[7.5rem] shrink-0 snap-center",
-                "sm:w-[8.5rem] sm:min-w-[8.5rem]",
-                "lg:w-[11rem] lg:min-w-[11rem]",
-              )}
-            >
-              <Reveal delay={capStaggerDelay(index, 0.1)} direction="up" variant="card">
-                <CategoryCard category={category} />
-              </Reveal>
-            </li>
-          ))}
-        </ul>
+          <ul
+            className={cn(
+              "flex w-max flex-nowrap items-start gap-5",
+              "sm:gap-6 lg:gap-8",
+            )}
+          >
+
+            {categories.map((category, index) => (
+              <li
+                key={category.id}
+                className="w-auto shrink-0 snap-center"
+              >
+                <Reveal delay={capStaggerDelay(index, 0.1)} direction="up" variant="card">
+                  <CategoryCard category={category} />
+                </Reveal>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
@@ -84,7 +88,7 @@ function CategoryCard({ category }: CategoryCardProps) {
           />
         </div>
 
-        <h3 className="line-clamp-2 max-w-[9.5rem] font-display text-sm font-semibold leading-snug text-brand-brown transition-colors duration-300 group-hover:text-brand-primary sm:text-[0.9375rem]">
+        <h3 className="inline-flex h-5 w-auto shrink-0 items-center justify-center whitespace-nowrap px-1 font-display text-sm font-semibold leading-none text-brand-brown transition-colors duration-300 group-hover:text-brand-primary sm:h-6 sm:text-[0.9375rem]">
           {category.title}
         </h3>
       </Link>
