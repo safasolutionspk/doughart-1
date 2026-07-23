@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CustomerHeaderAuth } from "@/components/auth/CustomerHeaderAuth";
 import { CartIconLink } from "@/components/cart/CartIconLink";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +12,7 @@ import { navLinks, siteConfig } from "@/lib/site";
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   const closeMenu = () => setMenuOpen(false);
   const toggleMenu = () => setMenuOpen((open) => !open);
@@ -43,51 +44,79 @@ export function Header() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) {
+      return;
+    }
+
+    const syncOffset = () => {
+      document.documentElement.style.setProperty(
+        "--header-offset",
+        `${el.offsetHeight}px`,
+      );
+    };
+
+    syncOffset();
+    const observer = new ResizeObserver(syncOffset);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-brand-border/70 bg-white/95 shadow-sm shadow-brand-primary/5 backdrop-blur-md">
-        <div className="section-container flex min-w-0 items-center justify-between gap-2 py-2 sm:gap-3 sm:py-2.5">
+      <header
+        ref={headerRef}
+        className="sticky top-0 z-50 border-b border-brand-border/70 bg-white/95 shadow-sm shadow-brand-primary/5 backdrop-blur-md"
+      >
+        <div
+          className={cn(
+            "section-container flex min-w-0 items-center gap-3",
+            "min-h-16 py-1.5 sm:min-h-[4.5rem] sm:gap-4 sm:py-2",
+            "lg:min-h-[5.5rem] lg:gap-5 lg:py-2.5",
+          )}
+        >
+          {/* LEFT — large standalone logo only (no card/plate) */}
           <Link
             href="/"
-            className={cn(
-              "group flex shrink-0 items-center justify-center",
-              "h-14 min-w-[7.5rem] px-2.5 sm:h-16 sm:min-w-[9rem] sm:px-3.5",
-              "lg:h-[4.25rem] lg:min-w-[10.5rem] lg:px-4",
-              "rounded-2xl border border-brand-border/70",
-              "bg-gradient-to-b from-white via-brand-pink-lighter/35 to-brand-pink-lighter/55",
-              "shadow-sm shadow-brand-primary/10",
-              "transition-[box-shadow,border-color] duration-200",
-              "hover:border-brand-primary/35 hover:shadow-md hover:shadow-brand-primary/15",
-            )}
+            className="relative z-10 flex shrink-0 items-center self-center"
             onClick={closeMenu}
             aria-label={`${siteConfig.name} home`}
           >
             <Image
               src={siteImages.logo}
               alt={siteConfig.name}
-              width={225}
-              height={225}
+              width={167}
+              height={89}
               unoptimized
               priority
-              className="h-12 w-auto max-h-[3rem] object-contain object-center sm:h-14 sm:max-h-[3.5rem] lg:h-16 lg:max-h-16"
+              className={cn(
+                "h-auto w-[7.25rem] object-contain object-left",
+                "sm:w-[8.75rem]",
+                "lg:w-[11.5rem] xl:w-[12.5rem]",
+              )}
             />
           </Link>
 
-          <nav
-            className="hidden items-center gap-0.5 lg:flex"
-            aria-label="Main navigation"
-          >
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-full px-2.5 py-1.5 text-sm font-medium text-brand-brown/85 transition-colors hover:bg-brand-pink-lighter hover:text-brand-primary xl:px-3"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          {/* MIDDLE — flexible nav / spacer */}
+          <div className="flex min-w-0 flex-1 items-center justify-center lg:justify-start lg:pl-2">
+            <nav
+              className="hidden items-center gap-0.5 lg:flex"
+              aria-label="Main navigation"
+            >
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-full px-2.5 py-1.5 text-sm font-medium text-brand-brown/85 transition-colors hover:bg-brand-pink-lighter hover:text-brand-primary xl:px-3"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
+          {/* RIGHT — account, cart, CTA, mobile menu */}
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <CustomerHeaderAuth
               className="hidden min-[480px]:flex"
