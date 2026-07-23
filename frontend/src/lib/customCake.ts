@@ -1,3 +1,13 @@
+export const customCakeCopy = {
+  subtitle: "CREATE YOUR SIGNATURE CAKE",
+  heading: "A Custom Cake Made for Your Moment",
+  description:
+    "Choose your favourite flavour, style, colours, and finishing touches to create a cake that feels completely yours.",
+  ctaLabel: "Start Customizing",
+  ctaHref: "/custom-cake",
+} as const;
+
+/** Legacy step list — retained for any remaining imports; not rendered on homepage Customize Cake */
 export const customCakeSteps = [
   {
     step: 1,
@@ -20,13 +30,3 @@ export const customCakeSteps = [
     description: "Messages, toppers, and custom details.",
   },
 ] as const;
-
-export const customCakeCopy = {
-  subtitle: "Design Your Dream Cake",
-  headingLine1: "Make Your Own",
-  headingLine2: "Custom Cake",
-  description:
-    "Bring your celebration to life with a cake made just for you. Pick every flavour, filling, and finishing detail.",
-  ctaLabel: "Start Customizing",
-  ctaHref: "/custom-cake",
-} as const;

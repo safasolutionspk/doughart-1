@@ -8,6 +8,7 @@ export const siteImages = {
   customCake: "/images/real/custom-cake.png",
   customCakeMobile: "/images/real/custom-cake.png",
   customCakeFallback: "/images/real/custom-cake.jpg",
+  process: "/images/real/process.png",
   categories: {
     birthday: "/images/real/birthday-cake.jpg",
     wedding: "/images/real/wedding-cake.png",

@@ -90,11 +90,7 @@ export function Header() {
               height={89}
               unoptimized
               priority
-              className={cn(
-                "h-auto w-[7.25rem] object-contain object-left",
-                "sm:w-[8.75rem]",
-                "lg:w-[11.5rem] xl:w-[12.5rem]",
-              )}
+              className="h-auto w-[6.25rem] object-contain object-left"
             />
           </Link>
 

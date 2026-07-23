@@ -3,6 +3,32 @@ export const orderProcessCopy = {
   heading: "Simple Steps To Get Your Perfect Cake",
 } as const;
 
+/** Homepage trust section — replaces the old step-timeline presentation */
+export const whyChooseCopy = {
+  heading: "Why Choose DoughArt?",
+} as const;
+
+export const whyChooseBenefits = [
+  {
+    title: "Premium Quality Ingredients",
+    description:
+      "Carefully selected ingredients for rich flavour and consistent quality.",
+  },
+  {
+    title: "Hygienically Prepared",
+    description: "Prepared with care in a clean and controlled environment.",
+  },
+  {
+    title: "Freshly Made to Order",
+    description: "Every cake is prepared fresh for your celebration.",
+  },
+  {
+    title: "Crafted with Love and Care",
+    description: "Thoughtfully finished to make every moment feel special.",
+  },
+] as const;
+
+/** Used on About page order-process timeline */
 export const orderProcessSteps = [
   {
     id: "design",

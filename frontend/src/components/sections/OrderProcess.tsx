@@ -1,82 +1,73 @@
-import Image from "next/image";
-import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
 import { Reveal } from "@/components/animation/Reveal";
+import { SafeImage } from "@/components/ui/SafeImage";
 import { capStaggerDelay } from "@/lib/animation/constants";
-import { orderProcessCopy, orderProcessSteps } from "@/lib/orderProcess";
+import { cn } from "@/lib/cn";
+import { siteImages } from "@/lib/images";
+import { whyChooseBenefits, whyChooseCopy } from "@/lib/orderProcess";
 
 export function OrderProcess() {
   return (
     <section
       id="order"
-      className="section-anchor section-padding bg-[#FFF8FA]"
+      className="section-anchor relative min-h-[28rem] overflow-hidden bg-[#FBE4E8] sm:min-h-[32rem] lg:min-h-[36rem] xl:min-h-[40rem]"
       aria-labelledby="order-heading"
     >
-      <div className="section-container">
-        <SectionAnimatedHeader
-          eyebrow={orderProcessCopy.subtitle}
-          title={orderProcessCopy.heading}
-          titleAs="h2"
-          titleId="order-heading"
-          align="center"
-          className="max-w-xl"
+      <div className="absolute inset-0" aria-hidden>
+        <SafeImage
+          src={siteImages.process}
+          fallbackSrc={siteImages.process}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-[78%_center] opacity-100 sm:object-[72%_center] lg:object-right"
         />
+      </div>
 
-        <div className="relative mt-8 sm:mt-10">
-          <span
-            className="absolute left-[12.5%] right-[12.5%] top-8 hidden h-px bg-brand-primary/30 lg:block"
-            aria-hidden
-          />
+      <div
+        className={cn(
+          "section-container relative z-10 flex min-h-[28rem] items-center",
+          "py-10 sm:min-h-[32rem] sm:py-12",
+          "lg:min-h-[36rem] lg:py-14 xl:min-h-[40rem] xl:py-16",
+        )}
+      >
+        <div className="relative min-w-0 max-w-[17rem] sm:max-w-sm md:max-w-md lg:max-w-[28rem] xl:max-w-[30rem]">
+          <Reveal direction="left" delay={0}>
+            <h2
+              id="order-heading"
+              className="font-display text-2xl font-bold leading-tight tracking-tight text-brand-brown sm:text-3xl lg:text-[2.125rem]"
+            >
+              {whyChooseCopy.heading}
+            </h2>
+          </Reveal>
 
-          <ol className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden">
-            {orderProcessSteps.map((step, index) => (
+          <ul className="mt-6 space-y-4 sm:mt-7 sm:space-y-5 lg:mt-8">
+            {whyChooseBenefits.map((benefit, index) => (
               <Reveal
-                key={step.id}
+                key={benefit.title}
                 as="li"
-                delay={capStaggerDelay(index, 0.1)}
+                delay={capStaggerDelay(index, 0.08, 0.45)}
                 direction="up"
-                variant="card"
-                className="flex w-[68%] min-w-[9.5rem] max-w-[11.5rem] shrink-0 snap-center flex-col items-center text-center sm:w-[42%] sm:max-w-[12rem] lg:w-auto lg:max-w-none"
+                className="flex min-w-0 gap-3"
               >
-                <OrderStep step={step} />
+                <span
+                  className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[0.6875rem] font-bold text-white sm:h-8 sm:w-8 sm:text-xs"
+                  aria-hidden
+                >
+                  {index + 1}
+                </span>
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="font-display text-sm font-bold leading-snug text-brand-brown sm:text-base">
+                    {benefit.title}
+                  </h3>
+                  <p className="mt-0.5 text-xs font-medium leading-snug text-brand-brown/80 sm:text-sm sm:leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </div>
               </Reveal>
             ))}
-          </ol>
+          </ul>
         </div>
       </div>
     </section>
-  );
-}
-
-type OrderStepProps = {
-  step: (typeof orderProcessSteps)[number];
-};
-
-function OrderStep({ step }: OrderStepProps) {
-  return (
-    <>
-      <span className="relative z-10 flex h-14 w-14 items-center justify-center rounded-full border-2 border-brand-pink-light bg-white p-2.5 shadow-lg shadow-brand-primary/10 transition-transform duration-300 hover:-translate-y-0.5 sm:h-16 sm:w-16 sm:p-3">
-        <Image
-          src={step.icon}
-          alt=""
-          width={40}
-          height={40}
-          className="h-8 w-8 object-contain sm:h-10 sm:w-10"
-          aria-hidden
-        />
-      </span>
-
-      <div className="mt-2.5 flex items-center justify-center gap-2">
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[0.625rem] font-bold leading-none text-white">
-          {step.step}
-        </span>
-        <h3 className="font-display text-xs font-semibold leading-snug text-brand-brown sm:text-sm">
-          {step.title}
-        </h3>
-      </div>
-
-      <p className="mt-1 hidden max-w-[10.5rem] text-[0.6875rem] leading-snug text-brand-muted sm:block">
-        {step.description}
-      </p>
-    </>
   );
 }
