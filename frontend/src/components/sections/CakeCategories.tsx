@@ -38,7 +38,7 @@ export async function CakeCategories() {
 
         <div
           className={cn(
-            "mt-8 -mx-4 overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 pb-2",
+            "mt-8 -mx-4 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x px-4 pb-2",
             "snap-x snap-mandatory scroll-smooth",
             "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
             "lg:mx-0 lg:px-0",
@@ -46,17 +46,21 @@ export async function CakeCategories() {
         >
           <ul
             className={cn(
-              "flex w-max flex-nowrap items-start gap-5",
+              "flex w-max min-w-max flex-nowrap items-center gap-5",
               "sm:gap-6 lg:gap-8",
             )}
           >
-
             {categories.map((category, index) => (
               <li
                 key={category.id}
-                className="w-auto shrink-0 snap-center"
+                className="w-fit min-w-max shrink-0 snap-center"
               >
-                <Reveal delay={capStaggerDelay(index, 0.1)} direction="up" variant="card">
+                <Reveal
+                  delay={capStaggerDelay(index, 0.1)}
+                  direction="up"
+                  variant="card"
+                  className="w-fit min-w-max shrink-0"
+                >
                   <CategoryCard category={category} />
                 </Reveal>
               </li>
@@ -74,10 +78,10 @@ type CategoryCardProps = {
 
 function CategoryCard({ category }: CategoryCardProps) {
   return (
-    <article className="group h-full">
+    <article className="group w-fit min-w-max">
       <Link
         href={category.href}
-        className="flex h-full flex-col items-center gap-3 text-center outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+        className="inline-flex w-fit min-w-max flex-col items-center gap-3 text-center outline-none focus-visible:rounded-2xl focus-visible:ring-2 focus-visible:ring-brand-primary/50"
       >
         <div className={categoryCircleClassName}>
           <CategoryCardImage
@@ -88,7 +92,16 @@ function CategoryCard({ category }: CategoryCardProps) {
           />
         </div>
 
-        <h3 className="inline-flex h-5 w-auto shrink-0 items-center justify-center whitespace-nowrap px-1 font-display text-sm font-semibold leading-none text-brand-brown transition-colors duration-300 group-hover:text-brand-primary sm:h-6 sm:text-[0.9375rem]">
+        <h3
+          className={cn(
+            "inline-flex h-7 w-max min-w-max shrink-0 items-center justify-center",
+            "whitespace-nowrap leading-none",
+            "rounded-full bg-brand-pink-lighter/80 px-3",
+            "font-display text-sm font-semibold text-brand-brown",
+            "transition-colors duration-300 group-hover:bg-brand-pink-light/90 group-hover:text-brand-primary",
+            "sm:h-8 sm:px-3.5 sm:text-[0.9375rem]",
+          )}
+        >
           {category.title}
         </h3>
       </Link>

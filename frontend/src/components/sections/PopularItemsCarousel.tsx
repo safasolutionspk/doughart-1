@@ -53,7 +53,7 @@ export function PopularItemsCarousel({
         ref={scrollerRef}
         className={cn(
           // Cancel section-container gutters, then restore equal start/end insets.
-          "-mx-4 flex flex-nowrap gap-3 overflow-x-auto ps-4 pe-0 pb-2",
+          "-mx-4 flex flex-nowrap gap-2 overflow-x-auto overscroll-x-contain touch-pan-x ps-4 pe-0 pb-2",
           "snap-x snap-mandatory scroll-smooth scroll-ps-4 scroll-pe-4",
           "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           // Trailing inset via ::after (flex overflow ignores end padding in some browsers).

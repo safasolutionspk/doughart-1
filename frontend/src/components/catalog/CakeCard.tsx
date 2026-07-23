@@ -17,16 +17,28 @@ import { formatPrice, getCategoryRef, type PublicCake } from "@/lib/catalog";
 import { getCakeImageSrc } from "@/lib/media";
 import { getWhatsAppNumber, buildWhatsAppOrderUrl } from "@/lib/whatsapp";
 
-const cardButtonClassName =
+const defaultCardButtonClassName =
   "!h-8 w-full min-w-0 !min-w-0 max-w-full truncate !px-2 !text-[10px] sm:!h-8 sm:!text-[11px]";
+
+const popularCardButtonClassName =
+  "!h-6 w-full min-w-0 !min-w-0 max-w-full truncate !px-1.5 !text-[0.575rem] sm:!h-8 sm:!px-2 sm:!text-[11px]";
+
+const popularSideButtonClassName =
+  "!h-6 w-full min-w-0 !min-w-0 max-w-full truncate !px-1 !text-[0.55rem] sm:!h-8 sm:!px-2 sm:!text-[11px]";
 
 type CakeCardProps = {
   cake: PublicCake;
   /** When false, omits the description line (homepage popular section). Default true. */
   showDescription?: boolean;
+  /** Homepage Most Popular Items — narrower image-focused mobile card. */
+  compactPopular?: boolean;
 };
 
-export async function CakeCard({ cake, showDescription = true }: CakeCardProps) {
+export async function CakeCard({
+  cake,
+  showDescription = true,
+  compactPopular = false,
+}: CakeCardProps) {
   const category = getCategoryRef(cake);
   const { apiImage, fallback } = getCakeImageSrc(cake.image, category.slug);
   const displayImage = apiImage ?? fallback;
@@ -35,26 +47,49 @@ export async function CakeCard({ cake, showDescription = true }: CakeCardProps) 
   const waNumber = await getWhatsAppNumber();
   const whatsappHref = buildWhatsAppOrderUrl(cake.name, waNumber);
 
+  const imageClassName = compactPopular
+    ? "image-zoom-wrap relative h-32 w-full shrink-0 overflow-hidden bg-brand-pink-lighter sm:h-32 md:h-36 lg:h-40"
+    : catalogCardImageClassName;
+
+  const bodyClassName = compactPopular
+    ? "flex min-h-0 flex-1 flex-col overflow-hidden p-1.5 sm:p-2.5"
+    : catalogCardBodyClassName;
+
+  const actionsClassName = compactPopular
+    ? "mt-auto flex min-w-0 shrink-0 flex-col gap-1 pt-1"
+    : catalogCardActionsClassName;
+
+  const primaryButtonClassName = compactPopular
+    ? popularCardButtonClassName
+    : defaultCardButtonClassName;
+
+  const sideButtonClassName = compactPopular
+    ? popularSideButtonClassName
+    : defaultCardButtonClassName;
+
   return (
     <Card as="article" padding="none" className={catalogCardShellClassName}>
       <Link href={detailHref} className="block shrink-0">
-        <div className={catalogCardImageClassName}>
+        <div className={imageClassName}>
           <CatalogCardImage
             apiImage={apiImage}
             fallbackSrc={fallback}
             alt={cake.name}
-            sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            sizes="(max-width: 640px) 10rem, (max-width: 1280px) 33vw, 25vw"
+            objectFit={compactPopular ? "contain" : "cover"}
+            className={compactPopular ? "sm:object-cover" : undefined}
           />
           <span className="pink-overlay" aria-hidden />
         </div>
       </Link>
 
-      <div className={catalogCardBodyClassName}>
+      <div className={bodyClassName}>
         <div className={catalogCardContentClassName}>
           <Link href={detailHref} className="block shrink-0">
             <h3
               className={cn(
                 catalogCardTitleClassName,
+                compactPopular && "text-[0.7rem] leading-snug sm:text-sm",
                 "transition-colors hover:text-brand-primary",
               )}
             >
@@ -66,12 +101,19 @@ export async function CakeCard({ cake, showDescription = true }: CakeCardProps) 
               {cake.description?.trim() || "\u00a0"}
             </p>
           ) : null}
-          <p className="shrink-0 pt-0.5 font-display text-xs font-semibold text-brand-primary sm:text-sm">
+          <p
+            className={cn(
+              "shrink-0 pt-0.5 font-display font-semibold text-brand-primary",
+              compactPopular
+                ? "text-[0.6875rem] sm:text-sm"
+                : "text-xs sm:text-sm",
+            )}
+          >
             {formatPrice(cake.price)}
           </p>
         </div>
 
-        <div className={catalogCardActionsClassName}>
+        <div className={actionsClassName}>
           <AddToCartButton
             item={{
               cakeSlug: cake.slug,
@@ -80,17 +122,22 @@ export async function CakeCard({ cake, showDescription = true }: CakeCardProps) 
               image: displayImage,
               unitPrice: cake.price,
             }}
-            className={cn(cardButtonClassName, "!min-w-0")}
+            className={cn(primaryButtonClassName, "!min-w-0")}
           />
-          <div className="grid min-w-0 grid-cols-2 gap-1 sm:gap-1.5">
-            <Button href={orderHref} size="sm" className={cardButtonClassName}>
+          <div
+            className={cn(
+              "grid min-w-0 grid-cols-2",
+              compactPopular ? "gap-1 sm:gap-1.5" : "gap-1 sm:gap-1.5",
+            )}
+          >
+            <Button href={orderHref} size="sm" className={sideButtonClassName}>
               Order
             </Button>
             <Button
               href={whatsappHref}
               variant="outline"
               size="sm"
-              className={cardButtonClassName}
+              className={sideButtonClassName}
             >
               WhatsApp
             </Button>

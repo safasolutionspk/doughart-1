@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { CakeCard } from "@/components/catalog/CakeCard";
 import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
 import { Reveal } from "@/components/animation/Reveal";
@@ -52,25 +51,20 @@ export async function MostPopularItems() {
                 direction="up"
                 variant="card"
                 className={cn(
-                  "w-[min(20rem,calc(100vw-2.5rem))] max-w-full shrink-0 snap-start",
-                  "sm:w-[13rem] sm:max-w-none",
+                  "w-[10rem] shrink-0 snap-start",
+                  "sm:w-[13rem]",
                   "lg:w-[14.5rem]",
                 )}
               >
-                <CakeCard cake={cake} showDescription={false} />
+                <CakeCard
+                  cake={cake}
+                  showDescription={false}
+                  compactPopular
+                />
               </Reveal>
             ))}
           </PopularItemsCarousel>
         </div>
-
-        <p className="mt-5 text-center lg:hidden">
-          <Link
-            href="/cakes/all"
-            className="text-sm font-semibold text-brand-primary underline-offset-2 hover:underline"
-          >
-            View all menu
-          </Link>
-        </p>
       </div>
     </section>
   );

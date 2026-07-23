@@ -14,6 +14,8 @@ type CatalogCardImageProps = {
   sizes: string;
   className?: string;
   priority?: boolean;
+  /** Defaults to cover. Use contain for homepage popular cards on mobile. */
+  objectFit?: "cover" | "contain";
 };
 
 function isRemoteApiUrl(src: string): boolean {
@@ -27,9 +29,10 @@ export function CatalogCardImage({
   sizes,
   className,
   priority,
+  objectFit = "cover",
 }: CatalogCardImageProps) {
   const trimmedApiImage = apiImage?.trim() ?? "";
-  const resetKey = `${trimmedApiImage}|${fallbackSrc}`;
+  const resetKey = `${trimmedApiImage}|${fallbackSrc}|${objectFit}`;
 
   return (
     <CatalogCardImageInner
@@ -40,6 +43,7 @@ export function CatalogCardImage({
       sizes={sizes}
       className={className}
       priority={priority}
+      objectFit={objectFit}
     />
   );
 }
@@ -51,6 +55,7 @@ function CatalogCardImageInner({
   sizes,
   className,
   priority,
+  objectFit = "cover",
 }: CatalogCardImageProps) {
   const trimmedApiImage = apiImage?.trim() ?? "";
   const [primaryFailed, setPrimaryFailed] = useState(false);
@@ -66,7 +71,12 @@ function CatalogCardImageInner({
 
   const displaySrc = currentSrc || fallbackSrc;
   const showRemote = isRemoteApiUrl(displaySrc) && !useFallbackOnly;
-  const imageClassName = cn("object-cover object-center", className);
+  const imageClassName = cn(
+    objectFit === "contain"
+      ? "object-contain object-center"
+      : "object-cover object-center",
+    className,
+  );
 
   if (showRemote) {
     return (
