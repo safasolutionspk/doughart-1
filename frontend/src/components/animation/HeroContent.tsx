@@ -31,7 +31,7 @@ export function HeroContent({
   return (
     <div
       className={cn(
-        "max-w-[15.5rem] sm:max-w-[20rem]",
+        "max-w-[14.25rem] sm:max-w-[20rem]",
         "lg:max-w-xl xl:max-w-2xl",
         /* Soft shadow only — readability over photo, no solid panel */
         "[text-shadow:0_1px_10px_rgba(255,255,255,0.55)]",
@@ -43,7 +43,7 @@ export function HeroContent({
         variant="hero-text"
         as="p"
         className={cn(
-          "w-full whitespace-nowrap font-sans text-xs font-semibold uppercase tracking-[0.16em]",
+          "w-full whitespace-nowrap font-sans text-[0.55rem] font-semibold uppercase tracking-[0.16em]",
           "text-brand-primary",
           "sm:text-[0.8125rem] sm:tracking-[0.18em]",
           "lg:text-sm lg:tracking-[0.2em]",
@@ -59,8 +59,8 @@ export function HeroContent({
         as="h1"
         id="hero-heading"
         className={cn(
-          "mt-2.5 block w-full font-display font-bold leading-[1.12] tracking-tight",
-          "text-3xl sm:mt-3 sm:text-4xl sm:leading-[1.12]",
+          "mt-2.5 block w-full font-display font-bold leading-[0.98] tracking-tight",
+          "text-[1.7rem] sm:mt-3 sm:text-4xl sm:leading-[1.12]",
           "md:text-5xl",
           "lg:mt-4 lg:text-5xl lg:leading-[1.1]",
           "xl:text-[3.25rem]",
@@ -74,11 +74,11 @@ export function HeroContent({
         mount
         delay={HERO_TEXT_DELAYS.description}
         variant="hero-text"
-        className="mt-3 max-w-[14.5rem] sm:mt-3.5 sm:max-w-sm lg:mt-5 lg:max-w-md"
+        className="mt-3 max-w-[13.25rem] sm:mt-3.5 sm:max-w-sm lg:mt-5 lg:max-w-md"
       >
         <p
           className={cn(
-            "text-sm leading-snug text-brand-brown/80",
+            "text-[0.68rem] leading-[1.35] text-brand-brown/80",
             "sm:text-sm sm:leading-relaxed",
             "lg:text-base xl:text-lg",
           )}
