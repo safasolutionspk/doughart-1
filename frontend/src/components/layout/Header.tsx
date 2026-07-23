@@ -49,26 +49,19 @@ export function Header() {
         <div className="section-container flex min-w-0 items-center justify-between gap-2 py-2.5 sm:gap-3 sm:py-3">
           <Link
             href="/"
-            className="group flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5"
+            className="group flex min-w-0 shrink-0 items-center"
             onClick={closeMenu}
+            aria-label={`${siteConfig.name} home`}
           >
-            <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-brand-border/80 bg-brand-pink-lighter shadow-sm sm:h-10 sm:w-10">
-              <Image
-                src={siteImages.logo}
-                alt=""
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate font-display text-base font-bold tracking-tight text-brand-primary sm:text-lg lg:text-xl">
-                {siteConfig.name}
-              </span>
-              <span className="mt-0.5 hidden truncate text-[0.6rem] font-medium uppercase tracking-[0.16em] text-brand-muted min-[380px]:block sm:text-xs">
-                {siteConfig.tagline}
-              </span>
-            </span>
+            <Image
+              src={siteImages.logo}
+              alt={siteConfig.name}
+              width={225}
+              height={225}
+              unoptimized
+              priority
+              className="h-9 w-auto max-w-[9.5rem] object-contain object-left sm:h-10 sm:max-w-[11rem] lg:h-11 lg:max-w-[12rem]"
+            />
           </Link>
 
           <nav

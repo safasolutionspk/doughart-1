@@ -2,11 +2,11 @@
 export const siteImages = {
   hero: "/images/real/hero-cake.png",
   heroMobile: "/images/real/hero-mobile.png",
-  heroMobileFallback: "/images/real/hero-mobile.jpg",
+  heroMobileFallback: "/images/real/hero-cake.png",
   heroFallback: "/images/real/hero-cake.png",
-  logo: "/images/real/logo.png",
+  logo: "/images/real/logo.svg",
   customCake: "/images/real/custom-cake.png",
-  customCakeMobile: "/images/real/custom-cake-mobile.png",
+  customCakeMobile: "/images/real/custom-cake.png",
   customCakeFallback: "/images/real/custom-cake.jpg",
   categories: {
     birthday: "/images/real/birthday-cake.jpg",
