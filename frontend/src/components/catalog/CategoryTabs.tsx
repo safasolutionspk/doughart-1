@@ -24,11 +24,19 @@ function CategoryTab({ slug, label, activeSlug, delay }: TabItemProps) {
   const isActive = slug === activeSlug;
 
   return (
-    <Reveal delay={delay} direction="up" variant="text">
+    <Reveal
+      delay={delay}
+      direction="up"
+      variant="text"
+      className="inline-flex w-max min-w-max flex-none shrink-0"
+    >
       <Link
         href={`/cakes/${slug}`}
         className={cn(
-          "inline-flex h-8 shrink-0 items-center justify-center rounded-full px-3.5 text-xs font-semibold tracking-wide transition-all duration-300 sm:h-9 sm:px-4 sm:text-sm",
+          "inline-flex h-8 w-max min-w-max flex-none shrink-0 items-center justify-center",
+          "whitespace-nowrap break-keep [overflow-wrap:normal] leading-none",
+          "rounded-full px-3 text-xs font-semibold tracking-wide transition-all duration-300",
+          "sm:h-9 sm:px-4 sm:text-sm",
           "hover:-translate-y-0.5",
           isActive
             ? "bg-brand-primary text-white shadow-md shadow-brand-primary/30 ring-1 ring-brand-primary/15"
@@ -36,7 +44,9 @@ function CategoryTab({ slug, label, activeSlug, delay }: TabItemProps) {
         )}
         aria-current={isActive ? "page" : undefined}
       >
-        {label}
+        <span className="inline-block w-max min-w-max whitespace-nowrap break-keep leading-none [overflow-wrap:normal]">
+          {label}
+        </span>
       </Link>
     </Reveal>
   );
@@ -46,22 +56,35 @@ export function CategoryTabs({ categories, activeSlug }: CategoryTabsProps) {
   return (
     <nav
       className={cn(
-        "-mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1 scroll-smooth",
+        "-mx-4 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x scroll-smooth px-4 pb-1",
+        "[-webkit-overflow-scrolling:touch]",
         "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        "sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 lg:gap-2.5",
+        "sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0",
       )}
       aria-label="Filter by category"
     >
-      <CategoryTab slug={ALL_SLUG} label="All Menu" activeSlug={activeSlug} delay={0} />
-      {categories.map((category, index) => (
+      <div
+        className={cn(
+          "flex w-max min-w-max flex-nowrap items-center gap-2",
+          "sm:mx-auto sm:w-auto sm:min-w-0 sm:flex-wrap sm:justify-center sm:gap-2.5",
+        )}
+      >
         <CategoryTab
-          key={category._id}
-          slug={category.slug}
-          label={category.name}
+          slug={ALL_SLUG}
+          label="All Menu"
           activeSlug={activeSlug}
-          delay={capStaggerDelay(index + 1, 0.08)}
+          delay={0}
         />
-      ))}
+        {categories.map((category, index) => (
+          <CategoryTab
+            key={category._id}
+            slug={category.slug}
+            label={category.name}
+            activeSlug={activeSlug}
+            delay={capStaggerDelay(index + 1, 0.08)}
+          />
+        ))}
+      </div>
     </nav>
   );
 }
