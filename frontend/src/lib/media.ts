@@ -4,10 +4,12 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:5000";
 
-const UPLOAD_PREFIX = "/uploads/images";
+const CATALOG_UPLOAD_PREFIX = "/uploads/images";
+const GALLERY_UPLOAD_PREFIX = "/uploads/gallery";
 
 /** Legacy uploads without file extension */
-const EXTENSIONLESS_UPLOAD_PATTERN = /^\/uploads\/images\/\d+-[a-f0-9]+$/i;
+const EXTENSIONLESS_CATALOG_PATTERN = /^\/uploads\/images\/\d+-[a-f0-9]+$/i;
+const EXTENSIONLESS_GALLERY_PATTERN = /^\/uploads\/gallery\/\d+-[a-f0-9]+$/i;
 
 const categoryFallbacks: Record<string, string> = {
   birthday: siteImages.categories.birthday,
@@ -18,6 +20,10 @@ const categoryFallbacks: Record<string, string> = {
 };
 
 const DEFAULT_FALLBACK_IMAGE = siteImages.categories.all;
+
+function isSafeUploadBasename(basename: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(basename) && !basename.includes("..");
+}
 
 function normalizeStoredImagePath(
   value: string | undefined | null,
@@ -31,7 +37,10 @@ function normalizeStoredImagePath(
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     try {
       const { pathname } = new URL(trimmed);
-      if (pathname.startsWith(UPLOAD_PREFIX)) {
+      if (
+        pathname.startsWith(CATALOG_UPLOAD_PREFIX) ||
+        pathname.startsWith(GALLERY_UPLOAD_PREFIX)
+      ) {
         return pathname;
       }
       // CDN URLs (e.g. Cloudinary) — use full URL
@@ -41,7 +50,11 @@ function normalizeStoredImagePath(
     }
   }
 
-  if (trimmed.startsWith(UPLOAD_PREFIX) && isUploadStoragePath(trimmed)) {
+  if (
+    (trimmed.startsWith(CATALOG_UPLOAD_PREFIX) ||
+      trimmed.startsWith(GALLERY_UPLOAD_PREFIX)) &&
+    isUploadStoragePath(trimmed)
+  ) {
     return trimmed;
   }
 
@@ -72,14 +85,24 @@ function getPathname(value: string): string {
 
 export function isUploadStoragePath(value: string): boolean {
   const pathname = getPathname(value.trim());
-  if (!pathname.startsWith(UPLOAD_PREFIX)) {
-    return false;
+
+  if (pathname.startsWith(CATALOG_UPLOAD_PREFIX)) {
+    const basename = pathname.slice(CATALOG_UPLOAD_PREFIX.length + 1);
+    return (
+      isSafeUploadBasename(basename) &&
+      (basename.includes(".") || EXTENSIONLESS_CATALOG_PATTERN.test(pathname))
+    );
   }
-  const basename = pathname.slice(UPLOAD_PREFIX.length + 1);
-  return (
-    /^[a-zA-Z0-9._-]+$/.test(basename) &&
-    (basename.includes(".") || EXTENSIONLESS_UPLOAD_PATTERN.test(pathname))
-  );
+
+  if (pathname.startsWith(GALLERY_UPLOAD_PREFIX)) {
+    const basename = pathname.slice(GALLERY_UPLOAD_PREFIX.length + 1);
+    return (
+      isSafeUploadBasename(basename) &&
+      (basename.includes(".") || EXTENSIONLESS_GALLERY_PATTERN.test(pathname))
+    );
+  }
+
+  return false;
 }
 
 export function resolveImageSrc(path?: string | null): string | undefined {
@@ -96,16 +119,8 @@ export function resolveImageSrc(path?: string | null): string | undefined {
   const pathname = getPathname(trimmed);
   const stored = normalizeStoredImagePath(trimmed) ?? pathname;
 
-  if (stored.startsWith(UPLOAD_PREFIX) || stored.startsWith(`uploads/`)) {
-    const uploadPath = stored.startsWith("/") ? stored : `/${stored}`;
-    const basename = uploadPath.slice(UPLOAD_PREFIX.length + 1);
-    if (basename && !basename.includes("..") && !basename.includes("/")) {
-      return `${API_BASE_URL}${uploadPath.split("?")[0]}`;
-    }
-  }
-
   if (isUploadStoragePath(stored)) {
-    return `${API_BASE_URL}${stored}`;
+    return `${API_BASE_URL}${stored.split("?")[0]}`;
   }
 
   if (pathname.startsWith("/images") || pathname.startsWith("/")) {
@@ -158,9 +173,9 @@ export function resolveCakeApiImage(image?: string | null): string | null {
 
   const normalized = stored.startsWith("/") ? stored : `/${stored}`;
 
-  if (normalized.startsWith(UPLOAD_PREFIX)) {
-    const basename = normalized.slice(UPLOAD_PREFIX.length + 1);
-    if (basename && !basename.includes("..") && !basename.includes("/")) {
+  if (normalized.startsWith(CATALOG_UPLOAD_PREFIX)) {
+    const basename = normalized.slice(CATALOG_UPLOAD_PREFIX.length + 1);
+    if (basename && isSafeUploadBasename(basename)) {
       return `${API_BASE_URL}${normalized.split("?")[0]}`;
     }
   }

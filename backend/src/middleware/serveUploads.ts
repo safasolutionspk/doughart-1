@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { NextFunction, Request, Response } from "express";
 import {
+  GALLERY_UPLOAD_DIR,
   UPLOAD_DIR,
   getExtensionFromFilename,
   isAllowedImageExtension,
@@ -19,24 +20,25 @@ function contentTypeForFilename(filename: string): string | undefined {
   return undefined;
 }
 
-export async function serveUploadImages(
-  req: Request,
+async function serveFromDir(
+  dir: string,
+  filename: string,
   res: Response,
   next: NextFunction,
-): Promise<void> {
-  const filename = path.basename(req.path);
+): Promise<boolean> {
   if (!filename || !isAllowedImageFilename(filename)) {
-    next();
-    return;
+    return false;
   }
 
-  const filePath = path.join(UPLOAD_DIR, filename);
+  const filePath = path.join(dir, filename);
+  if (!filePath.startsWith(dir)) {
+    return false;
+  }
 
   try {
     await fs.access(filePath);
   } catch {
-    next();
-    return;
+    return false;
   }
 
   let contentType = contentTypeForFilename(filename);
@@ -64,4 +66,30 @@ export async function serveUploadImages(
       next(error);
     }
   });
+
+  return true;
+}
+
+export async function serveUploadImages(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const filename = path.basename(req.path);
+  const served = await serveFromDir(UPLOAD_DIR, filename, res, next);
+  if (!served) {
+    next();
+  }
+}
+
+export async function serveGalleryUploadImages(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const filename = path.basename(req.path);
+  const served = await serveFromDir(GALLERY_UPLOAD_DIR, filename, res, next);
+  if (!served) {
+    next();
+  }
 }

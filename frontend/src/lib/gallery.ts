@@ -32,41 +32,27 @@ type ApiFailure = {
 };
 
 type PublicGalleryApiItem = {
+  id: string;
   filename: string;
   url: string;
   size?: number;
+  mimeType?: string;
+  altText?: string;
   createdAt: string;
 };
 
 /**
- * Static fallback used only when the public gallery API is unreachable
- * or returns no uploads yet. Prefer Admin-uploaded images whenever present.
+ * Client-only broken-image fallback asset.
+ * Never returned by the Gallery API and never treated as a Gallery record.
  */
+export const galleryBrokenImageFallback = siteImages.gallery[0];
+
+/** @deprecated Prefer galleryBrokenImageFallback — not a Gallery data source. */
 export const staticGalleryFallback: GalleryDisplayImage[] = [
   {
-    id: "gallery-1",
-    alt: "Elegant wedding tiered cake",
-    src: siteImages.gallery[0],
-  },
-  {
-    id: "gallery-2",
-    alt: "Colourful birthday cake with candles",
-    src: siteImages.gallery[1],
-  },
-  {
-    id: "gallery-3",
-    alt: "Beautiful custom decorated cake",
-    src: siteImages.gallery[2],
-  },
-  {
-    id: "gallery-4",
-    alt: "Romantic anniversary cake",
-    src: siteImages.gallery[3],
-  },
-  {
-    id: "gallery-5",
-    alt: "Assorted custom cake collection",
-    src: siteImages.gallery[4],
+    id: "fallback-1",
+    alt: "Gallery image unavailable",
+    src: galleryBrokenImageFallback,
   },
 ];
 
@@ -87,20 +73,21 @@ function toDisplayImage(item: PublicGalleryApiItem): GalleryDisplayImage | null 
   }
 
   return {
-    id: item.filename,
-    alt: "DoughArt custom cake gallery photo",
+    id: item.id || item.filename,
+    alt: item.altText?.trim() || "DoughArt custom cake gallery photo",
     src: resolved,
     createdAt: item.createdAt,
   };
 }
 
 /**
- * Fetches every non-deleted Admin gallery upload for the public `/gallery` page.
- * Ordering matches the backend (newest first). No pagination truncation.
+ * Fetches dedicated GalleryImage records for the public `/gallery` page.
+ * Newest-first. Empty when Admin has not uploaded Gallery images yet.
+ * Never lists product, category, logo, or shared storage files.
  */
 export async function fetchPublicGalleryImages(): Promise<GalleryDisplayImage[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/uploads/public/gallery`, {
+    const response = await fetch(`${API_BASE_URL}/api/gallery/public`, {
       next: { revalidate: 60 },
     });
 

@@ -8,3 +8,5 @@ coverage/
 .turbo/
 uploads/images/*
 !uploads/images/.gitkeep
+uploads/gallery/*
+!uploads/gallery/.gitkeep

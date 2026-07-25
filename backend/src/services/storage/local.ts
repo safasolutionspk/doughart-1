@@ -1,9 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 import {
+  GALLERY_PUBLIC_PREFIX,
+  GALLERY_STORAGE_KEY_PREFIX,
   UPLOAD_DIR,
+  buildPublicGalleryImageUrl,
   buildPublicImageUrl,
+  ensureGalleryUploadDir,
   isAllowedImageFilename,
+  resolveGalleryUploadFilePath,
   resolveUploadFilePath,
 } from "../../config/upload";
 import type {
@@ -13,17 +18,50 @@ import type {
   UploadFileResult,
 } from "./types";
 
+async function moveIntoGalleryDir(sourcePath: string, filename: string): Promise<string> {
+  ensureGalleryUploadDir();
+  const destPath = resolveGalleryUploadFilePath(filename);
+
+  if (path.resolve(sourcePath) === destPath) {
+    return destPath;
+  }
+
+  try {
+    await fs.rename(sourcePath, destPath);
+  } catch {
+    await fs.copyFile(sourcePath, destPath);
+    await fs.unlink(sourcePath).catch(() => {
+      // temp file may already be gone
+    });
+  }
+
+  return destPath;
+}
+
 export const localFileStorage: IFileStorage = {
   provider: "local",
 
   async uploadFile(input: UploadFileInput): Promise<UploadFileResult> {
     const filename = path.basename(input.filePath);
+
+    if (input.namespace === "gallery") {
+      await moveIntoGalleryDir(input.filePath, filename);
+      const storedPath = buildPublicGalleryImageUrl(filename);
+
+      return {
+        storedPath,
+        url: storedPath,
+        deleteKey: `${GALLERY_STORAGE_KEY_PREFIX}${filename}`,
+        filename,
+        size: input.size,
+      };
+    }
+
     const storedPath = buildPublicImageUrl(filename);
-    const url = storedPath;
 
     return {
       storedPath,
-      url,
+      url: storedPath,
       deleteKey: filename,
       filename,
       size: input.size,
@@ -34,6 +72,9 @@ export const localFileStorage: IFileStorage = {
     if (storedPath.startsWith("http://") || storedPath.startsWith("https://")) {
       return storedPath;
     }
+    if (storedPath.startsWith(GALLERY_PUBLIC_PREFIX)) {
+      return storedPath;
+    }
     if (storedPath.startsWith("/uploads/images/")) {
       return storedPath;
     }
@@ -41,10 +82,17 @@ export const localFileStorage: IFileStorage = {
   },
 
   resolveFilePath(filename: string): string {
+    if (filename.startsWith(GALLERY_STORAGE_KEY_PREFIX)) {
+      return resolveGalleryUploadFilePath(
+        filename.slice(GALLERY_STORAGE_KEY_PREFIX.length),
+      );
+    }
     return resolveUploadFilePath(filename);
   },
 
   async listGalleryFiles(): Promise<GalleryFileEntry[]> {
+    // Legacy mixed listing of shared catalog uploads only.
+    // Dedicated Gallery uses MongoDB GalleryImage records.
     let entries: { name: string; isFile: () => boolean }[];
     try {
       const dirents = await fs.readdir(UPLOAD_DIR, { withFileTypes: true });
@@ -79,6 +127,12 @@ export const localFileStorage: IFileStorage = {
   },
 
   async deleteFile(deleteKey: string): Promise<void> {
+    if (deleteKey.startsWith(GALLERY_STORAGE_KEY_PREFIX)) {
+      const filename = path.basename(deleteKey.slice(GALLERY_STORAGE_KEY_PREFIX.length));
+      await fs.unlink(resolveGalleryUploadFilePath(filename));
+      return;
+    }
+
     await fs.unlink(resolveUploadFilePath(deleteKey));
   },
 };

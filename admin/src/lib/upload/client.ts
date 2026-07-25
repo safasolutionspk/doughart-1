@@ -2,6 +2,7 @@ import { adminFetch, parseAdminJson } from "@/lib/api/client";
 import { normalizeStoredImagePath } from "@/lib/upload/path";
 import type { GalleryImage, UploadedImage } from "./types";
 
+/** Shared catalog upload (products, categories, settings, reviews). */
 export async function uploadImage(file: File): Promise<UploadedImage> {
   const formData = new FormData();
   formData.append("image", file);
@@ -25,15 +26,29 @@ export async function uploadImage(file: File): Promise<UploadedImage> {
   };
 }
 
+/** Dedicated Gallery list — MongoDB GalleryImage records only. */
 export async function fetchGallery(): Promise<GalleryImage[]> {
-  const response = await adminFetch("/api/uploads/gallery", { cache: "no-store" });
+  const response = await adminFetch("/api/gallery", { cache: "no-store" });
   return parseAdminJson<GalleryImage[]>(response);
 }
 
-export async function deleteGalleryImage(identifier: string): Promise<void> {
-  const response = await adminFetch(
-    `/api/uploads/image/${encodeURIComponent(identifier)}`,
-    { method: "DELETE" },
-  );
-  await parseAdminJson<{ filename: string }>(response);
+/** Dedicated Gallery upload — creates a GalleryImage DB record. */
+export async function uploadGalleryImage(file: File): Promise<GalleryImage> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await adminFetch("/api/gallery", {
+    method: "POST",
+    body: formData,
+  });
+
+  return parseAdminJson<GalleryImage>(response);
+}
+
+/** Delete by Gallery database record ID only. */
+export async function deleteGalleryImage(id: string): Promise<void> {
+  const response = await adminFetch(`/api/gallery/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+  await parseAdminJson<{ id: string }>(response);
 }

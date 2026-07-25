@@ -24,6 +24,10 @@ function stripExtension(filename: string): string {
   return ext ? filename.slice(0, -ext.length) : filename;
 }
 
+function galleryFolder(): string {
+  return `${env.CLOUDINARY_FOLDER}/gallery`;
+}
+
 export const cloudinaryFileStorage: IFileStorage = {
   provider: "cloudinary",
 
@@ -36,10 +40,12 @@ export const cloudinaryFileStorage: IFileStorage = {
     } as Express.Multer.File;
 
     const generatedFilename = buildUploadFilename(multerLike);
+    const folder =
+      input.namespace === "gallery" ? galleryFolder() : env.CLOUDINARY_FOLDER;
 
     try {
       const result = await cloudinary.uploader.upload(input.filePath, {
-        folder: env.CLOUDINARY_FOLDER,
+        folder,
         public_id: stripExtension(path.basename(generatedFilename)),
         resource_type: "image",
         overwrite: false,
@@ -86,6 +92,8 @@ export const cloudinaryFileStorage: IFileStorage = {
   },
 
   async listGalleryFiles(): Promise<GalleryFileEntry[]> {
+    // Legacy mixed listing of the shared Cloudinary folder only.
+    // Dedicated Gallery uses MongoDB GalleryImage records.
     configureCloudinary();
 
     const response = await cloudinary.api.resources({

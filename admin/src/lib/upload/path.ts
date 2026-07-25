@@ -1,9 +1,11 @@
 import { API_BASE_URL } from "@/lib/api";
 
-const UPLOAD_PREFIX = "/uploads/images";
+const CATALOG_UPLOAD_PREFIX = "/uploads/images";
+const GALLERY_UPLOAD_PREFIX = "/uploads/gallery";
 
 /** Legacy uploads without file extension */
-const EXTENSIONLESS_UPLOAD_PATTERN = /^\/uploads\/images\/\d+-[a-f0-9]+$/i;
+const EXTENSIONLESS_CATALOG_PATTERN = /^\/uploads\/images\/\d+-[a-f0-9]+$/i;
+const EXTENSIONLESS_GALLERY_PATTERN = /^\/uploads\/gallery\/\d+-[a-f0-9]+$/i;
 
 function getPathname(value: string): string {
   if (value.startsWith("http://") || value.startsWith("https://")) {
@@ -16,20 +18,35 @@ function getPathname(value: string): string {
   return value.startsWith("/") ? value : `/${value}`;
 }
 
+function isSafeUploadBasename(basename: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(basename);
+}
+
 export function isUploadStoragePath(value: string): boolean {
   const pathname = getPathname(value.trim());
-  if (!pathname.startsWith(UPLOAD_PREFIX)) {
-    return false;
+
+  if (pathname.startsWith(CATALOG_UPLOAD_PREFIX)) {
+    const basename = pathname.slice(CATALOG_UPLOAD_PREFIX.length + 1);
+    return (
+      isSafeUploadBasename(basename) &&
+      (basename.includes(".") || EXTENSIONLESS_CATALOG_PATTERN.test(pathname))
+    );
   }
-  const basename = pathname.slice(UPLOAD_PREFIX.length + 1);
-  return (
-    /^[a-zA-Z0-9._-]+$/.test(basename) &&
-    (basename.includes(".") || EXTENSIONLESS_UPLOAD_PATTERN.test(pathname))
-  );
+
+  if (pathname.startsWith(GALLERY_UPLOAD_PREFIX)) {
+    const basename = pathname.slice(GALLERY_UPLOAD_PREFIX.length + 1);
+    return (
+      isSafeUploadBasename(basename) &&
+      (basename.includes(".") || EXTENSIONLESS_GALLERY_PATTERN.test(pathname))
+    );
+  }
+
+  return false;
 }
 
 /**
- * Normalize image values for MongoDB — store `/uploads/images/...` when possible.
+ * Normalize image values for MongoDB — store `/uploads/images/...` or
+ * `/uploads/gallery/...` when possible.
  */
 export function normalizeStoredImagePath(
   value: string | undefined | null,
@@ -46,7 +63,10 @@ export function normalizeStoredImagePath(
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     try {
       const { pathname } = new URL(trimmed);
-      if (pathname.startsWith(UPLOAD_PREFIX)) {
+      if (
+        pathname.startsWith(CATALOG_UPLOAD_PREFIX) ||
+        pathname.startsWith(GALLERY_UPLOAD_PREFIX)
+      ) {
         return pathname;
       }
       // CDN URLs (e.g. Cloudinary) — store full URL
@@ -56,7 +76,11 @@ export function normalizeStoredImagePath(
     }
   }
 
-  if (trimmed.startsWith(UPLOAD_PREFIX) && isUploadStoragePath(trimmed)) {
+  if (
+    (trimmed.startsWith(CATALOG_UPLOAD_PREFIX) ||
+      trimmed.startsWith(GALLERY_UPLOAD_PREFIX)) &&
+    isUploadStoragePath(trimmed)
+  ) {
     return trimmed;
   }
 
@@ -66,8 +90,8 @@ export function normalizeStoredImagePath(
   }
 
   const basename = trimmed.replace(/^\/+/, "");
-  if (/^[a-zA-Z0-9._-]+$/.test(basename)) {
-    const path = `${UPLOAD_PREFIX}/${basename}`;
+  if (isSafeUploadBasename(basename)) {
+    const path = `${CATALOG_UPLOAD_PREFIX}/${basename}`;
     return isUploadStoragePath(path) ? path : undefined;
   }
 

@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ConfirmDeleteModal } from "@/components/catalog/ConfirmDeleteModal";
 import { EmptyState, ErrorState, LoadingList } from "@/components/catalog/ListStates";
 import { cn } from "@/lib/cn";
-import { deleteGalleryImage, fetchGallery, uploadImage } from "@/lib/upload/client";
+import {
+  deleteGalleryImage,
+  fetchGallery,
+  uploadGalleryImage,
+} from "@/lib/upload/client";
 import type { GalleryImage } from "@/lib/upload/types";
 import {
   IMAGE_UPLOAD_ACCEPT,
@@ -77,7 +81,7 @@ export function GalleryView() {
     setUploadError(null);
 
     try {
-      await uploadImage(file);
+      await uploadGalleryImage(file);
       await load();
     } catch (error) {
       setUploadError(
@@ -98,7 +102,7 @@ export function GalleryView() {
     setDeleteError(null);
 
     try {
-      await deleteGalleryImage(deleteTarget.deleteKey ?? deleteTarget.filename);
+      await deleteGalleryImage(deleteTarget.id);
       setDeleteTarget(null);
       await load();
     } catch (error) {
@@ -118,7 +122,8 @@ export function GalleryView() {
             Gallery
           </h1>
           <p className="mt-1 text-sm text-brand-muted">
-            Upload and manage images for categories, cakes, and marketing.
+            Upload images for the public Gallery page. Product and category
+            images are managed separately and will not appear here.
           </p>
         </div>
         <div>
@@ -139,13 +144,13 @@ export function GalleryView() {
               "hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60",
             )}
           >
-            {isUploading ? "Uploading…" : "Upload image"}
+            {isUploading ? "Uploading…" : "Upload Gallery Image"}
           </button>
         </div>
       </section>
 
       <section className="rounded-2xl border border-dashed border-brand-border bg-brand-pink-lighter/50 p-6 text-center text-sm text-brand-muted">
-        JPG, PNG, or WebP · max 5MB per file
+        JPG, PNG, or WebP · max 5MB per file · Gallery only
       </section>
 
       {uploadError && (
@@ -160,8 +165,8 @@ export function GalleryView() {
       )}
       {viewState.type === "empty" && (
         <EmptyState
-          title="No images yet"
-          description="Upload your first image to get started."
+          title="No Gallery images have been uploaded yet."
+          description="Upload Gallery Image to add photos that appear on the public Gallery page."
         />
       )}
 
@@ -169,14 +174,14 @@ export function GalleryView() {
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
           {viewState.images.map((image) => (
             <li
-              key={image.filename}
+              key={image.id}
               className="overflow-hidden rounded-xl border border-brand-border/60 bg-white shadow-sm"
             >
               <div className="aspect-square bg-brand-pink-lighter">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolveImageSrc(image.url)}
-                  alt={image.filename}
+                  alt={image.altText || image.filename}
                   className="h-full w-full object-cover object-center"
                 />
               </div>
@@ -184,9 +189,8 @@ export function GalleryView() {
                 <p className="truncate text-[10px] font-medium text-brand-brown sm:text-xs">
                   {image.filename}
                 </p>
-                <p className="text-[10px] text-brand-muted">{formatBytes(image.size)}</p>
-                <p className="hidden truncate text-[10px] text-brand-muted/70 sm:block">
-                  {image.url}
+                <p className="text-[10px] text-brand-muted">
+                  {formatBytes(image.size)}
                 </p>
                 <button
                   type="button"
@@ -203,10 +207,10 @@ export function GalleryView() {
 
       <ConfirmDeleteModal
         open={Boolean(deleteTarget)}
-        title="Delete image?"
+        title="Delete Gallery image?"
         description={
           deleteTarget
-            ? `"${deleteTarget.filename}" will be removed from the server. Items using this URL may show a broken image.`
+            ? `"${deleteTarget.filename}" will be removed from the public Gallery. This does not affect product or category images.`
             : ""
         }
         isDeleting={isDeleting}

@@ -8,7 +8,16 @@ export type UploadedImage = {
   size: number;
 };
 
-export type GalleryImage = UploadedImage & {
+/** Dedicated GalleryImage record from the Gallery API (no storageKey). */
+export type GalleryImage = {
+  id: string;
+  filename: string;
+  url: string;
+  size: number;
+  mimeType?: string;
+  altText?: string;
+  width?: number;
+  height?: number;
   createdAt: string;
-  deleteKey: string;
+  updatedAt?: string;
 };

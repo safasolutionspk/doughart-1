@@ -5,6 +5,12 @@ export { Category, type ICategoryDocument } from "./Category";
 export { Cake, type ICakeDocument } from "./Cake";
 export { Review, type IReviewDocument } from "./Review";
 export {
+  GalleryImage,
+  type IGalleryImage,
+  type IGalleryImageDocument,
+  type GalleryStorageProvider,
+} from "./GalleryImage";
+export {
   BusinessSettings,
   type IBusinessSettingsDocument,
 } from "./BusinessSettings";

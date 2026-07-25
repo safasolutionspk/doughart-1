@@ -3,14 +3,23 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import { corsOrigins, env } from "./config/env";
-import { UPLOAD_PUBLIC_PREFIX, ensureUploadDir } from "./config/upload";
+import {
+  GALLERY_PUBLIC_PREFIX,
+  UPLOAD_PUBLIC_PREFIX,
+  ensureGalleryUploadDir,
+  ensureUploadDir,
+} from "./config/upload";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
-import { serveUploadImages } from "./middleware/serveUploads";
+import {
+  serveGalleryUploadImages,
+  serveUploadImages,
+} from "./middleware/serveUploads";
 import { generalLimiter } from "./middleware/rateLimiter";
 import { rejectUnknownApiContentType } from "./middleware/security";
 import apiRoutes from "./routes";
 
 ensureUploadDir();
+ensureGalleryUploadDir();
 
 export function createApp() {
   const app = express();
@@ -69,6 +78,7 @@ export function createApp() {
   });
 
   app.use(UPLOAD_PUBLIC_PREFIX, serveUploadImages);
+  app.use(GALLERY_PUBLIC_PREFIX, serveGalleryUploadImages);
 
   app.use("/api", rejectUnknownApiContentType, apiRoutes);
 

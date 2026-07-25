@@ -8,12 +8,20 @@ export type GalleryFileEntry = {
   url: string;
 };
 
+export type StorageNamespace = "default" | "gallery";
+
 export type UploadFileInput = {
   /** Absolute path to validated temp file on disk */
   filePath: string;
   originalFilename: string;
   mimeType: string;
   size: number;
+  /**
+   * Storage namespace.
+   * - `default`: shared catalog uploads (products, categories, settings, reviews)
+   * - `gallery`: dedicated public Gallery only
+   */
+  namespace?: StorageNamespace;
 };
 
 export type UploadFileResult = {
@@ -34,6 +42,10 @@ export interface IFileStorage {
   uploadFile(input: UploadFileInput): Promise<UploadFileResult>;
   deleteFile(deleteKey: string): Promise<void>;
   getPublicUrl(storedPath: string): string;
+  /**
+   * @deprecated Mixed shared-storage listing. Do not use for public Gallery.
+   * Dedicated Gallery records live in MongoDB (`GalleryImage`).
+   */
   listGalleryFiles(): Promise<GalleryFileEntry[]>;
   /** Local disk only — resolve absolute path for existence checks */
   resolveFilePath?(filename: string): string;

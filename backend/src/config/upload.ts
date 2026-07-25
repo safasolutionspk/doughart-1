@@ -64,12 +64,27 @@ export const UPLOAD_DIR = path.resolve(process.cwd(), "uploads", "images");
 
 export const UPLOAD_PUBLIC_PREFIX = "/uploads/images";
 
+/** Dedicated Gallery uploads — isolated from product/category/shared images */
+export const GALLERY_UPLOAD_DIR = path.resolve(process.cwd(), "uploads", "gallery");
+
+export const GALLERY_PUBLIC_PREFIX = "/uploads/gallery";
+
+export const GALLERY_STORAGE_KEY_PREFIX = "gallery/";
+
 export function ensureUploadDir(): void {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+export function ensureGalleryUploadDir(): void {
+  fs.mkdirSync(GALLERY_UPLOAD_DIR, { recursive: true });
+}
+
 export function buildPublicImageUrl(filename: string): string {
   return `${UPLOAD_PUBLIC_PREFIX}/${filename}`;
+}
+
+export function buildPublicGalleryImageUrl(filename: string): string {
+  return `${GALLERY_PUBLIC_PREFIX}/${filename}`;
 }
 
 export function resolveUploadFilePath(filename: string): string {
@@ -78,6 +93,17 @@ export function resolveUploadFilePath(filename: string): string {
 
   if (!resolved.startsWith(UPLOAD_DIR)) {
     throw new Error("Invalid filename");
+  }
+
+  return resolved;
+}
+
+export function resolveGalleryUploadFilePath(filename: string): string {
+  const safeName = path.basename(filename);
+  const resolved = path.resolve(GALLERY_UPLOAD_DIR, safeName);
+
+  if (!resolved.startsWith(GALLERY_UPLOAD_DIR)) {
+    throw new Error("Invalid gallery filename");
   }
 
   return resolved;

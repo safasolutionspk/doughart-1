@@ -22,11 +22,18 @@ router.post(
   uploadPublicReferenceImage,
 );
 
-/** Public gallery listing — same non-deleted uploads Admin manages (no delete keys). */
+/**
+ * @deprecated Prefer GET /api/gallery/public
+ * Kept for compatibility — now returns dedicated GalleryImage records only.
+ */
 router.get("/public/gallery", listPublicGallery);
 
 router.use(authenticateAdmin, auditLog);
 
+/**
+ * @deprecated Prefer GET /api/gallery
+ * Kept for compatibility — now returns dedicated GalleryImage records only.
+ */
 router.get("/gallery", listGallery);
 
 router.post(
