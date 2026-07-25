@@ -54,36 +54,28 @@ export function Footer() {
         >
           {/* COLUMN 1 — Brand / About */}
           <Reveal direction="up" delay={0} className="min-[480px]:col-span-2 lg:col-span-1">
-            <div className="max-w-sm">
+            <div className="mx-auto flex max-w-sm flex-col items-center text-center">
               <Link
                 href="/"
-                className="group inline-flex max-w-full items-center gap-3 transition-opacity hover:opacity-90 sm:gap-3.5"
+                className="group inline-flex transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
                 aria-label={`${siteConfig.name} home`}
               >
                 <Image
                   src={siteImages.logo}
-                  alt=""
-                  width={167}
-                  height={89}
+                  alt={siteConfig.name}
+                  width={210}
+                  height={112}
                   unoptimized
-                  className="h-auto w-[4.5rem] shrink-0 object-contain object-left sm:w-[5rem] lg:w-[5.5rem]"
+                  className="h-auto w-[9.5rem] object-contain sm:w-[10.5rem] lg:w-[12rem]"
                 />
-                <span className="min-w-0">
-                  <span className="block font-display text-2xl font-bold leading-none tracking-tight text-brand-primary sm:text-[1.75rem]">
-                    {siteConfig.name}
-                  </span>
-                  <span className="mt-1.5 block text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-brand-brown/75 sm:text-[0.6875rem] sm:tracking-[0.24em]">
-                    {footerCopy.brandLine}
-                  </span>
-                </span>
               </Link>
 
-              <p className="mt-4 text-sm leading-relaxed text-brand-muted">
+              <p className="mt-4 max-w-xs text-[0.9375rem] leading-relaxed text-brand-muted sm:text-base">
                 {footerCopy.description}
               </p>
 
               <ul
-                className="mt-5 flex flex-wrap gap-2"
+                className="mt-5 flex flex-wrap items-center justify-center gap-2"
                 aria-label="Social media"
               >
                 {footerSocialLinks.map((social) => {
