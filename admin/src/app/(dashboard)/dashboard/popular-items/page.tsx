@@ -13,8 +13,8 @@ export default function PopularItemsPage() {
           Popular Items
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-brand-muted">
-          Read-only ranking by successful order count for every cake, including
-          Combo Offers. Product changes belong on the Cakes page.
+          Read-only ranking by successful order count for every menu item, including
+          Combo Offers. Product changes belong on the Menu page.
         </p>
       </header>
 

@@ -217,8 +217,8 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
       ? "Edit combo offer"
       : "New combo offer"
     : isEdit
-      ? "Edit cake"
-      : "New cake";
+      ? "Edit menu item"
+      : "New menu item";
 
   const canSubmit = isCombo ? true : Boolean(form.categoryId);
 
@@ -229,7 +229,7 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
           href={listHref}
           className="text-sm font-medium text-brand-primary hover:text-brand-button-hover"
         >
-          ← Back to {isCombo ? "combo offers" : "cakes"}
+          ← Back to {isCombo ? "combo offers" : "menu"}
         </Link>
         <h1 className="mt-4 text-2xl font-semibold text-brand-brown">{title}</h1>
         {isCombo ? (
@@ -407,7 +407,7 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
                 ? "Save changes"
                 : isCombo
                   ? "Create combo offer"
-                  : "Create cake"}
+                  : "Create menu item"}
           </button>
           <Link href={listHref} className="admin-btn-secondary">
             Cancel

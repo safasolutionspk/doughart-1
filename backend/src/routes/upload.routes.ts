@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   deleteImage,
   listGallery,
+  listPublicGallery,
   uploadImage as uploadImageHandler,
   uploadPublicReferenceImage,
 } from "../controllers/upload.controller";
@@ -20,6 +21,9 @@ router.post(
   uploadImage.single("image"),
   uploadPublicReferenceImage,
 );
+
+/** Public gallery listing — same non-deleted uploads Admin manages (no delete keys). */
+router.get("/public/gallery", listPublicGallery);
 
 router.use(authenticateAdmin, auditLog);
 

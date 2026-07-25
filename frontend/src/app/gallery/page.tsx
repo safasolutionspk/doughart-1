@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { AnimatedListItem } from "@/components/animation/AnimatedListItem";
 import { Reveal } from "@/components/animation/Reveal";
 import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
+import { GalleryImageTile } from "@/components/gallery/GalleryImageTile";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
-import { galleryCopy, galleryImages } from "@/lib/gallery";
+import { galleryCopy, fetchPublicGalleryImages } from "@/lib/gallery";
 import { cn } from "@/lib/cn";
 import { externalLinkProps } from "@/lib/links";
 import { realAssets } from "@/lib/realAssets";
@@ -18,8 +18,9 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/gallery",
 });
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
   const waveBg = realAssets.galleryWaveBg;
+  const images = await fetchPublicGalleryImages();
 
   return (
     <PublicPageLayout mainId="gallery-page" ariaLabel="Gallery">
@@ -62,21 +63,25 @@ export default function GalleryPage() {
             </Link>
           </Reveal>
 
-          <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-5">
-            {galleryImages.map((image, index) => (
-              <AnimatedListItem key={image.id} index={index}>
-                <div className="card-premium image-zoom-wrap group relative aspect-square overflow-hidden rounded-2xl border border-white/90 bg-white shadow-md shadow-brand-primary/10">
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
-                    className="image-zoom-target object-cover"
-                  />
-                </div>
-              </AnimatedListItem>
-            ))}
-          </ul>
+          {images.length === 0 ? (
+            <p className="mt-10 text-center text-sm text-brand-muted">
+              Gallery photos will appear here once they are added in Admin.
+            </p>
+          ) : (
+            <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-5">
+              {images.map((image, index) => (
+                <AnimatedListItem key={image.id} index={index}>
+                  <div className="card-premium image-zoom-wrap group relative aspect-square overflow-hidden rounded-2xl border border-white/90 bg-white shadow-md shadow-brand-primary/10">
+                    <GalleryImageTile
+                      image={image}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                      imageClassName="image-zoom-target"
+                    />
+                  </div>
+                </AnimatedListItem>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
     </PublicPageLayout>

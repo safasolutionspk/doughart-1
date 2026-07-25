@@ -1,16 +1,23 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/animation/Reveal";
 import { WordReveal } from "@/components/animation/WordReveal";
-import { capStaggerDelay } from "@/lib/animation/constants";
+import { GalleryImageTile } from "@/components/gallery/GalleryImageTile";
 import { SectionEyebrow } from "@/components/ui/SectionEyebrow";
-import { galleryCopy, galleryImages } from "@/lib/gallery";
+import { capStaggerDelay } from "@/lib/animation/constants";
+import {
+  fetchPublicGalleryImages,
+  galleryCopy,
+  type GalleryDisplayImage,
+} from "@/lib/gallery";
 import { cn } from "@/lib/cn";
 import { externalLinkProps } from "@/lib/links";
 import { realAssets } from "@/lib/realAssets";
 
-export function Gallery() {
+/** Homepage preview — shows Admin gallery uploads when available. */
+export async function Gallery() {
   const waveBg = realAssets.galleryWaveBg;
+  const images = await fetchPublicGalleryImages();
+  const preview = images.slice(0, 8);
 
   return (
     <section
@@ -56,29 +63,43 @@ export function Gallery() {
                 <InstagramIcon className="h-4 w-4 shrink-0" />
                 {galleryCopy.instagramLabel}
               </Link>
+              {images.length > 0 ? (
+                <Link
+                  href="/gallery"
+                  className="mt-3 block text-sm font-semibold text-brand-primary hover:underline"
+                >
+                  View full gallery
+                </Link>
+              ) : null}
             </div>
           </Reveal>
 
-          <ul
-            className={cn(
-              "flex items-center justify-start gap-2 overflow-x-auto pb-1",
-              "snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-              "lg:justify-end lg:gap-2.5",
-            )}
-          >
-            {galleryImages.map((image, index) => (
-              <Reveal
-                key={image.id}
-                as="li"
-                delay={capStaggerDelay(index, 0.1)}
-                direction="scale"
-                variant="card"
-                className="w-[5.75rem] shrink-0 snap-start sm:w-[6.5rem] md:w-[7.25rem] lg:w-[7.75rem]"
-              >
-                <GalleryCard image={image} />
-              </Reveal>
-            ))}
-          </ul>
+          {preview.length === 0 ? (
+            <p className="text-sm text-brand-muted">
+              Gallery photos will appear here once they are added in Admin.
+            </p>
+          ) : (
+            <ul
+              className={cn(
+                "flex items-center justify-start gap-2 overflow-x-auto pb-1",
+                "snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                "lg:justify-end lg:gap-2.5",
+              )}
+            >
+              {preview.map((image, index) => (
+                <Reveal
+                  key={image.id}
+                  as="li"
+                  delay={capStaggerDelay(index, 0.1)}
+                  direction="scale"
+                  variant="card"
+                  className="w-[5.75rem] shrink-0 snap-start sm:w-[6.5rem] md:w-[7.25rem] lg:w-[7.75rem]"
+                >
+                  <GalleryCard image={image} />
+                </Reveal>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </section>
@@ -86,23 +107,20 @@ export function Gallery() {
 }
 
 type GalleryCardProps = {
-  image: (typeof galleryImages)[number];
+  image: GalleryDisplayImage;
 };
 
 function GalleryCard({ image }: GalleryCardProps) {
   return (
     <Link
-      href={galleryCopy.instagramHref}
+      href="/gallery"
       className="card-premium group relative block aspect-square overflow-hidden rounded-xl border-2 border-white/95 bg-white shadow-md shadow-brand-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-      aria-label={`View ${image.alt} on Instagram`}
-      {...externalLinkProps}
+      aria-label={`View ${image.alt} in gallery`}
     >
-      <Image
-        src={image.src}
-        alt={image.alt}
-        fill
+      <GalleryImageTile
+        image={image}
         sizes="(max-width: 640px) 92px, (max-width: 1024px) 104px, 124px"
-        className="image-zoom-target object-cover"
+        imageClassName="image-zoom-target"
       />
       <span
         className="absolute inset-0 flex items-center justify-center bg-brand-brown/0 transition-colors group-hover:bg-brand-primary/20"

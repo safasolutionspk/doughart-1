@@ -252,7 +252,7 @@ export function CategoriesListView() {
         title="Delete category?"
         description={
           deleteTarget
-            ? `"${deleteTarget.name}" will be removed. This cannot be undone if cakes still reference it.`
+            ? `"${deleteTarget.name}" will be removed. This cannot be undone if menu items still reference it.`
             : ""
         }
         isDeleting={isDeleting}

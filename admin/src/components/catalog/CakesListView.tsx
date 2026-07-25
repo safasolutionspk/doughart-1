@@ -82,7 +82,7 @@ export function CakesListView() {
     } catch (error) {
       setViewState({
         type: "error",
-        message: error instanceof Error ? error.message : "Failed to load cakes",
+        message: error instanceof Error ? error.message : "Failed to load menu items",
       });
     }
   }, [searchParams, categoryFilter, activeFilter, featuredFilter, page]);
@@ -116,7 +116,7 @@ export function CakesListView() {
       await load();
     } catch (error) {
       setDeleteError(
-        error instanceof Error ? error.message : "Failed to delete cake",
+        error instanceof Error ? error.message : "Failed to delete menu item",
       );
     } finally {
       setDeletingId(null);
@@ -130,15 +130,15 @@ export function CakesListView() {
       <section className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-brand-brown sm:text-2xl">
-            Cakes
+            Menu
           </h1>
-          <p className="mt-1 text-sm text-brand-muted">Manage your cake catalog.</p>
+          <p className="mt-1 text-sm text-brand-muted">Manage your menu catalog.</p>
         </div>
         <Link
           href="/dashboard/cakes/new"
           className="admin-btn-primary w-fit shrink-0 self-start sm:self-auto"
         >
-          Add cake
+          Add menu item
         </Link>
       </section>
 
@@ -198,8 +198,8 @@ export function CakesListView() {
       )}
       {viewState.type === "empty" && (
         <EmptyState
-          title="No cakes found"
-          description="Add a cake or adjust your filters."
+          title="No menu items found"
+          description="Add a menu item or adjust your filters."
         />
       )}
 
@@ -252,7 +252,7 @@ export function CakesListView() {
 
       <ConfirmDeleteModal
         open={Boolean(deleteTarget)}
-        title="Delete cake?"
+        title="Delete menu item?"
         description={
           deleteTarget
             ? `"${deleteTarget.name}" will be permanently removed from the catalog.`

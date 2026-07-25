@@ -91,6 +91,39 @@ export const listGallery = asyncHandler(async (_req: Request, res: Response) => 
 
 
 
+/** Public gallery — strips delete keys; every non-deleted upload is eligible. */
+export const listPublicGallery = asyncHandler(
+
+  async (_req: Request, res: Response) => {
+
+    const images = await uploadService.listGalleryImages();
+
+    sendSuccess(
+
+      res,
+
+      images.map(({ filename, url, size, createdAt }) => ({
+
+        filename,
+
+        url,
+
+        size,
+
+        createdAt,
+
+      })),
+
+      "Gallery images retrieved",
+
+    );
+
+  },
+
+);
+
+
+
 export const deleteImage = asyncHandler(async (req: Request, res: Response) => {
 
   const result = await uploadService.deleteGalleryImage(

@@ -88,7 +88,7 @@ export default async function DashboardPage() {
               href="/dashboard/cakes"
               className="flex h-full flex-col rounded-xl border border-brand-border bg-white px-4 py-3 text-sm font-medium text-brand-brown shadow-sm transition-all duration-300 hover:border-brand-primary hover:bg-brand-pink-lighter hover:shadow-md"
             >
-              Cake catalog
+              Menu
               <span className="mt-1 text-xs font-normal text-brand-muted">
                 Add or edit products
               </span>
