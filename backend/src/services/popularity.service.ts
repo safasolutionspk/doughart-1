@@ -12,7 +12,7 @@ import {
 
 type ScopeFilter = Record<string, unknown>;
 
-function buildOrderScopeFilter(
+function buildCakeScopeFilter(
   tenantContext?: RequestTenantContext,
 ): ScopeFilter {
   if (
@@ -28,21 +28,135 @@ function buildOrderScopeFilter(
   return {};
 }
 
-function buildCakeScopeFilter(
+/**
+ * Orders may be legacy-unscoped while cakes are tenant-scoped.
+ * Include current tenant/workspace orders plus fully unscoped legacy orders.
+ * Never include orders that belong to a different tenant or workspace —
+ * a single missing scope field must not open a cross-tenant leak.
+ */
+function buildEligibleOrderMatch(
   tenantContext?: RequestTenantContext,
 ): ScopeFilter {
-  return buildOrderScopeFilter(tenantContext);
+  const eligible: ScopeFilter = {
+    status: { $in: [...POPULARITY_ELIGIBLE_STATUSES] },
+    paymentStatus: { $ne: "failed" },
+  };
+
+  if (
+    !(
+      tenantContext?.isResolved &&
+      tenantContext.tenantId &&
+      tenantContext.workspaceId
+    )
+  ) {
+    return eligible;
+  }
+
+  const tenantId = new Types.ObjectId(tenantContext.tenantId);
+  const workspaceId = new Types.ObjectId(tenantContext.workspaceId);
+
+  return {
+    ...eligible,
+    $or: [
+      { tenantId, workspaceId },
+      {
+        $and: [
+          {
+            $or: [{ tenantId: { $exists: false } }, { tenantId: null }],
+          },
+          {
+            $or: [{ workspaceId: { $exists: false } }, { workspaceId: null }],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function normalizeCakeName(value: string | undefined | null): string {
+  return (value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 type AggRow = {
   _id: Types.ObjectId;
   totalQuantitySold: number;
   totalRevenue: number;
-  successfulOrderCount: number;
+  successfulOrderIds: Types.ObjectId[];
   lastPurchasedAt: Date | null;
   latestCakeName?: string;
   latestUnitPrice?: number;
 };
+
+type NameOnlyItemRow = {
+  orderId: Types.ObjectId;
+  cakeName: string;
+  quantity: number;
+  unitPrice: number;
+  createdAt: Date | null;
+};
+
+type MutableStats = {
+  cakeId: string;
+  orderIds: Set<string>;
+  totalQuantitySold: number;
+  totalRevenue: number;
+  lastPurchasedAt: Date | null;
+  latestCakeName?: string;
+  latestUnitPrice?: number;
+};
+
+async function buildUniqueCakeNameIndex(
+  tenantContext?: RequestTenantContext,
+): Promise<Map<string, string>> {
+  const scope = buildCakeScopeFilter(tenantContext);
+  const cakes = await Cake.find({ ...scope }).select("_id name").lean();
+
+  const counts = new Map<string, string[]>();
+  for (const cake of cakes) {
+    const key = normalizeCakeName(cake.name);
+    if (!key) {
+      continue;
+    }
+    const ids = counts.get(key) ?? [];
+    ids.push(String(cake._id));
+    counts.set(key, ids);
+  }
+
+  const unique = new Map<string, string>();
+  for (const [key, ids] of counts) {
+    if (ids.length === 1) {
+      unique.set(key, ids[0]);
+    }
+  }
+  return unique;
+}
+
+function toPopularStats(map: Map<string, MutableStats>): PopularCakeStats[] {
+  return [...map.values()]
+    .map((row) => ({
+      cakeId: row.cakeId,
+      totalQuantitySold: row.totalQuantitySold,
+      totalRevenue: row.totalRevenue,
+      successfulOrderCount: row.orderIds.size,
+      lastPurchasedAt: row.lastPurchasedAt,
+      latestCakeName: row.latestCakeName,
+      latestUnitPrice: row.latestUnitPrice,
+    }))
+    .sort((a, b) => {
+      if (b.successfulOrderCount !== a.successfulOrderCount) {
+        return b.successfulOrderCount - a.successfulOrderCount;
+      }
+      if (b.totalRevenue !== a.totalRevenue) {
+        return b.totalRevenue - a.totalRevenue;
+      }
+      const aTime = a.lastPurchasedAt ? a.lastPurchasedAt.getTime() : 0;
+      const bTime = b.lastPurchasedAt ? b.lastPurchasedAt.getTime() : 0;
+      if (bTime !== aTime) {
+        return bTime - aTime;
+      }
+      return a.cakeId.localeCompare(b.cakeId);
+    });
+}
 
 /**
  * Aggregate purchase stats ranked primarily by distinct successful orders.
@@ -52,64 +166,111 @@ type AggRow = {
 async function aggregatePurchaseStats(
   tenantContext?: RequestTenantContext,
 ): Promise<PopularCakeStats[]> {
-  const scope = buildOrderScopeFilter(tenantContext);
+  const orderMatch = buildEligibleOrderMatch(tenantContext);
 
-  const rows = await Order.aggregate<AggRow>([
-    {
-      $match: {
-        ...scope,
-        status: { $in: [...POPULARITY_ELIGIBLE_STATUSES] },
-        paymentStatus: { $ne: "failed" },
-      },
-    },
-    { $unwind: "$items" },
-    {
-      $match: {
-        "items.cakeId": { $exists: true, $ne: null },
-      },
-    },
-    {
-      $group: {
-        _id: "$items.cakeId",
-        totalQuantitySold: { $sum: "$items.quantity" },
-        totalRevenue: {
-          $sum: { $multiply: ["$items.quantity", "$items.unitPrice"] },
+  const [cakeIdRows, nameOnlyRows, uniqueNames] = await Promise.all([
+    Order.aggregate<AggRow>([
+      { $match: orderMatch },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.cakeId": { $exists: true, $ne: null },
         },
-        successfulOrderCount: { $addToSet: "$_id" },
-        lastPurchasedAt: { $max: "$createdAt" },
-        latestCakeName: { $last: "$items.cakeName" },
-        latestUnitPrice: { $last: "$items.unitPrice" },
       },
-    },
-    {
-      $project: {
-        totalQuantitySold: 1,
-        totalRevenue: 1,
-        successfulOrderCount: { $size: "$successfulOrderCount" },
-        lastPurchasedAt: 1,
-        latestCakeName: 1,
-        latestUnitPrice: 1,
+      {
+        $group: {
+          _id: "$items.cakeId",
+          totalQuantitySold: { $sum: "$items.quantity" },
+          totalRevenue: {
+            $sum: { $multiply: ["$items.quantity", "$items.unitPrice"] },
+          },
+          successfulOrderIds: { $addToSet: "$_id" },
+          lastPurchasedAt: { $max: "$createdAt" },
+          latestCakeName: { $last: "$items.cakeName" },
+          latestUnitPrice: { $last: "$items.unitPrice" },
+        },
       },
-    },
-    {
-      $sort: {
-        successfulOrderCount: -1,
-        totalRevenue: -1,
-        lastPurchasedAt: -1,
-        _id: 1,
+    ]),
+    Order.aggregate<NameOnlyItemRow>([
+      { $match: orderMatch },
+      { $unwind: "$items" },
+      {
+        $match: {
+          $or: [
+            { "items.cakeId": { $exists: false } },
+            { "items.cakeId": null },
+          ],
+          "items.cakeName": { $type: "string", $ne: "" },
+        },
       },
-    },
+      {
+        $project: {
+          _id: 0,
+          orderId: "$_id",
+          cakeName: "$items.cakeName",
+          quantity: "$items.quantity",
+          unitPrice: "$items.unitPrice",
+          createdAt: "$createdAt",
+        },
+      },
+    ]),
+    buildUniqueCakeNameIndex(tenantContext),
   ]);
 
-  return rows.map((row) => ({
-    cakeId: String(row._id),
-    totalQuantitySold: row.totalQuantitySold,
-    totalRevenue: row.totalRevenue,
-    successfulOrderCount: row.successfulOrderCount,
-    lastPurchasedAt: row.lastPurchasedAt,
-    latestCakeName: row.latestCakeName,
-    latestUnitPrice: row.latestUnitPrice,
-  }));
+  const stats = new Map<string, MutableStats>();
+
+  for (const row of cakeIdRows) {
+    const cakeId = String(row._id);
+    stats.set(cakeId, {
+      cakeId,
+      orderIds: new Set(row.successfulOrderIds.map((id) => String(id))),
+      totalQuantitySold: row.totalQuantitySold,
+      totalRevenue: row.totalRevenue,
+      lastPurchasedAt: row.lastPurchasedAt,
+      latestCakeName: row.latestCakeName,
+      latestUnitPrice: row.latestUnitPrice,
+    });
+  }
+
+  // Reporting-only fallback for historical items missing cakeId:
+  // exact unique normalized name → current Cake. Never fuzzy; skip ambiguous names.
+  for (const item of nameOnlyRows) {
+    const cakeId = uniqueNames.get(normalizeCakeName(item.cakeName));
+    if (!cakeId) {
+      continue;
+    }
+
+    const existing = stats.get(cakeId) ?? {
+      cakeId,
+      orderIds: new Set<string>(),
+      totalQuantitySold: 0,
+      totalRevenue: 0,
+      lastPurchasedAt: null as Date | null,
+      latestCakeName: item.cakeName,
+      latestUnitPrice: item.unitPrice,
+    };
+
+    const orderKey = String(item.orderId);
+    const alreadyCounted = existing.orderIds.has(orderKey);
+    existing.orderIds.add(orderKey);
+    existing.totalQuantitySold += item.quantity;
+    existing.totalRevenue += item.quantity * item.unitPrice;
+    if (
+      item.createdAt &&
+      (!existing.lastPurchasedAt ||
+        item.createdAt.getTime() > existing.lastPurchasedAt.getTime())
+    ) {
+      existing.lastPurchasedAt = item.createdAt;
+    }
+    if (!alreadyCounted || !existing.latestCakeName) {
+      existing.latestCakeName = item.cakeName;
+      existing.latestUnitPrice = item.unitPrice;
+    }
+
+    stats.set(cakeId, existing);
+  }
+
+  return toPopularStats(stats);
 }
 
 type LeanPublicCake = {

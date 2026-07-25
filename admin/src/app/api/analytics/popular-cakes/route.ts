@@ -25,18 +25,25 @@ export async function GET(request: Request) {
       | PopularCakesListResponse["pagination"]
       | undefined;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        rows,
-        pagination: pagination ?? {
-          page: 1,
-          limit: 20,
-          total: rows.length,
-          totalPages: 1,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          rows,
+          pagination: pagination ?? {
+            page: 1,
+            limit: 20,
+            total: rows.length,
+            totalPages: 1,
+          },
         },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to load popular cakes";
