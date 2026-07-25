@@ -6,7 +6,6 @@ import { CakeCategories } from "@/components/sections/CakeCategories";
 import { ComboOffersSection } from "@/components/sections/ComboOffersSection";
 import { CustomCakeBuilder } from "@/components/sections/CustomCakeBuilder";
 import { FeatureStrip } from "@/components/sections/FeatureStrip";
-import { Gallery } from "@/components/sections/Gallery";
 import { Hero } from "@/components/sections/Hero";
 import { MostPopularItems } from "@/components/sections/MostPopularItems";
 import { Newsletter } from "@/components/sections/Newsletter";
@@ -69,7 +68,6 @@ export default function Home() {
         <ComboOffersSection />
         <OrderProcess />
         <Reviews />
-        <Gallery />
         <Newsletter />
       </main>
       <Footer />
