@@ -19,6 +19,11 @@ export const metadata: Metadata = {
     template: "%s · DoughArt Admin",
   },
   description: "DoughArt bakery administration panel",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon-apple.png",
+  },
 };
 
 export default function RootLayout({

@@ -68,13 +68,13 @@ export default async function GalleryPage() {
               Gallery photos will appear here once they are added in Admin.
             </p>
           ) : (
-            <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-5">
+            <ul className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4">
               {images.map((image, index) => (
                 <AnimatedListItem key={image.id} index={index}>
-                  <div className="card-premium image-zoom-wrap group relative aspect-square overflow-hidden rounded-2xl border border-white/90 bg-white shadow-md shadow-brand-primary/10">
+                  <div className="card-premium image-zoom-wrap group relative aspect-square overflow-hidden rounded-xl border border-white/90 bg-white shadow-sm shadow-brand-primary/10">
                     <GalleryImageTile
                       image={image}
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                      sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 240px"
                       imageClassName="image-zoom-target"
                     />
                   </div>
