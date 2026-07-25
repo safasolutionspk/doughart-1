@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { ReviewsGrid } from "@/components/sections/ReviewsGrid";
-import { getAllDisplayReviews, reviewsCopy } from "@/lib/reviews";
+import { getHomepageDisplayReviews, reviewsCopy } from "@/lib/reviews";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -12,8 +12,8 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/reviews",
 });
 
-export default async function ReviewsPage() {
-  const reviews = await getAllDisplayReviews();
+export default function ReviewsPage() {
+  const reviews = getHomepageDisplayReviews();
 
   return (
     <PublicPageLayout mainId="reviews-page" ariaLabel="Customer reviews">

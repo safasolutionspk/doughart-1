@@ -1,8 +1,10 @@
+import { contactInfo } from "@/lib/contact";
+
 export const footerCopy = {
   description:
     "Crafting beautiful custom cakes for life’s sweetest moments.",
-  email: "Sweetbitelahore@gmail.com",
-  emailHref: "mailto:Sweetbitelahore@gmail.com",
+  email: contactInfo.email,
+  emailHref: contactInfo.emailHref,
   brandLine: "CUSTOM CAKES",
 } as const;
 

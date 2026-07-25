@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { contactInfo } from "@/lib/contact";
 import { footerCopy } from "@/lib/footer";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/cn";
@@ -79,6 +80,20 @@ export function ContactPageContent() {
                 Bakery
               </p>
               <p className="mt-0.5 text-sm text-brand-muted">{siteConfig.address}</p>
+            </div>
+          </li>
+          <li className="flex items-start gap-3 rounded-2xl border border-brand-border/50 bg-white/90 px-4 py-3 shadow-sm">
+            <ContactIcon label="Hours">🕒</ContactIcon>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-muted">
+                Hours
+              </p>
+              <p className="mt-0.5 text-sm text-brand-muted">
+                {contactInfo.businessHours.weekdays}
+              </p>
+              <p className="text-sm text-brand-muted">
+                {contactInfo.businessHours.sunday}
+              </p>
             </div>
           </li>
         </ul>

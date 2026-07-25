@@ -12,6 +12,7 @@ import { MostPopularItems } from "@/components/sections/MostPopularItems";
 import { Newsletter } from "@/components/sections/Newsletter";
 import { OrderProcess } from "@/components/sections/OrderProcess";
 import { Reviews } from "@/components/sections/Reviews";
+import { contactInfo } from "@/lib/contact";
 import { siteImages } from "@/lib/images";
 import { buildPageMetadata, siteUrl } from "@/lib/seo";
 import { siteConfig, socialLinks } from "@/lib/site";
@@ -31,14 +32,16 @@ export default function Home() {
     url: siteUrl,
     image: new URL(siteImages.hero, siteUrl).toString(),
     logo: new URL(siteImages.logo, siteUrl).toString(),
-    telephone: siteConfig.phone,
-    email: siteConfig.email,
+    telephone: contactInfo.phoneDisplay,
+    email: contactInfo.email,
     address: {
       "@type": "PostalAddress",
-      streetAddress: siteConfig.address,
+      streetAddress: "Thokkar Niaz Baig",
       addressLocality: "Lahore",
+      addressRegion: "Punjab",
       addressCountry: "PK",
     },
+    openingHours: ["Mo-Sa 07:00-20:00", "Su 08:00-18:00"],
     sameAs: socialLinks.map((link) => link.href),
   } as const;
 

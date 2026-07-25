@@ -1,10 +1,11 @@
+import { contactInfo } from "@/lib/contact";
 import { siteImages } from "@/lib/images";
 
 export const galleryCopy = {
   subtitle: "Follow Us On Instagram",
   heading: "A Little Happiness In Every Slice",
   instagramLabel: "Follow on Instagram",
-  instagramHref: "https://www.instagram.com/sweetbitelahore/",
+  instagramHref: contactInfo.social.instagram,
 } as const;
 
 export const galleryImages = [

@@ -1,6 +1,7 @@
+import { contactInfo } from "@/lib/contact";
 import { fetchPublicSettings, getWhatsAppDigitsFromSettings } from "@/lib/settings";
 
-const DEFAULT_WHATSAPP_NUMBER = "923046736831";
+const DEFAULT_WHATSAPP_NUMBER = contactInfo.whatsappNumber;
 
 function getEnvWhatsAppNumber(): string | undefined {
   // Prefer NEXT_PUBLIC_WHATSAPP. Keep NEXT_PUBLIC_WHATSAPP_NUMBER as a documented alias.

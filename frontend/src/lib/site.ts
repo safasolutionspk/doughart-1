@@ -1,13 +1,15 @@
+import { contactInfo } from "@/lib/contact";
+
 export const siteConfig = {
-  name: "DoughArt",
+  name: contactInfo.businessName,
   tagline: "Custom Cakes",
   slogan: "Baked with love, designed just for you",
-  address: "Main Market Gulberg 2 Lahore",
-  phone: "03046736831",
-  phoneHref: "tel:+923046736831",
-  whatsapp: "03046736831",
-  whatsappInternational: "923046736831",
-  email: "Sweetbitelahore@gmail.com",
+  address: contactInfo.address,
+  phone: contactInfo.phoneDisplay,
+  phoneHref: contactInfo.phoneHref,
+  whatsapp: contactInfo.whatsappDisplay,
+  whatsappInternational: contactInfo.whatsappNumber,
+  email: contactInfo.email,
 } as const;
 
 export const navLinks = [
@@ -22,7 +24,6 @@ export const navLinks = [
 ] as const;
 
 export const socialLinks = [
-  { label: "Facebook", href: "https://www.facebook.com/sweetbitelahore" },
-  { label: "Instagram", href: "https://www.instagram.com/sweetbitelahore/" },
-  { label: "TikTok", href: "https://www.tiktok.com/@sweetbitelahore" },
+  { label: "Facebook", href: contactInfo.social.facebook },
+  { label: "Instagram", href: contactInfo.social.instagram },
 ] as const;

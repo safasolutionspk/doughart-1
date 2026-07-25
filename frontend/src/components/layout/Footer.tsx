@@ -17,7 +17,6 @@ import { cn } from "@/lib/cn";
 const socialIconMap = {
   Facebook: "facebook",
   Instagram: "instagram",
-  TikTok: "tiktok",
   WhatsApp: "whatsapp",
 } as const;
 
