@@ -12,9 +12,9 @@ export type CheckoutDraftForm = {
   notes: string;
 };
 
+/** Payment method is not stored — public checkout is Cash on Delivery only. */
 export type CheckoutDraft = {
   form: Partial<CheckoutDraftForm>;
-  paymentMethod?: string;
 };
 
 export const emptyCheckoutForm: CheckoutDraftForm = {

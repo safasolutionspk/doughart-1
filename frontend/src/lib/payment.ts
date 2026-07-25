@@ -1,12 +1,12 @@
-/** Checkout payment options for Phase 1 launch (manual methods only). */
-export const CHECKOUT_PAYMENT_METHODS = [
-  "cash_on_delivery",
-  "bank_transfer",
-] as const;
+/**
+ * Public checkout is Cash on Delivery only. Customers never choose a payment
+ * method — every new order is created with the canonical COD value below.
+ */
+export const COD_PAYMENT_METHOD = "cash_on_delivery" as const;
 
-export type CheckoutPaymentMethod = (typeof CHECKOUT_PAYMENT_METHODS)[number];
+export const COD_PAYMENT_LABEL = "Cash on Delivery";
 
-/** All methods stored on orders (includes legacy). */
+/** All methods that may exist on stored orders (includes legacy records). */
 export const PAYMENT_METHODS = [
   "cash_on_delivery",
   "bank_transfer",
@@ -17,32 +17,10 @@ export const PAYMENT_METHODS = [
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-export type PaymentOption = {
-  id: CheckoutPaymentMethod;
-  label: string;
-  description: string;
-  badge?: string;
-};
-
-const checkoutPaymentOptions: PaymentOption[] = [
-  {
-    id: "cash_on_delivery",
-    label: "Cash on Delivery",
-    description: "Pay in cash when your order is delivered.",
-  },
-  {
-    id: "bank_transfer",
-    label: "Bank Transfer",
-    description:
-      "Transfer payment to our bank account and upload proof for manual verification.",
-  },
-];
-
-/** Payment methods shown at checkout for Phase 1. */
-export function getAvailablePaymentOptions(): PaymentOption[] {
-  return checkoutPaymentOptions;
-}
-
+/**
+ * Historical orders created with a 50% advance method keep their original
+ * payable amount so old records remain readable.
+ */
 export function resolvePayableAmount(
   finalAmount: number,
   paymentMethod: PaymentMethod | string,
@@ -56,6 +34,7 @@ export function resolvePayableAmount(
   return finalAmount;
 }
 
+/** Labels for stored orders — legacy values only appear on historical records. */
 const paymentMethodLabels: Record<string, string> = {
   cash_on_delivery: "Cash on Delivery",
   bank_transfer: "Bank Transfer",
@@ -68,14 +47,6 @@ export function formatPaymentMethod(method: PaymentMethod | string): string {
   return paymentMethodLabels[method] ?? method;
 }
 
-export function isOnlinePaymentStructureMethod(method: PaymentMethod | string): boolean {
-  return (
-    method === "online_payment" ||
-    method === "online_payment_full" ||
-    method === "online_payment_advance"
-  );
-}
-
 export function formatPaymentStatus(status: string): string {
   const labels: Record<string, string> = {
     pending: "Pending",
@@ -83,8 +54,4 @@ export function formatPaymentStatus(status: string): string {
     failed: "Failed",
   };
   return labels[status] ?? status;
-}
-
-export function isAdvancePaymentMethod(method: PaymentMethod | string): boolean {
-  return method === "online_payment_advance";
 }

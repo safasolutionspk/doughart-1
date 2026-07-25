@@ -5,7 +5,6 @@ import { noopEmailNotifier } from "./noop";
 import { smtpEmailNotifier } from "./smtp";
 import {
   adminNewOrderEmail,
-  adminPaymentProofEmail,
   orderCreatedCustomerEmail,
   quoteReadyCustomerEmail,
 } from "./templates";
@@ -114,11 +113,6 @@ export function notifyQuoteReady(ctx: OrderEmailContext): void {
   }
 
   sendAsync(ctx.customerEmail.trim(), quoteReadyCustomerEmail(ctx));
-}
-
-/** Admin alert when payment proof is uploaded. Never throws. */
-export function notifyPaymentProofUploaded(ctx: OrderEmailContext): void {
-  sendAsync(getAdminNotificationRecipient(), adminPaymentProofEmail(ctx));
 }
 
 /** Customer password reset email. Never throws. */

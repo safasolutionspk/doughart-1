@@ -28,7 +28,7 @@ npx tsx scripts/verify-data-flow.ts
 | 7 | Frontend cake detail | `/cakes/{cat}/{cake}` price, image, checkout link | ☐ |
 | 8 | Checkout order | Complete checkout → order number shown | ☐ |
 | 9 | My order lookup | `/my-order` with order # + phone | ☐ |
-| 10 | Payment proof | Upload proof on order success / my-order | ☐ |
+| 10 | COD checkout | Checkout shows Cash on Delivery only (no payment selector) | ☐ |
 | 11 | Admin orders | New order visible in admin orders list | ☐ |
 | 12 | Reviews | Admin review → homepage public reviews | ☐ |
 | 13 | Newsletter | Homepage subscribe → success message | ☐ |

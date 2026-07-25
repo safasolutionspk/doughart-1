@@ -2,6 +2,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:5000";
 
+/** Stored order methods — legacy values only appear on historical records. */
 export type PaymentMethod =
   | "cash_on_delivery"
   | "bank_transfer"
@@ -27,9 +28,9 @@ export type PublicOrderPayload = {
   deliveryDate?: string;
   address?: string;
   notes?: string;
-  paymentMethod?: PaymentMethod;
+  /** New public orders are always Cash on Delivery. */
+  paymentMethod?: "cash_on_delivery";
   cakeSlug?: string;
-  proofImage?: string;
   /** Custom cake reference/design image path from upload */
   referenceImage?: string;
   /** Included for cart orders; public API may encode lines in notes until backend accepts items. */
@@ -57,7 +58,7 @@ export type PublicOrderResponse = {
   message: string;
 };
 
-export type UploadProofResponse = {
+export type UploadImageResponse = {
   url: string;
   filename: string;
 };
@@ -208,7 +209,7 @@ export async function lookupOrder(
   return body.data;
 }
 
-export async function uploadReferenceImage(file: File): Promise<UploadProofResponse> {
+export async function uploadReferenceImage(file: File): Promise<UploadImageResponse> {
   const formData = new FormData();
   formData.append("image", file);
 
@@ -217,9 +218,9 @@ export async function uploadReferenceImage(file: File): Promise<UploadProofRespo
     body: formData,
   });
 
-  let body: ApiSuccess<UploadProofResponse> | ApiFailure;
+  let body: ApiSuccess<UploadImageResponse> | ApiFailure;
   try {
-    body = (await response.json()) as ApiSuccess<UploadProofResponse> | ApiFailure;
+    body = (await response.json()) as ApiSuccess<UploadImageResponse> | ApiFailure;
   } catch {
     throw new OrderApiError("Failed to upload image. Please try again.");
   }
@@ -227,56 +228,6 @@ export async function uploadReferenceImage(file: File): Promise<UploadProofRespo
   if (!response.ok || !body.success) {
     const failure = body as ApiFailure;
     throw new OrderApiError(failure.message || "Failed to upload reference image.");
-  }
-
-  return body.data;
-}
-
-export async function uploadPaymentProof(file: File): Promise<UploadProofResponse> {
-  const formData = new FormData();
-  formData.append("image", file);
-
-  const response = await fetch(`${API_BASE_URL}/api/uploads/public/payment-proof`, {
-    method: "POST",
-    body: formData,
-  });
-
-  let body: ApiSuccess<UploadProofResponse> | ApiFailure;
-  try {
-    body = (await response.json()) as ApiSuccess<UploadProofResponse> | ApiFailure;
-  } catch {
-    throw new OrderApiError("Failed to upload image. Please try again.");
-  }
-
-  if (!response.ok || !body.success) {
-    const failure = body as ApiFailure;
-    throw new OrderApiError(failure.message || "Failed to upload payment proof.");
-  }
-
-  return body.data;
-}
-
-export async function attachPaymentProof(payload: {
-  orderNumber: string;
-  phone: string;
-  proofImage: string;
-}): Promise<PublicOrderResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/orders/public/proof`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  let body: ApiSuccess<PublicOrderResponse> | ApiFailure;
-  try {
-    body = (await response.json()) as ApiSuccess<PublicOrderResponse> | ApiFailure;
-  } catch {
-    throw new OrderApiError("Unable to reach the server. Please try again.");
-  }
-
-  if (!response.ok || !body.success) {
-    const failure = body as ApiFailure;
-    throw new OrderApiError(failure.message || "Failed to attach payment proof.");
   }
 
   return body.data;

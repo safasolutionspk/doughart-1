@@ -1,8 +1,12 @@
 import type { PaymentMethod } from "../../types/payment";
 
+/**
+ * Historical orders created with a 50% advance method keep their original
+ * payable amount so old records stay accurate. New orders are always
+ * Cash on Delivery and pay the full amount on delivery.
+ */
 const ADVANCE_METHODS: PaymentMethod[] = ["online_payment_advance"];
 
-/** Payable amount for checkout display (whole PKR rupees). */
 export function resolvePayableAmount(
   finalAmount: number,
   paymentMethod: string,
@@ -10,21 +14,8 @@ export function resolvePayableAmount(
   if (finalAmount <= 0) {
     return 0;
   }
-
   if (ADVANCE_METHODS.includes(paymentMethod as PaymentMethod)) {
     return Math.round(finalAmount * 0.5);
   }
-
   return finalAmount;
-}
-
-export function formatPaymentMethodLabel(method: string): string {
-  const labels: Record<string, string> = {
-    cash_on_delivery: "Cash on Delivery",
-    bank_transfer: "Bank Transfer",
-    online_payment: "Online Payment",
-    online_payment_full: "Full Online Payment",
-    online_payment_advance: "50% Advance Payment",
-  };
-  return labels[method] ?? method;
 }

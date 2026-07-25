@@ -56,10 +56,10 @@ Copy `.env.example` to `.env`.
 | `EMAIL_ENABLED` | No | `true` to send notifications (default: off) |
 | `EMAIL_PROVIDER` | No | `noop` \| `console` \| `smtp` (nodemailer when `smtp` + `EMAIL_ENABLED=true`) |
 | `SMTP_*` | No | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` or `SMTP_PASS`, `SMTP_FROM` |
-| `ONLINE_PAYMENTS_ENABLED` | No | Default `false` — set `true` only when gateways are live |
-| `ONLINE_PAYMENT_GATEWAY` | No | `jazzcash` \| `easypaisa` (required if online payments enabled) |
 
-See [docs/PAYMENTS.md](./docs/PAYMENTS.md), [../docs/PRODUCTION_LAUNCH.md](../docs/PRODUCTION_LAUNCH.md), and [../docs/UPLOADS.md](../docs/UPLOADS.md).
+Customer checkout is **Cash on Delivery only** — new public orders are always created as `cash_on_delivery` (`paymentStatus=pending`) and any other supplied payment method is rejected with a 400 validation error. Historical orders may retain older payment metadata.
+
+See [../docs/PRODUCTION_LAUNCH.md](../docs/PRODUCTION_LAUNCH.md) and [../docs/UPLOADS.md](../docs/UPLOADS.md).
 
 ### Production example
 
@@ -124,7 +124,7 @@ Base URL: `http://localhost:5000` (local)
 | GET | `/api/health` | Health check |
 | GET | `/api/settings` | Business settings |
 | POST | `/api/auth/login` | Admin login (returns JWT) |
-| POST | `/api/orders` | Place order (website / checkout form; supports `paymentMethod`, optional `cakeSlug`) |
+| POST | `/api/orders` | Place order (website / checkout form; always Cash on Delivery, optional `cakeSlug`) |
 | GET | `/api/orders/public/:orderNumber?phone=` | Order confirmation (requires matching phone) |
 | GET | `/api/categories/public` | Active categories (catalog) |
 | GET | `/api/cakes/public` | Active cakes (optional `?categorySlug=`) |

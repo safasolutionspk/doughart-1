@@ -30,18 +30,6 @@ export const updateSettingsSchema = z
       .optional()
       .transform((val) => (val === "" ? undefined : val)),
     deliveryInfo: optionalText,
-    bankName: z.string().max(120).optional().transform((val) => (val === "" ? undefined : val)),
-    bankAccountTitle: z
-      .string()
-      .max(120)
-      .optional()
-      .transform((val) => (val === "" ? undefined : val)),
-    bankAccountNumber: z
-      .string()
-      .max(80)
-      .optional()
-      .transform((val) => (val === "" ? undefined : val)),
-    bankPaymentInstructions: optionalText,
   })
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
     message: "At least one field is required to update",
@@ -62,8 +50,4 @@ export type PublicSettings = {
   tiktok?: string;
   whatsapp?: string;
   deliveryInfo?: string;
-  bankName?: string;
-  bankAccountTitle?: string;
-  bankAccountNumber?: string;
-  bankPaymentInstructions?: string;
 };

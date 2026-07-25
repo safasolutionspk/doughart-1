@@ -6,15 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { OrderNumberBadge } from "@/components/orders/OrderNumberBadge";
 import { fetchPublicOrderByNumber } from "@/lib/api";
 import { formatPrice } from "@/lib/catalog";
-import { BankTransferInstructions } from "@/components/payment/BankTransferInstructions";
 import {
   formatPaymentMethod,
   formatPaymentStatus,
-  isOnlinePaymentStructureMethod,
   resolvePayableAmount,
 } from "@/lib/payment";
-import { fetchPublicSettings } from "@/lib/settings";
-import { bankProofUploadEnabled } from "@/lib/featureFlags";
 import { buildPageMetadata } from "@/lib/seo";
 import { buildWhatsAppOrderConfirmationUrl, getWhatsAppNumber } from "@/lib/whatsapp";
 
@@ -48,10 +44,7 @@ export default async function OrderSuccessPage({ params, searchParams }: PagePro
     notFound();
   }
 
-  const [waNumber, settings] = await Promise.all([
-    getWhatsAppNumber(),
-    fetchPublicSettings(),
-  ]);
+  const waNumber = await getWhatsAppNumber();
   const whatsappHref = buildWhatsAppOrderConfirmationUrl(
     order.orderNumber,
     order.cakeType,
@@ -61,9 +54,6 @@ export default async function OrderSuccessPage({ params, searchParams }: PagePro
   const payableAmount =
     order.payableAmount ??
     resolvePayableAmount(order.finalAmount, order.paymentMethod);
-  const isOnlineStructureMethod = isOnlinePaymentStructureMethod(
-    order.paymentMethod,
-  );
 
   return (
     <PublicPageLayout mainId="order-success" ariaLabel="Order confirmation">
@@ -158,26 +148,9 @@ export default async function OrderSuccessPage({ params, searchParams }: PagePro
                 ) : null}
               </dl>
 
-              {order.paymentMethod === "bank_transfer" ? (
-                <div className="mt-4 space-y-4">
-                  <BankTransferInstructions
-                    settings={settings}
-                    orderNumber={order.orderNumber}
-                  />
-                  <p className="text-sm text-brand-muted">
-                    {bankProofUploadEnabled
-                      ? order.paymentProofSubmitted
-                        ? "We received your payment proof. Admin will verify it manually and update payment status."
-                        : "Upload your payment proof anytime from My Order. Admin will verify it manually after upload."
-                      : "Transfer the amount using the details above with your order reference, then message us on WhatsApp. Admin will verify payment manually."}
-                  </p>
-                </div>
-              ) : null}
-              {isOnlineStructureMethod ? (
+              {order.paymentMethod === "cash_on_delivery" ? (
                 <p className="mt-4 text-sm text-brand-muted">
-                  Online payment is currently unavailable and coming soon. For
-                  help with this order, contact support on WhatsApp. For new
-                  orders, please use cash on delivery or bank transfer.
+                  Pay when your order is delivered.
                 </p>
               ) : null}
 

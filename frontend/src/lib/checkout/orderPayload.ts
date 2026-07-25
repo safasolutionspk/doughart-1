@@ -1,7 +1,8 @@
 import { formatPrice } from "@/lib/catalog";
 import { getCartSubtotal } from "@/lib/cart/cart";
 import type { CartItem } from "@/lib/cart/types";
-import type { PaymentMethod, PublicOrderPayload } from "@/lib/api";
+import type { PublicOrderPayload } from "@/lib/api";
+import { COD_PAYMENT_METHOD } from "@/lib/payment";
 import type { CheckoutDraftForm } from "./draft";
 
 export type CheckoutOrderItem = {
@@ -58,8 +59,6 @@ function combineNotes(
 export function buildOrderPayloadFromCart(
   form: CheckoutDraftForm,
   cartItems: CartItem[],
-  paymentMethod: PaymentMethod,
-  proofImage?: string,
 ): PublicOrderPayload {
   const items = cartItemsToOrderItems(cartItems);
   const cartBlock = buildCartNotesBlock(cartItems);
@@ -85,9 +84,8 @@ export function buildOrderPayloadFromCart(
       deliveryDate: form.deliveryDate || undefined,
       address: form.address.trim() || undefined,
       notes,
-      paymentMethod,
+      paymentMethod: COD_PAYMENT_METHOD,
       cakeSlug: item.cakeSlug,
-      proofImage,
       items,
     };
   }
@@ -108,8 +106,7 @@ export function buildOrderPayloadFromCart(
     deliveryDate: form.deliveryDate || undefined,
     address: form.address.trim() || undefined,
     notes: combineNotes(form.notes, [cartBlock]),
-    paymentMethod,
-    proofImage,
+    paymentMethod: COD_PAYMENT_METHOD,
     items,
   };
 }
@@ -118,8 +115,6 @@ export function buildOrderPayloadFromCake(
   form: CheckoutDraftForm,
   cakeName: string,
   cakeSlug: string | undefined,
-  paymentMethod: PaymentMethod,
-  proofImage?: string,
 ): PublicOrderPayload {
   return {
     name: form.name.trim(),
@@ -132,8 +127,7 @@ export function buildOrderPayloadFromCake(
     deliveryDate: form.deliveryDate || undefined,
     address: form.address.trim() || undefined,
     notes: form.notes.trim() || undefined,
-    paymentMethod,
+    paymentMethod: COD_PAYMENT_METHOD,
     cakeSlug,
-    proofImage,
   };
 }

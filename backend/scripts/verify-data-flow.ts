@@ -295,7 +295,8 @@ async function main() {
     email: "verify@example.com",
     phone: "03046736831",
     cakeType: "Verify Cake Order",
-    paymentMethod: "bank_transfer",
+    // Public checkout is COD-only; any other value is rejected with 400.
+    paymentMethod: "cash_on_delivery",
   };
 
   const orderCreate = await apiJson<{ orderNumber: string }>("/api/orders", {
@@ -329,59 +330,50 @@ async function main() {
     fail("Admin orders", orderInAdmin ? "search miss" : `HTTP ${adminOrders.status}`);
   }
 
-  const proofForm = new FormData();
-  const proofBlob = new Blob([tinyJpegBuffer()], { type: "image/jpeg" });
-  proofForm.append("image", proofBlob, "proof.jpg");
-
-  const proofUpload = await fetch(`${API}/api/uploads/public/payment-proof`, {
+  // COD-only enforcement: a non-COD payment method must be rejected with 400
+  // before any database write.
+  const rejectedOrder = await apiJson<{ orderNumber: string }>("/api/orders", {
     method: "POST",
-    body: proofForm,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...orderPayload, paymentMethod: "bank_transfer" }),
   });
-  const proofBody = (await proofUpload.json()) as ApiOk<{
+  if (rejectedOrder.status === 400 && !rejectedOrder.body.success) {
+    ok("Non-COD payment method rejected (400)");
+  } else {
+    fail(
+      "Non-COD rejection",
+      `expected HTTP 400, got HTTP ${rejectedOrder.status}`,
+    );
+  }
+
+  // Public reference-image upload (custom cake design images) still works.
+  const referenceForm = new FormData();
+  const referenceBlob = new Blob([tinyJpegBuffer()], { type: "image/jpeg" });
+  referenceForm.append("image", referenceBlob, "reference.jpg");
+
+  const referenceUpload = await fetch(
+    `${API}/api/uploads/public/reference-image`,
+    {
+      method: "POST",
+      body: referenceForm,
+    },
+  );
+  const referenceBody = (await referenceUpload.json()) as ApiOk<{
     path: string;
     url: string;
   }>;
 
-  let proofPath = "";
   if (
-    proofUpload.status === 201 &&
-    proofBody.success &&
-    proofBody.data.path?.startsWith("/uploads/images/")
+    referenceUpload.status === 201 &&
+    referenceBody.success &&
+    referenceBody.data.path?.startsWith("/uploads/images/")
   ) {
-    proofPath = proofBody.data.path;
-    ok("Payment proof upload");
+    ok("Reference image upload");
   } else {
     fail(
-      "Payment proof upload",
-      !proofBody.success ? proofBody.message : `HTTP ${proofUpload.status}`,
+      "Reference image upload",
+      !referenceBody.success ? referenceBody.message : `HTTP ${referenceUpload.status}`,
     );
-  }
-
-  if (orderNumber && proofPath) {
-    const attachProof = await apiJson<{ orderNumber: string; paymentProofSubmitted?: boolean }>(
-      "/api/orders/public/proof",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderNumber,
-          phone: orderPayload.phone,
-          proofImage: proofPath,
-        }),
-      },
-    );
-    if (
-      attachProof.status === 200 &&
-      attachProof.body.success &&
-      attachProof.body.data.paymentProofSubmitted
-    ) {
-      ok("Payment proof attached to order");
-    } else {
-      fail(
-        "Payment proof attach",
-        !attachProof.body.success ? attachProof.body.message : `HTTP ${attachProof.status}`,
-      );
-    }
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

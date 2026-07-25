@@ -3,7 +3,7 @@ import {
   deleteImage,
   listGallery,
   uploadImage as uploadImageHandler,
-  uploadPaymentProofPublic,
+  uploadPublicReferenceImage,
 } from "../controllers/upload.controller";
 import { auditLog } from "../middleware/auditLog";
 import { authenticateAdmin } from "../middleware/auth";
@@ -15,17 +15,10 @@ import { uploadFilenameParamSchema } from "../validators/upload.validator";
 const router = Router();
 
 router.post(
-  "/public/payment-proof",
-  uploadLimiter,
-  uploadImage.single("image"),
-  uploadPaymentProofPublic,
-);
-
-router.post(
   "/public/reference-image",
   uploadLimiter,
   uploadImage.single("image"),
-  uploadPaymentProofPublic,
+  uploadPublicReferenceImage,
 );
 
 router.use(authenticateAdmin, auditLog);

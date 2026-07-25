@@ -92,7 +92,6 @@ UPLOAD_PROVIDER=cloudinary
 ```env
 NEXT_PUBLIC_API_URL=https://api.sweetbite.com
 NEXT_PUBLIC_SITE_URL=https://sweetbite.com
-NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED=false
 ```
 
 `admin/.env.local`:
@@ -238,7 +237,7 @@ cd /opt/sweetbite && npm run smoke
 API_BASE=https://api.sweetbite.com npm run smoke
 ```
 
-Manual: admin login, test order, bank transfer instructions, proof upload.
+Manual: admin login, test order (checkout shows Cash on Delivery only).
 
 See [SMOKE_TESTS.md](./SMOKE_TESTS.md), [RUNBOOK.md](./RUNBOOK.md), [MONITORING.md](./MONITORING.md), [BACKUP.md](./BACKUP.md).
 

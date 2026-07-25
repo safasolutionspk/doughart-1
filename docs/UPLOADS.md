@@ -1,6 +1,6 @@
 # DoughArt — Upload storage (production)
 
-Catalog images and payment proofs are uploaded through the API. Storage is selected with `UPLOAD_PROVIDER`.
+Catalog images and custom-cake reference images are uploaded through the API. Storage is selected with `UPLOAD_PROVIDER`.
 
 ## Phase 1 strategy (single VPS)
 
@@ -106,7 +106,7 @@ Local provider behavior is unchanged from pre-P2A (paths under `/uploads/images/
 - Allowed types: JPG, JPEG, PNG, WebP, GIF, HEIC, HEIF
 - Extension + MIME + magic-byte validation (`imageValidation.ts`)
 - Rate limit on upload routes (`uploadLimiter`)
-- Public payment proof: `POST /api/uploads/public/payment-proof` only
+- Public reference image: `POST /api/uploads/public/reference-image` only
 - Admin catalog images: JWT required
 
 ## Related docs

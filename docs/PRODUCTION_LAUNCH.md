@@ -60,10 +60,9 @@ cp frontend/.env.example frontend/.env.local
 | `EMAIL_ENABLED` | `true` when SMTP is ready |
 | `EMAIL_PROVIDER` | `console` (test) or `smtp` (production) |
 | `SMTP_*` | See §6 and [backend/docs/EMAIL.md](../backend/docs/EMAIL.md) |
-| `NOTIFY_ADMIN_EMAIL` | New order + payment proof alerts |
+| `NOTIFY_ADMIN_EMAIL` | New order alerts |
 | `FRONTEND_URL` | My Order links in customer emails |
 | `ADMIN_URL` | Order detail links in admin emails |
-| `ONLINE_PAYMENTS_ENABLED` | `false` until JazzCash/EasyPaisa live |
 | `UPLOAD_PROVIDER` | `cloudinary` in production (or `local` + persistent disk) |
 | `CLOUDINARY_*` | Required when `UPLOAD_PROVIDER=cloudinary` (see [UPLOADS.md](./UPLOADS.md)) |
 
@@ -80,8 +79,6 @@ cp frontend/.env.example frontend/.env.local
 | --- | --- |
 | `NEXT_PUBLIC_API_URL` | Backend public URL |
 | `NEXT_PUBLIC_SITE_URL` | Public shop URL (SEO) |
-| `NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED` | `false` until gateways live (sync with backend) |
-| `NEXT_PUBLIC_BANK_PROOF_UPLOAD_ENABLED` | `false` (hide screenshot upload in shop; keep API for future) |
 | `NEXT_PUBLIC_WHATSAPP` | Digits with country code (fallback if settings API empty) |
 
 ## 4. DNS and SSL
@@ -155,50 +152,19 @@ ADMIN_URL=https://admin.example.com
 
 ## 7. Payment setup
 
-Full reference: [backend/docs/PAYMENTS.md](../backend/docs/PAYMENTS.md)
+Customer checkout is **Cash on Delivery only**:
 
-### Defaults (production-safe)
+- Customers do not select a payment method — checkout shows a fixed
+  "Payment Method: Cash on Delivery" block.
+- New public orders are always created as `cash_on_delivery` with
+  `paymentStatus=pending`. The API rejects any other supplied payment method
+  with a 400 validation error.
+- Payment status is updated operationally in Admin → Orders after cash is
+  collected on delivery.
+- Historical orders may retain older payment metadata (bank transfer / online
+  payment values); Admin still displays these correctly.
 
-```env
-# backend
-ONLINE_PAYMENTS_ENABLED=false
-
-# frontend
-NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED=false
-```
-
-- Checkout shows **Cash on Delivery** and **Bank Transfer** only.
-- API rejects `online_payment` when disabled.
-- Bank details: **Admin → Settings → Bank transfer** (shown on checkout / order success / My Order).
-- Payment proof upload remains available for bank transfer orders.
-
-### Bank transfer go-live
-
-1. In admin, set bank name, account title, account number/IBAN, and instructions.
-2. Place a test order with bank transfer — confirm details appear on order success.
-3. Upload proof from My Order — confirm admin receives email if `NOTIFY_ADMIN_EMAIL` is set.
-
-### Online payment go-live (when client provides credentials)
-
-**Client must provide:**
-
-| JazzCash | EasyPaisa |
-| --- | --- |
-| Merchant ID | Store ID |
-| Password / API key | Hash key / secret |
-| Integrity salt | — |
-| Sandbox + live portal access | Sandbox + live portal access |
-| Return URL approval | Return URL approval |
-| Webhook/IPN URL whitelisted | Webhook URL whitelisted |
-
-**Engineering (before taking live payments):**
-
-1. Set `ONLINE_PAYMENTS_ENABLED=true` and `NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED=true`.
-2. Set `ONLINE_PAYMENT_GATEWAY` and all required `JAZZCASH_*` or `EASYPAISA_*` vars (API will not start if incomplete).
-3. Implement gateway redirect + webhook signature verification — **orders stay `pending` until verified** (see PAYMENTS.md).
-4. Configure gateway dashboard:
-   - Webhook: `POST https://api.example.com/api/webhooks/payments/jazzcash` (or easypaisa)
-   - Return: `https://shop.example.com/order-success/...`
+No payment gateway env vars or bank-transfer settings are required.
 
 ## 8. Deploy admin
 
@@ -251,7 +217,7 @@ See [UPLOADS.md](./UPLOADS.md).
 | Public orders omit PII/proof URLs | `types/publicOrder.ts` |
 | Upload validation 5MB + MIME | `config/upload.ts`, `imageValidation.ts` |
 | No stack traces in production 500s | `errorHandler.ts` |
-| Online payment gated by env | `payment/guards.ts`, order validator |
+| Public orders forced to Cash on Delivery | order validator + `order.service.ts` |
 
 ## 12. Post-deploy QA
 
@@ -263,7 +229,7 @@ Automated smoke tests (see [SMOKE_TESTS.md](./SMOKE_TESTS.md)):
 # API (health, public routes, customer auth, order)
 npm run smoke
 
-# Optional: full admin CRUD + uploads + proof flow
+# Optional: full admin CRUD + uploads + COD order flow
 npm run verify:data-flow
 
 # With shop/admin dev servers running:
@@ -288,9 +254,7 @@ See **[RUNBOOK.md](./RUNBOOK.md)** (emergency rollback) and **[BACKUP.md](./BACK
 | MongoDB Atlas user/password | `MONGODB_URI` |
 | Production domains + SSL | Hosting |
 | SMTP | Backend `SMTP_*` |
-| Bank transfer details | Admin → Settings |
 | WhatsApp number | Admin → Settings + `NEXT_PUBLIC_WHATSAPP` |
-| JazzCash / EasyPaisa | Backend payment env (when enabling online pay) |
 
 ## Related
 

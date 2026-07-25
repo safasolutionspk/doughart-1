@@ -42,11 +42,6 @@ export async function seedBusinessSettings(): Promise<void> {
     instagram: "https://www.instagram.com/sweetbitelahore/",
     tiktok: "https://www.tiktok.com/@sweetbitelahore",
     whatsapp: "923277707333",
-    bankName: "HBL",
-    bankAccountTitle: "DoughArt",
-    bankAccountNumber: "12345678901234",
-    bankPaymentInstructions:
-      "Transfer the order total and use your order number as the payment reference. Upload your receipt on My Order after paying.",
   });
 
   console.log("Default business settings seeded");

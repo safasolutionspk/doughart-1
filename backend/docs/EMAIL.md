@@ -1,6 +1,6 @@
 # DoughArt — Email notifications
 
-Transactional emails are sent from the API using a small provider abstraction. **Order creation, quotes, and payment proof uploads always succeed even if email fails** — errors are logged without SMTP secrets.
+Transactional emails are sent from the API using a small provider abstraction. **Order creation and quotes always succeed even if email fails** — errors are logged without SMTP secrets.
 
 ## Enable / disable
 
@@ -37,7 +37,7 @@ NOTIFY_ADMIN_EMAIL=orders@example.com
 
 - `FRONTEND_URL` — adds **My Order** links in customer emails  
 - `ADMIN_URL` — adds **Open order in admin** links in staff emails  
-- `NOTIFY_ADMIN_EMAIL` — receives new-order and payment-proof alerts  
+- `NOTIFY_ADMIN_EMAIL` — receives new-order alerts
 
 ## Gmail app password setup
 
@@ -70,7 +70,7 @@ ADMIN_URL=http://localhost:3001
 NOTIFY_ADMIN_EMAIL=admin@example.com
 ```
 
-Place a test order or upload payment proof. The API logs JSON lines like:
+Place a test order. The API logs JSON lines like:
 
 ```json
 {"type":"email_preview","to":"customer@example.com","subject":"Order received — SA-...","textPreview":"...","htmlLength":4200}
@@ -85,7 +85,6 @@ No mail is sent; use this to verify templates and routing before enabling SMTP.
 | Order confirmation | Customer (if email on order) | After `POST /api/orders` |
 | New order alert | `NOTIFY_ADMIN_EMAIL` | After order create (if set) |
 | Quote ready | Customer (if email on order) | Admin sets `quotedAmount` on custom cake |
-| Payment proof uploaded | `NOTIFY_ADMIN_EMAIL` | Customer uploads bank transfer proof |
 
 ## Templates
 
@@ -100,7 +99,7 @@ HTML + plain-text templates live under `src/services/email/templates/`:
 ## Security
 
 - SMTP passwords are never logged (`safeErrorLog` redacts sensitive keys).  
-- Failed sends do not roll back orders or proofs.  
+- Failed sends do not roll back orders.
 - Console provider only logs a short text preview, not full HTML body.
 
 ## Related

@@ -33,12 +33,7 @@ import {
 import { cn } from "@/lib/cn";
 import { formatPrice, type PublicCake } from "@/lib/catalog";
 import { buildLoginRedirectUrl } from "@/lib/auth/returnUrl";
-import {
-  formatPaymentMethod,
-  getAvailablePaymentOptions,
-  resolvePayableAmount,
-  type CheckoutPaymentMethod,
-} from "@/lib/payment";
+import { COD_PAYMENT_LABEL } from "@/lib/payment";
 
 const inputClassName = cn(
   "w-full rounded-xl border border-brand-border bg-white px-3.5 py-2.5 text-sm text-brand-brown",
@@ -86,10 +81,6 @@ export function CheckoutForm({
 
   const [form, setForm] = useState<CheckoutDraftForm>({ ...emptyCheckoutForm });
   const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
-  const availablePaymentOptions = getAvailablePaymentOptions();
-  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>(
-    availablePaymentOptions[0]?.id ?? "cash_on_delivery",
-  );
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -109,7 +100,6 @@ export function CheckoutForm({
       : 0;
   const orderTotal =
     showCartSubtotal ? cartSubtotal : singleCakeTotal > 0 ? singleCakeTotal : 0;
-  const payableAmount = resolvePayableAmount(orderTotal, paymentMethod);
   const showPricing = orderTotal > 0;
 
   useEffect(() => {
@@ -122,26 +112,17 @@ export function CheckoutForm({
     if (draft) {
       const timer = window.setTimeout(() => {
         setForm((prev) => mergeFormWithDraft(prev, draft.form));
-        if (
-          draft.paymentMethod &&
-          availablePaymentOptions.some((o) => o.id === draft.paymentMethod)
-        ) {
-          setPaymentMethod(draft.paymentMethod as CheckoutPaymentMethod);
-        }
       }, 0);
       return () => window.clearTimeout(timer);
     }
-  }, [availablePaymentOptions]);
+  }, []);
 
   useEffect(() => {
     if (!draftRestored.current) {
       return;
     }
-    saveCheckoutDraft({
-      form,
-      paymentMethod,
-    });
-  }, [form, paymentMethod]);
+    saveCheckoutDraft({ form });
+  }, [form]);
 
   function updateField<K extends keyof CheckoutDraftForm>(
     key: K,
@@ -170,7 +151,7 @@ export function CheckoutForm({
     }
 
     if (authHydrated && !isAuthenticated) {
-      saveCheckoutDraft({ form, paymentMethod });
+      saveCheckoutDraft({ form });
       router.push(buildLoginRedirectUrl("/checkout"));
       return;
     }
@@ -188,12 +169,11 @@ export function CheckoutForm({
     setFieldErrors({});
 
     const payload = checkoutFromCart
-      ? buildOrderPayloadFromCart(form, cartItems, paymentMethod)
+      ? buildOrderPayloadFromCart(form, cartItems)
       : buildOrderPayloadFromCake(
           form,
           selectedCake?.name ?? "Custom cake",
           selectedCakeSlug,
-          paymentMethod,
         );
 
     try {
@@ -496,99 +476,26 @@ export function CheckoutForm({
 
       <section className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-brown">
-          Payment option
+          Payment Method
         </h2>
-        <p className="text-xs text-brand-muted">
-          Cash on delivery and bank transfer are available now. Online payment
-          is coming soon. Bank transfer payments are verified manually by admin
-          after proof upload.
-        </p>
-        {paymentMethod === "bank_transfer" ? (
-          <p className="text-xs text-brand-muted">
-            After placing your order, bank details are shown on Order Success and
-            My Order. Upload payment proof there for manual verification.
+        <div
+          className="rounded-2xl border border-brand-border bg-brand-pink-lighter/50 p-4 sm:p-5"
+          role="note"
+          aria-label="Payment method"
+        >
+          <p className="font-semibold text-brand-brown">{COD_PAYMENT_LABEL}</p>
+          <p className="mt-1 text-sm leading-relaxed text-brand-muted">
+            Pay when your order is delivered.
           </p>
-        ) : null}
-        <fieldset className="space-y-3">
-          <legend className="sr-only">Choose payment option</legend>
-          {availablePaymentOptions.map((option) => {
-            const isSelected = paymentMethod === option.id;
-            const optionPayable = resolvePayableAmount(orderTotal, option.id);
-            return (
-              <label
-                key={option.id}
-                className={cn(
-                  "flex cursor-pointer gap-4 rounded-2xl border p-4 transition-colors sm:p-5",
-                  isSelected
-                    ? "border-brand-primary bg-brand-pink-lighter/60 shadow-sm"
-                    : "border-brand-border bg-white hover:border-brand-primary/40",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value={option.id}
-                  checked={isSelected}
-                  disabled={status === "loading"}
-                  onChange={() => setPaymentMethod(option.id)}
-                  className="mt-1 h-4 w-4 shrink-0 accent-brand-primary"
-                />
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-brand-brown">
-                      {option.label}
-                    </span>
-                    {option.badge ? (
-                      <span className="rounded-full bg-brand-pink-light px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-primary">
-                        {option.badge}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="text-sm leading-relaxed text-brand-muted">
-                    {option.description}
-                  </span>
-                  {showPricing ? (
-                    <span className="text-sm font-semibold text-brand-primary">
-                      Payable: {formatPrice(optionPayable)}
-                    </span>
-                  ) : null}
-                </span>
-              </label>
-            );
-          })}
-          <div
-            aria-disabled="true"
-            className="cursor-not-allowed rounded-2xl border border-brand-border bg-brand-cream/70 p-4 opacity-80 sm:p-5"
-          >
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-brand-brown">Online Payment</span>
-                <span className="rounded-full bg-brand-border/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-brown">
-                  Coming Soon
-                </span>
-              </div>
-              <p className="text-sm leading-relaxed text-brand-muted">
-                JazzCash / EasyPaisa integration will be available soon.
-              </p>
-            </div>
-          </div>
-        </fieldset>
+        </div>
       </section>
 
       {showPricing ? (
         <div className="space-y-2 rounded-xl border border-brand-border bg-brand-cream px-4 py-3.5 sm:px-5">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span className="font-medium text-brand-brown">Order total</span>
-            <span className="font-display text-lg font-semibold text-brand-brown sm:text-xl">
-              {formatPrice(orderTotal)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-3 border-t border-brand-border/60 pt-2">
-            <span className="font-medium text-brand-brown">
-              Payable ({formatPaymentMethod(paymentMethod)})
-            </span>
             <span className="font-display text-xl font-semibold text-brand-primary sm:text-2xl">
-              {formatPrice(payableAmount)}
+              {formatPrice(orderTotal)}
             </span>
           </div>
         </div>

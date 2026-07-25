@@ -54,7 +54,8 @@ cp frontend/.env.example frontend/.env.local
 | `CORS_ORIGIN` | Yes | Comma-separated HTTPS origins (shop + admin), no trailing slashes |
 | `FRONTEND_URL` | Recommended | Public shop URL (HTTPS) |
 | `ADMIN_URL` | Recommended | Admin dashboard URL (HTTPS) |
-| `ONLINE_PAYMENTS_ENABLED` | No | Default `false` — set `true` only when gateways are live |
+
+Customer checkout is **Cash on Delivery only** — new public orders are always created as `cash_on_delivery` and no env variable enables another public payment method.
 
 ### Admin — required variables
 
@@ -70,7 +71,6 @@ cp frontend/.env.example frontend/.env.local
 | `NEXT_PUBLIC_API_URL` | Yes | Same API URL as admin |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical shop URL for SEO |
 | `NEXT_PUBLIC_WHATSAPP` | No | Legacy optional. Public shop WhatsApp uses `frontend/src/lib/contact.ts` (`923277707333` for display `0327 7707333`) and is not overridden by ENV or Admin settings. |
-| `NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED` | No | Default `false` — must match backend when enabling online pay |
 
 ## 3. Build and start (production smoke test)
 
@@ -109,12 +109,9 @@ Configure these with the bakery owner — not in example env files:
 | --- | --- |
 | **WhatsApp business number** | Admin → Settings + frontend `NEXT_PUBLIC_WHATSAPP` |
 | **SMTP** (order emails) | Backend `EMAIL_ENABLED=true`, `EMAIL_PROVIDER=smtp`, `SMTP_*` |
-| **Bank transfer details** | Admin → Settings (copy shown on checkout / instructions) |
-| **JazzCash merchant** | Backend `JAZZCASH_*` when enabling online payments |
-| **EasyPaisa merchant** | Backend `EASYPAISA_*` when enabling online payments |
 | **Domain / SSL** | Hosting provider (Vercel, Railway, VPS, etc.) |
 
-Online payment and live webhooks are **placeholders** until gateway keys are supplied — see [backend/docs/PAYMENTS.md](../backend/docs/PAYMENTS.md).
+Customer payment is Cash on Delivery only — no payment gateway or bank-transfer credentials are needed. Historical orders may retain older payment metadata, which Admin still displays.
 
 ## 6. Hosting suggestions
 
@@ -160,7 +157,7 @@ For a single-server or API-only VPS setup, follow **[VPS_DEPLOYMENT.md](./VPS_DE
 | Document | Purpose |
 | --- | --- |
 | [RUNBOOK.md](./RUNBOOK.md) | Start/stop/restart, logs, health, smoke, emergency rollback |
-| [MONITORING.md](./MONITORING.md) | Uptime, PM2, disk, Atlas, SMTP, proof upload alerts |
+| [MONITORING.md](./MONITORING.md) | Uptime, PM2, disk, Atlas, SMTP, upload alerts |
 | [BACKUP.md](./BACKUP.md) | MongoDB, local uploads, Cloudinary, restore steps |
 | [SMOKE_TESTS.md](./SMOKE_TESTS.md) | Automated post-deploy verification |
 

@@ -6,20 +6,12 @@ import { useCustomerAuth } from "@/components/auth/CustomerAuthProvider";
 import { LoggedInOrdersSection } from "@/components/orders/LoggedInOrdersSection";
 import { OrderNumberBadge } from "@/components/orders/OrderNumberBadge";
 import { Button } from "@/components/ui/Button";
-import { PaymentProofUpload } from "@/components/checkout/PaymentProofUpload";
-import {
-  attachPaymentProof,
-  lookupOrder,
-  type PublicOrderResponse,
-} from "@/lib/api";
+import { lookupOrder, type PublicOrderResponse } from "@/lib/api";
 import { formatPrice } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
-import { bankProofUploadEnabled } from "@/lib/featureFlags";
-import { BankTransferInstructions } from "@/components/payment/BankTransferInstructions";
 import {
   formatPaymentMethod,
   formatPaymentStatus,
-  isOnlinePaymentStructureMethod,
   resolvePayableAmount,
 } from "@/lib/payment";
 import { buildWhatsAppOrderConfirmationUrl } from "@/lib/whatsapp";
@@ -179,27 +171,13 @@ export function MyOrderLookup() {
           </form>
         )}
 
-        {order ? (
-          <OrderDetails
-            order={order}
-            phone={phone}
-            onProofAttached={(updated) => setOrder(updated)}
-          />
-        ) : null}
+        {order ? <OrderDetails order={order} /> : null}
       </section>
     </div>
   );
 }
 
-function OrderDetails({
-  order,
-  phone,
-  onProofAttached,
-}: {
-  order: PublicOrderResponse;
-  phone: string;
-  onProofAttached: (order: PublicOrderResponse) => void;
-}) {
+function OrderDetails({ order }: { order: PublicOrderResponse }) {
   const whatsappHref = buildWhatsAppOrderConfirmationUrl(
     order.orderNumber,
     order.cakeType,
@@ -208,9 +186,6 @@ function OrderDetails({
   const payableAmount =
     order.payableAmount ??
     resolvePayableAmount(order.finalAmount, order.paymentMethod);
-  const isOnlineStructureMethod = isOnlinePaymentStructureMethod(
-    order.paymentMethod,
-  );
 
   return (
     <div className="reveal-up space-y-5 rounded-2xl border border-brand-border bg-white p-5 shadow-sm sm:p-6">
@@ -253,38 +228,9 @@ function OrderDetails({
         {order.eventDate ? <Detail label="Delivery" value={order.eventDate} /> : null}
       </dl>
 
-      {order.paymentMethod === "bank_transfer" ? (
-        <BankTransferInstructions orderNumber={order.orderNumber} />
-      ) : null}
-
-      {bankProofUploadEnabled &&
-      order.paymentMethod === "bank_transfer" &&
-      !order.paymentProofSubmitted ? (
-        <PaymentProofUpload
-          label="Upload bank transfer proof"
-          onUploaded={async (url) => {
-            const updated = await attachPaymentProof({
-              orderNumber: order.orderNumber,
-              phone,
-              proofImage: url,
-            });
-            onProofAttached(updated);
-          }}
-        />
-      ) : null}
-
-      {bankProofUploadEnabled && order.paymentProofSubmitted ? (
-        <p className="text-sm text-emerald-700">
-          Payment proof received — thank you. Admin will verify it manually and
-          update your payment status.
-        </p>
-      ) : null}
-
-      {isOnlineStructureMethod ? (
+      {order.paymentMethod === "cash_on_delivery" ? (
         <p className="text-sm text-brand-muted">
-          Online payment is currently unavailable and coming soon. For help with
-          this order, contact support on WhatsApp. For new orders, please use
-          cash on delivery or bank transfer.
+          Pay when your order is delivered.
         </p>
       ) : null}
 

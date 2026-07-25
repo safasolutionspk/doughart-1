@@ -113,7 +113,7 @@ Exit code **0** = pass, **1** = fail.
 
 ### 2. Full data-flow verification (deeper)
 
-Admin CRUD, image upload, payment proof attach:
+Admin CRUD, image upload, COD order flow (rejects non-COD payment methods):
 
 ```bash
 npm run verify:data-flow
@@ -156,7 +156,7 @@ Run in browser while logged out unless noted.
 | 1 | `/` | Homepage loads; header/footer; cakes section |
 | 2 | `/cakes` | Category/cake listing loads |
 | 3 | `/cart` | Empty cart or items; link to checkout |
-| 4 | `/checkout` | Form loads; payment methods (no online if disabled) |
+| 4 | `/checkout` | Form loads; fixed "Payment Method: Cash on Delivery" block (no selector) |
 | 5 | `/login` | Sign-in form |
 | 6 | `/signup` | Registration form |
 | 7 | `/account` | Redirects to login when logged out |
@@ -181,7 +181,7 @@ Run in browser while logged out unless noted.
 | 5 | `/dashboard/cakes` | List / create / edit |
 | 6 | `/dashboard/orders` | Orders list; open detail |
 | 7 | `/dashboard/reviews` | Reviews list |
-| 8 | `/dashboard/settings` | Business + bank transfer fields save |
+| 8 | `/dashboard/settings` | Business, contact, and delivery fields save |
 | 9 | `/dashboard/gallery` | Image gallery loads |
 
 ---
@@ -191,10 +191,9 @@ Run in browser while logged out unless noted.
 | # | Check |
 | --- | --- |
 | 1 | `GET /api/health` → `database: connected` |
-| 2 | Bank transfer details in Admin → Settings appear on checkout |
-| 3 | Payment proof upload (My Order) succeeds |
-| 4 | `ONLINE_PAYMENTS_ENABLED=false` — online option hidden |
-| 5 | Email `EMAIL_PROVIDER=console` — order creates `email_preview` log |
+| 2 | Checkout shows Cash on Delivery only (no payment selector) |
+| 3 | `POST /api/orders` with non-COD `paymentMethod` → 400 |
+| 4 | Email `EMAIL_PROVIDER=console` — order creates `email_preview` log |
 
 See also: [FINAL_QA_CHECKLIST.md](./FINAL_QA_CHECKLIST.md), [PRODUCTION_LAUNCH.md](./PRODUCTION_LAUNCH.md).
 

@@ -289,73 +289,13 @@ export function SettingsForm() {
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-muted">
-            Bank transfer
+            Payments
           </h2>
           <p className="text-sm text-brand-muted">
-            Shown to customers who choose bank transfer at checkout, on order
-            confirmation, and on My Order.
+            Customer checkout is Cash on Delivery only. New orders are created
+            as Cash on Delivery automatically — there is no customer payment
+            selection to configure.
           </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="bankName" className={labelClassName}>
-                Bank name
-              </label>
-              <input
-                id="bankName"
-                value={form.bankName}
-                disabled={isSaving}
-                onChange={(event) => updateField("bankName", event.target.value)}
-                placeholder="e.g. HBL, Meezan, JazzCash Bank"
-                className={inputClassName}
-              />
-            </div>
-            <div>
-              <label htmlFor="bankAccountTitle" className={labelClassName}>
-                Account title
-              </label>
-              <input
-                id="bankAccountTitle"
-                value={form.bankAccountTitle}
-                disabled={isSaving}
-                onChange={(event) =>
-                  updateField("bankAccountTitle", event.target.value)
-                }
-                placeholder="Account holder name"
-                className={inputClassName}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="bankAccountNumber" className={labelClassName}>
-                Account number / IBAN
-              </label>
-              <input
-                id="bankAccountNumber"
-                value={form.bankAccountNumber}
-                disabled={isSaving}
-                onChange={(event) =>
-                  updateField("bankAccountNumber", event.target.value)
-                }
-                placeholder="PK00XXXX… or local account number"
-                className={inputClassName}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="bankPaymentInstructions" className={labelClassName}>
-                Payment instructions
-              </label>
-              <textarea
-                id="bankPaymentInstructions"
-                rows={4}
-                value={form.bankPaymentInstructions}
-                disabled={isSaving}
-                onChange={(event) =>
-                  updateField("bankPaymentInstructions", event.target.value)
-                }
-                placeholder="Include order number as reference, upload proof on My Order…"
-                className={textareaClassName}
-              />
-            </div>
-          </div>
         </section>
 
         <section className="space-y-4">

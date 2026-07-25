@@ -12,7 +12,7 @@ export const PAYMENT_STATUSES = ["pending", "paid", "failed"] as const;
 
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-/** Gateway identifiers (JazzCash / EasyPaisa ready — webhooks only for now) */
+/** Gateway identifiers — non-manual values only appear on historical orders. */
 export const PAYMENT_GATEWAYS = [
   "manual",
   "bank_transfer",

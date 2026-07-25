@@ -90,7 +90,7 @@ const orderSchema = new Schema<IOrderDocument>(
       type: String,
       enum: PAYMENT_METHODS,
       required: true,
-      default: "online_payment_full",
+      default: "cash_on_delivery",
     },
     paymentStatus: {
       type: String,

@@ -104,17 +104,6 @@ const envSchema = z
     CONTACT_NOTIFICATION_EMAIL: z.string().email().optional(),
     WHATSAPP_NUMBER: z.string().optional(),
     NOTIFY_ADMIN_EMAIL: z.string().email().optional(),
-    ONLINE_PAYMENTS_ENABLED: z
-      .string()
-      .optional()
-      .transform((v) => v === "true" || v === "1"),
-    ONLINE_PAYMENT_GATEWAY: z.enum(["jazzcash", "easypaisa"]).optional(),
-    PAYMENT_GATEWAY_MODE: z.enum(["sandbox", "live"]).default("sandbox"),
-    JAZZCASH_MERCHANT_ID: z.string().optional(),
-    JAZZCASH_PASSWORD: z.string().optional(),
-    JAZZCASH_INTEGRITY_SALT: z.string().optional(),
-    EASYPAISA_STORE_ID: z.string().optional(),
-    EASYPAISA_HASH_KEY: z.string().optional(),
     REQUIRE_CUSTOMER_AUTH_FOR_ORDERS: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -181,56 +170,6 @@ const envSchema = z
           code: z.ZodIssueCode.custom,
           message: "SMTP_FROM is required when EMAIL_ENABLED=true and EMAIL_PROVIDER=smtp",
           path: ["SMTP_FROM"],
-        });
-      }
-    }
-
-    if (data.ONLINE_PAYMENTS_ENABLED && !data.ONLINE_PAYMENT_GATEWAY) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "ONLINE_PAYMENT_GATEWAY is required when ONLINE_PAYMENTS_ENABLED=true (jazzcash or easypaisa)",
-        path: ["ONLINE_PAYMENT_GATEWAY"],
-      });
-    }
-
-    if (data.ONLINE_PAYMENTS_ENABLED && data.ONLINE_PAYMENT_GATEWAY === "jazzcash") {
-      if (!data.JAZZCASH_MERCHANT_ID?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "JAZZCASH_MERCHANT_ID is required when online JazzCash is enabled",
-          path: ["JAZZCASH_MERCHANT_ID"],
-        });
-      }
-      if (!data.JAZZCASH_PASSWORD?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "JAZZCASH_PASSWORD is required when online JazzCash is enabled",
-          path: ["JAZZCASH_PASSWORD"],
-        });
-      }
-      if (!data.JAZZCASH_INTEGRITY_SALT?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "JAZZCASH_INTEGRITY_SALT is required when online JazzCash is enabled",
-          path: ["JAZZCASH_INTEGRITY_SALT"],
-        });
-      }
-    }
-
-    if (data.ONLINE_PAYMENTS_ENABLED && data.ONLINE_PAYMENT_GATEWAY === "easypaisa") {
-      if (!data.EASYPAISA_STORE_ID?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "EASYPAISA_STORE_ID is required when online EasyPaisa is enabled",
-          path: ["EASYPAISA_STORE_ID"],
-        });
-      }
-      if (!data.EASYPAISA_HASH_KEY?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "EASYPAISA_HASH_KEY is required when online EasyPaisa is enabled",
-          path: ["EASYPAISA_HASH_KEY"],
         });
       }
     }

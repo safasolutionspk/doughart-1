@@ -10,7 +10,7 @@ import { buildPageMetadata } from "@/lib/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Checkout",
   description:
-    "Complete your cake order with delivery details and payment preference — cash on delivery or bank transfer. Online payment is coming soon.",
+    "Complete your cake order with delivery details. Payment is cash on delivery — pay when your order is delivered.",
   path: "/checkout",
   noIndex: true,
 });

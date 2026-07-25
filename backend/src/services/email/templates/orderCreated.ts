@@ -43,7 +43,7 @@ export function orderCreatedCustomerEmail(ctx: OrderEmailContext): EmailContent 
   if (myOrderUrl) {
     bodyHtml +=
       htmlParagraph(
-        "Use your order number and phone number on our My Order page to check status or upload bank transfer proof.",
+        "Use your order number and phone number on our My Order page to check your order status.",
       ) + htmlButton(myOrderUrl, "View My Order");
   } else {
     bodyHtml += htmlParagraph(

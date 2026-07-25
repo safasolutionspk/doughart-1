@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { env } from "../config/env";
 import { PAYMENT_GATEWAYS, PAYMENT_METHODS, PAYMENT_STATUSES } from "../types/payment";
 import { ORDER_STATUSES } from "../types/orderStatus";
 
@@ -75,7 +74,18 @@ export const publicCreateOrderSchema = z
       ),
     address: z.string().max(500).optional(),
     notes: z.string().max(1000).optional(),
-    paymentMethod: z.enum(PAYMENT_METHODS).optional().default("cash_on_delivery"),
+    /**
+     * Public checkout is Cash on Delivery only. Any explicitly supplied
+     * non-COD value is rejected with a 400 validation error.
+     */
+    paymentMethod: z
+      .enum(["cash_on_delivery"] as const, {
+        errorMap: () => ({
+          message: "Only Cash on Delivery is available. Pay when your order is delivered.",
+        }),
+      })
+      .optional()
+      .default("cash_on_delivery"),
     cakeSlug: z
       .string()
       .max(120)
@@ -83,7 +93,6 @@ export const publicCreateOrderSchema = z
       .optional(),
     /** Cart/catalog line refs (slug + qty). Name and price are ignored by the server. */
     items: z.array(publicCatalogItemSchema).max(50).optional(),
-    proofImage: z.string().max(500).optional(),
     referenceImage: z.string().max(500).optional(),
   })
   .superRefine((data, ctx) => {
@@ -144,23 +153,6 @@ export const publicCreateOrderSchema = z
       });
     }
   })
-  .refine(
-    (data) => {
-      if (
-        data.paymentMethod === "online_payment" ||
-        data.paymentMethod === "online_payment_full" ||
-        data.paymentMethod === "online_payment_advance"
-      ) {
-        return env.ONLINE_PAYMENTS_ENABLED;
-      }
-      return true;
-    },
-    {
-      message:
-        "Online payment is not available yet. Please choose cash on delivery or bank transfer.",
-      path: ["paymentMethod"],
-    },
-  )
   .transform((data) => ({
     customerName: data.name.trim(),
     customerPhone: data.phone.trim(),
@@ -176,7 +168,6 @@ export const publicCreateOrderSchema = z
     paymentMethod: data.paymentMethod,
     paymentStatus: "pending" as const,
     cakeSlug: data.cakeSlug?.trim() || undefined,
-    proofImage: data.proofImage?.trim() || undefined,
     catalogItems: (data.items ?? [])
       .map((item) => ({
         cakeSlug: item.cakeSlug.trim(),
@@ -195,16 +186,6 @@ export const lookupOrderQuerySchema = z.object({
     .max(32)
     .regex(/^SA-[0-9]{6}-[0-9]{4}$/, "Invalid order number format"),
   phone: z.string().min(7, "Phone number is required").max(30),
-});
-
-export const attachPaymentProofSchema = z.object({
-  orderNumber: z
-    .string()
-    .min(1)
-    .max(32)
-    .regex(/^SA-[0-9]{6}-[0-9]{4}$/),
-  phone: z.string().min(7).max(30),
-  proofImage: z.string().min(1, "Proof image path is required").max(500),
 });
 
 export const updateOrderQuoteSchema = z.object({
@@ -275,5 +256,4 @@ export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 export type UpdateOrderQuoteInput = z.infer<typeof updateOrderQuoteSchema>;
 export type MarkOrdersViewedInput = z.infer<typeof markOrdersViewedSchema>;
 export type LookupOrderQuery = z.infer<typeof lookupOrderQuerySchema>;
-export type AttachPaymentProofInput = z.infer<typeof attachPaymentProofSchema>;
 export type ListOrdersQuery = z.infer<typeof listOrdersQuerySchema>;

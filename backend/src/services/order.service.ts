@@ -1,18 +1,15 @@
 import { Cake, Order, type IOrderDocument } from "../models";
 import {
   notifyOrderCreated,
-  notifyPaymentProofUploaded,
   notifyQuoteReady,
   type OrderEmailContext,
 } from "./email";
-import { assertPaymentMethodAllowed } from "./payment/guards";
 import { resolvePayableAmount } from "./payment/amounts";
-import { resolveGatewayForMethod, validateProofAttachment } from "./payment";
+import { resolveGatewayForMethod } from "./payment";
 import type { CustomerOrderSummary } from "../types/customerOrder";
 import type { PublicOrderResponse } from "../types/publicOrder";
 import { ApiError } from "../utils/ApiError";
 import type {
-  AttachPaymentProofInput,
   ListOrdersQuery,
   LookupOrderQuery,
   PublicCreateOrderInput,
@@ -353,9 +350,11 @@ export async function createOrder(
   input: PublicCreateOrderInput,
   customerId?: string,
 ): Promise<PublicOrderResponse> {
-  assertPaymentMethodAllowed(input.paymentMethod);
-
   const { cakeSlug, catalogItems, ...orderInput } = input;
+
+  // Public checkout is Cash on Delivery only — enforced server-side in
+  // addition to schema validation, so no client payload can override it.
+  orderInput.paymentMethod = "cash_on_delivery";
 
   const resolvedCatalog = await resolveCatalogOrderItems(
     catalogItems ?? [],
@@ -499,36 +498,6 @@ export async function getPublicOrderByOrderNumber(
 
 export async function lookupPublicOrder(query: LookupOrderQuery) {
   const order = await findOrderForPublicAccess(query.orderNumber, query.phone);
-  return toPublicOrderResponse(order);
-}
-
-export async function attachPaymentProof(input: AttachPaymentProofInput) {
-  const existing = await Order.findOne({ orderNumber: input.orderNumber }).lean();
-
-  if (!existing) {
-    throw ApiError.notFound(PUBLIC_ORDER_NOT_FOUND);
-  }
-
-  if (!phonesMatch(existing.customerPhone, input.phone)) {
-    throw ApiError.notFound(PUBLIC_ORDER_NOT_FOUND);
-  }
-
-  const order = await Order.findOne({ orderNumber: input.orderNumber });
-
-  if (!order) {
-    throw ApiError.notFound(PUBLIC_ORDER_NOT_FOUND);
-  }
-
-  validateProofAttachment(order);
-
-  order.proofImage = input.proofImage;
-  if (!order.paymentGateway) {
-    order.paymentGateway = resolveGatewayForMethod("bank_transfer");
-  }
-  await order.save();
-
-  notifyPaymentProofUploaded(toOrderEmailContext(order));
-
   return toPublicOrderResponse(order);
 }
 

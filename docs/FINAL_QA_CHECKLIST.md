@@ -25,10 +25,8 @@ npx tsx scripts/verify-data-flow.ts
 | E4 | `CORS_ORIGIN` = HTTPS shop + admin only (no localhost) | ☐ |
 | E5 | `NEXT_PUBLIC_API_URL` correct on frontend + admin | ☐ |
 | E6 | `NEXT_PUBLIC_SITE_URL` set on frontend | ☐ |
-| E7 | `ONLINE_PAYMENTS_ENABLED=false` (backend) unless gateways live | ☐ |
-| E8 | `NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED=false` (frontend) unless live | ☐ |
-| E9 | Upload directory persistent on API host | ☐ |
-| E10 | SMTP tested if `EMAIL_ENABLED=true` | ☐ |
+| E7 | Upload directory persistent on API host | ☐ |
+| E8 | SMTP tested if `EMAIL_ENABLED=true` | ☐ |
 
 ---
 
@@ -47,7 +45,7 @@ npx tsx scripts/verify-data-flow.ts
 | A9 | Order appears after shop places order | ☐ |
 | A10 | Order status update | ☐ |
 | A11 | Quote update (custom cake) | ☐ |
-| A12 | Settings save (phone, WhatsApp, bank text) | ☐ |
+| A12 | Settings save (phone, WhatsApp, delivery info) | ☐ |
 
 ---
 
@@ -73,11 +71,11 @@ npx tsx scripts/verify-data-flow.ts
 | # | Flow | Pass |
 | --- | --- | --- |
 | O1 | Checkout with catalog cake (`?cake=slug`) | ☐ |
-| O2 | Checkout payment options: COD + bank only (online hidden when disabled) | ☐ |
+| O2 | Checkout shows fixed "Payment Method: Cash on Delivery" (no selector) | ☐ |
 | O3 | Custom cake order form submits | ☐ |
 | O4 | Order success page shows order number | ☐ |
 | O5 | `/my-order` lookup with order # + phone | ☐ |
-| O6 | Bank transfer: payment proof upload + attach | ☐ |
+| O6 | API rejects non-COD `paymentMethod` with 400 | ☐ |
 | O7 | Newsletter subscribe on homepage | ☐ |
 
 ---

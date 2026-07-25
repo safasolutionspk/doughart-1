@@ -53,11 +53,6 @@ function getDefaultSettings(): PublicSettings {
     instagram: "https://www.instagram.com/sweetbitelahore/",
     tiktok: "https://www.tiktok.com/@sweetbitelahore",
     deliveryInfo: "Local delivery available. Contact us for pickup times.",
-    bankName: "HBL",
-    bankAccountTitle: "DoughArt",
-    bankAccountNumber: "12345678901234",
-    bankPaymentInstructions:
-      "Transfer the order total and use your order number as the payment reference. Upload your receipt on My Order after paying.",
   };
 }
 
@@ -74,10 +69,6 @@ function toPublicSettings(doc: {
   tiktok?: string;
   whatsapp?: string;
   deliveryInfo?: string;
-  bankName?: string;
-  bankAccountTitle?: string;
-  bankAccountNumber?: string;
-  bankPaymentInstructions?: string;
   socialLinks?: {
     facebook?: string;
     instagram?: string;
@@ -96,10 +87,6 @@ function toPublicSettings(doc: {
     tiktok: doc.tiktok,
     whatsapp: doc.whatsapp,
     deliveryInfo: doc.deliveryInfo,
-    bankName: doc.bankName,
-    bankAccountTitle: doc.bankAccountTitle,
-    bankAccountNumber: doc.bankAccountNumber,
-    bankPaymentInstructions: doc.bankPaymentInstructions,
   };
 }
 
@@ -159,19 +146,6 @@ export async function updateSettings(
     whatsapp: input.whatsapp !== undefined ? input.whatsapp : baseline?.whatsapp,
     deliveryInfo:
       input.deliveryInfo !== undefined ? input.deliveryInfo : baseline?.deliveryInfo,
-    bankName: input.bankName !== undefined ? input.bankName : baseline?.bankName,
-    bankAccountTitle:
-      input.bankAccountTitle !== undefined
-        ? input.bankAccountTitle
-        : baseline?.bankAccountTitle,
-    bankAccountNumber:
-      input.bankAccountNumber !== undefined
-        ? input.bankAccountNumber
-        : baseline?.bankAccountNumber,
-    bankPaymentInstructions:
-      input.bankPaymentInstructions !== undefined
-        ? input.bankPaymentInstructions
-        : baseline?.bankPaymentInstructions,
   };
 
   if (legacyUnscoped && scope) {

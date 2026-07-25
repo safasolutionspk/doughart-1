@@ -118,7 +118,7 @@ Backend logs (`pm2 logs sweetbite-backend` or `backend/logs/pm2-error.log`):
 
 ---
 
-## 7. Payment proof upload errors
+## 7. Public image upload errors (custom-cake reference images)
 
 Log / API patterns:
 
@@ -127,9 +127,8 @@ Log / API patterns:
 | 400 upload validation | File type/size; see `imageValidation.ts` |
 | 413 from Nginx | Increase `client_max_body_size` (6M in example config) |
 | 503 API down | Health check, PM2, MongoDB |
-| Proof attach 404 | Order number + phone mismatch |
 
-Monitor rate limit hits on `/api/uploads/public/payment-proof`.
+Monitor rate limit hits on `/api/uploads/public/reference-image`.
 
 ---
 

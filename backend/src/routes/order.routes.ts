@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  attachPaymentProof,
   createOrder,
   getAdminOrderNotifications,
   getOrder,
@@ -17,7 +16,6 @@ import { requireCustomerForOrder } from "../middleware/requireCustomerForOrder";
 import { adminWriteLimiter, orderCreateLimiter } from "../middleware/rateLimiter";
 import { validate } from "../middleware/validate";
 import {
-  attachPaymentProofSchema,
   listOrdersQuerySchema,
   lookupOrderQuerySchema,
   orderIdParamSchema,
@@ -44,13 +42,6 @@ router.get(
   orderCreateLimiter,
   validate(lookupOrderQuerySchema, "query"),
   lookupPublicOrder,
-);
-
-router.post(
-  "/public/proof",
-  orderCreateLimiter,
-  validate(attachPaymentProofSchema),
-  attachPaymentProof,
 );
 
 router.get(

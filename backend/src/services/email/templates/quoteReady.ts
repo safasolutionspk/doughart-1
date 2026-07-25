@@ -53,9 +53,9 @@ export function quoteReadyCustomerEmail(ctx: OrderEmailContext): EmailContent {
         : []),
     ]);
 
-  if (ctx.paymentMethod === "bank_transfer") {
+  if (ctx.paymentMethod === "cash_on_delivery") {
     bodyHtml += htmlParagraph(
-      "If you chose bank transfer, you can upload your payment proof from the My Order page after paying.",
+      "Payment is cash on delivery — pay when your order is delivered.",
     );
   }
 

@@ -56,13 +56,14 @@ async function handleValidatedUpload(req: Request) {
 
 
 
-export const uploadPaymentProofPublic = asyncHandler(
+/** Public upload for custom-cake reference/design images. */
+export const uploadPublicReferenceImage = asyncHandler(
 
   async (req: Request, res: Response) => {
 
     const data = await handleValidatedUpload(req);
 
-    sendSuccess(res, data, "Payment proof uploaded", 201);
+    sendSuccess(res, data, "Image uploaded", 201);
 
   },
 

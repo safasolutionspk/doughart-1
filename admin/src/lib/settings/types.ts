@@ -11,10 +11,6 @@ export type BusinessSettings = {
   tiktok?: string;
   whatsapp?: string;
   deliveryInfo?: string;
-  bankName?: string;
-  bankAccountTitle?: string;
-  bankAccountNumber?: string;
-  bankPaymentInstructions?: string;
 };
 
 export type SettingsFormState = {
@@ -30,10 +26,6 @@ export type SettingsFormState = {
   tiktok: string;
   whatsapp: string;
   deliveryInfo: string;
-  bankName: string;
-  bankAccountTitle: string;
-  bankAccountNumber: string;
-  bankPaymentInstructions: string;
 };
 
 export const emptySettingsForm: SettingsFormState = {
@@ -49,10 +41,6 @@ export const emptySettingsForm: SettingsFormState = {
   tiktok: "",
   whatsapp: "",
   deliveryInfo: "",
-  bankName: "",
-  bankAccountTitle: "",
-  bankAccountNumber: "",
-  bankPaymentInstructions: "",
 };
 
 export function settingsToForm(settings: BusinessSettings): SettingsFormState {
@@ -69,10 +57,6 @@ export function settingsToForm(settings: BusinessSettings): SettingsFormState {
     tiktok: settings.tiktok ?? "",
     whatsapp: settings.whatsapp ?? "",
     deliveryInfo: settings.deliveryInfo ?? "",
-    bankName: settings.bankName ?? "",
-    bankAccountTitle: settings.bankAccountTitle ?? "",
-    bankAccountNumber: settings.bankAccountNumber ?? "",
-    bankPaymentInstructions: settings.bankPaymentInstructions ?? "",
   };
 }
 
@@ -90,9 +74,5 @@ export function formToPayload(form: SettingsFormState) {
     tiktok: form.tiktok.trim() || undefined,
     whatsapp: form.whatsapp.trim() || undefined,
     deliveryInfo: form.deliveryInfo.trim() || undefined,
-    bankName: form.bankName.trim() || undefined,
-    bankAccountTitle: form.bankAccountTitle.trim() || undefined,
-    bankAccountNumber: form.bankAccountNumber.trim() || undefined,
-    bankPaymentInstructions: form.bankPaymentInstructions.trim() || undefined,
   };
 }

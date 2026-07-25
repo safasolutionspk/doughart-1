@@ -40,7 +40,7 @@ Ensure backend `CORS_ORIGIN` includes `http://localhost:3000`.
 | 1 | `/` | Home — hero, categories, gallery |
 | 2 | `/cakes/{categorySlug}` | Category grid (e.g. `/cakes/birthday`, `/cakes/all`) |
 | 3 | `/cakes/{categorySlug}/{cakeSlug}` | Cake detail — price, Order Now, WhatsApp |
-| 4 | `/checkout?cake={cakeSlug}` | Checkout — customer, delivery, payment method |
+| 4 | `/checkout?cake={cakeSlug}` | Checkout — customer, delivery, Cash on Delivery only |
 | 5 | `/order-success/{orderNumber}` | Confirmation — order summary + WhatsApp |
 
 **Custom cakes:** `/custom-cake` — full bespoke order form (not tied to catalog SKU).

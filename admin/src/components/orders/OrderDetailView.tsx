@@ -29,7 +29,7 @@ import {
   formatPaymentMethod,
   formatPaymentStatus,
 } from "@/lib/orders/format";
-import { PAYMENT_GATEWAY_LABELS, PAYMENT_GATEWAYS } from "@/lib/orders/payment";
+import { PAYMENT_GATEWAY_LABELS, type PaymentGateway } from "@/lib/orders/payment";
 import {
   ORDER_STATUSES,
   PAYMENT_STATUSES,
@@ -49,7 +49,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const [status, setStatus] = useState<OrderStatus>("pending");
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("pending");
   const [transactionId, setTransactionId] = useState("");
-  const [paymentGateway, setPaymentGateway] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [quotedAmount, setQuotedAmount] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -69,7 +68,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
         setStatus(order.status);
         setPaymentStatus(order.paymentStatus ?? "pending");
         setTransactionId(order.transactionId ?? "");
-        setPaymentGateway(order.paymentGateway ?? "");
         setAdminNotes(order.adminNotes ?? "");
         setQuotedAmount(
           order.quotedAmount != null ? String(order.quotedAmount) : "",
@@ -105,7 +103,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
         paymentStatus,
         adminNotes: adminNotes.trim() || undefined,
         transactionId: transactionId.trim() || undefined,
-        paymentGateway: paymentGateway.trim() || undefined,
       });
       setState({ type: "success", order: updated });
       setSaveSuccess(true);
@@ -346,25 +343,15 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
               ))}
             </select>
           </div>
-          <div>
-            <label htmlFor="payment-gateway" className="admin-label">
-              Payment gateway
-            </label>
-            <select
-              id="payment-gateway"
-              value={paymentGateway}
-              disabled={isSaving}
-              onChange={(e) => setPaymentGateway(e.target.value)}
-              className="admin-input"
-            >
-              <option value="">— Not set —</option>
-              {PAYMENT_GATEWAYS.map((gateway) => (
-                <option key={gateway} value={gateway}>
-                  {PAYMENT_GATEWAY_LABELS[gateway]}
-                </option>
-              ))}
-            </select>
-          </div>
+          {order.paymentGateway ? (
+            <div>
+              <p className="admin-label">Payment gateway (historical)</p>
+              <p className="text-sm text-brand-brown">
+                {PAYMENT_GATEWAY_LABELS[order.paymentGateway as PaymentGateway] ??
+                  order.paymentGateway}
+              </p>
+            </div>
+          ) : null}
           <div>
             <label htmlFor="transaction-id" className="admin-label">
               Transaction ID

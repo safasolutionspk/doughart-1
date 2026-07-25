@@ -22,14 +22,6 @@ export type PublicSettings = {
 
   deliveryInfo?: string;
 
-  bankName?: string;
-
-  bankAccountTitle?: string;
-
-  bankAccountNumber?: string;
-
-  bankPaymentInstructions?: string;
-
 };
 
 
@@ -105,31 +97,3 @@ export function getWhatsAppDigitsFromSettings(
   return digits.length > 0 ? digits : null;
 
 }
-
-
-
-export function hasBankTransferDetails(
-
-  settings: PublicSettings | null | undefined,
-
-): boolean {
-
-  if (!settings) {
-
-    return false;
-
-  }
-
-  return Boolean(
-
-    settings.bankName?.trim() &&
-
-      settings.bankAccountNumber?.trim() &&
-
-      settings.bankAccountTitle?.trim(),
-
-  );
-
-}
-
-

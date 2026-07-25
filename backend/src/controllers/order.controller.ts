@@ -36,11 +36,6 @@ export const lookupPublicOrder = asyncHandler(async (req: Request, res: Response
   sendSuccess(res, order, "Order retrieved");
 });
 
-export const attachPaymentProof = asyncHandler(async (req: Request, res: Response) => {
-  const order = await orderService.attachPaymentProof(req.body);
-  sendSuccess(res, order, "Payment proof attached");
-});
-
 export const updateOrderQuote = asyncHandler(async (req: Request, res: Response) => {
   const order = await orderService.updateOrderQuote(getValidatedParam(req, "id"), req.body);
   sendSuccess(res, order, "Quote updated");
