@@ -6,12 +6,11 @@ import { cn } from "@/lib/cn";
 export function FeatureStrip() {
   return (
     <section
-      id="about"
       className="section-anchor border-y border-brand-border/30 bg-[#FFF8FA]"
-      aria-labelledby="about-heading"
+      aria-labelledby="features-heading"
     >
-      <h2 id="about-heading" className="sr-only">
-        About DoughArt
+      <h2 id="features-heading" className="sr-only">
+        Why choose DoughArt
       </h2>
       <div className="section-container">
         <ul

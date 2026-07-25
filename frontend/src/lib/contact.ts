@@ -5,11 +5,12 @@
  */
 export const contactInfo = {
   businessName: "DoughArt",
-  phoneDisplay: "+92 300 267467523",
-  phoneHref: "tel:+92300267467523",
-  whatsappDisplay: "+92 300 267467523",
-  whatsappNumber: "92300267467523",
-  whatsappBaseUrl: "https://wa.me/92300267467523",
+  phoneDisplay: "0327 7707333",
+  phoneInternational: "+923277707333",
+  phoneHref: "tel:+923277707333",
+  whatsappDisplay: "0327 7707333",
+  whatsappNumber: "923277707333",
+  whatsappBaseUrl: "https://wa.me/923277707333",
   email: "doughartbakers@gmail.com",
   emailHref: "mailto:doughartbakers@gmail.com",
   address: "Thokkar Niaz Baig, Lahore, Punjab, Pakistan",

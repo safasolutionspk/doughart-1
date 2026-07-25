@@ -19,9 +19,9 @@ export const quickLinks = [
 ] as const;
 
 export const customerServiceLinks = [
-  { label: "Track Order", href: "/my-order" },
   { label: "Reviews", href: "/reviews" },
   { label: "Contact Us", href: "/contact" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
 ] as const;
 
 export const myAccountLinks = [

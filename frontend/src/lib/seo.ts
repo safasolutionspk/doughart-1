@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { siteImages } from "@/lib/images";
 import { siteConfig } from "@/lib/site";
 
-export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sweetbite.com";
+export const siteBrandName = "DoughArt Bakers";
 
-const defaultTitle = `${siteConfig.name} | Custom Cakes Bakery`;
+export const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const defaultTitle = siteBrandName;
 const defaultDescription =
   "Order handcrafted custom cakes for weddings, birthdays, and celebrations. DoughArt bakes premium cakes with fresh ingredients and designs made just for you.";
 const defaultOgImage = siteImages.hero;
@@ -32,22 +34,22 @@ export const siteMetadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: defaultTitle,
-    template: `%s | ${siteConfig.name}`,
+    template: `%s | ${siteBrandName}`,
   },
   description: defaultDescription,
   keywords: [...siteKeywords],
   authors: [{ name: siteConfig.name }],
   creator: siteConfig.name,
   icons: {
-    icon: "/images/real/logo.svg",
-    shortcut: "/images/real/logo.svg",
-    apple: "/images/real/logo.svg",
+    icon: "/images/real/favicon.svg",
+    shortcut: "/images/real/favicon.svg",
+    apple: "/images/real/favicon-apple.png",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    siteName: siteConfig.name,
+    siteName: siteBrandName,
     title: defaultTitle,
     description: defaultDescription,
     images: [{ url: defaultOgImage }],
@@ -82,6 +84,8 @@ export function buildPageMetadata({
 }: PageMetadataOptions): Metadata {
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
   const pageUrl = new URL(canonicalPath, siteUrl).toString();
+  const socialTitle =
+    title === siteBrandName ? siteBrandName : `${title} | ${siteBrandName}`;
 
   return {
     title,
@@ -92,14 +96,14 @@ export function buildPageMetadata({
     },
     openGraph: {
       ...siteMetadata.openGraph,
-      title: `${title} | ${siteConfig.name}`,
+      title: socialTitle,
       description,
       url: pageUrl,
       images: siteMetadata.openGraph?.images,
     },
     twitter: {
       ...siteMetadata.twitter,
-      title: `${title} | ${siteConfig.name}`,
+      title: socialTitle,
       description,
       images: siteMetadata.twitter?.images,
     },

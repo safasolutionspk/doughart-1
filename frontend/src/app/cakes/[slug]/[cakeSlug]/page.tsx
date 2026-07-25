@@ -140,13 +140,14 @@ export default async function CakeDetailPage({ params }: PageProps) {
             </nav>
 
             <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 xl:gap-14 lg:items-start">
-              <div className="card-premium relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-brand-border/70 bg-brand-pink-lighter shadow-sm lg:max-w-none">
+              <div className="card-premium relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-brand-border/70 bg-brand-pink-lighter p-2 shadow-sm sm:p-3 lg:max-w-none">
                 <CatalogCardImage
                   apiImage={apiImage}
                   fallbackSrc={fallback}
                   alt={cake.name}
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority
+                  objectFit="contain"
                 />
               </div>
 

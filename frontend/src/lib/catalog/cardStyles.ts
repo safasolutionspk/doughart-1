@@ -1,7 +1,7 @@
 /** Compact equal-height product cards for catalog grids */
 export const catalogCardImageClassName =
-  "image-zoom-wrap relative h-28 w-full shrink-0 overflow-hidden bg-brand-pink-lighter sm:h-32 md:h-36 lg:h-40";
-export const catalogImageAspectClassName = "h-28 sm:h-32 md:h-36 lg:h-40";
+  "image-zoom-wrap relative aspect-square w-full shrink-0 overflow-hidden bg-brand-pink-lighter p-1.5 sm:p-2";
+export const catalogImageAspectClassName = "aspect-square";
 export const catalogCardShellClassName =
   "card-premium animate-card group flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border-brand-border/70 shadow-sm";
 export const catalogCardBodyClassName =

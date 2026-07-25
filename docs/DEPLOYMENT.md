@@ -69,7 +69,7 @@ cp frontend/.env.example frontend/.env.local
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | Yes | Same API URL as admin |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical shop URL for SEO |
-| `NEXT_PUBLIC_WHATSAPP` | Recommended | Digits with country code for wa.me (e.g. `923046736831` for 03046736831) |
+| `NEXT_PUBLIC_WHATSAPP` | No | Legacy optional. Public shop WhatsApp uses `frontend/src/lib/contact.ts` (`923277707333` for display `0327 7707333`) and is not overridden by ENV or Admin settings. |
 | `NEXT_PUBLIC_ONLINE_PAYMENTS_ENABLED` | No | Default `false` — must match backend when enabling online pay |
 
 ## 3. Build and start (production smoke test)

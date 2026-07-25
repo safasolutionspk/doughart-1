@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { TopBar } from "@/components/layout/TopBar";
+import { AboutUs } from "@/components/sections/AboutUs";
 import { CakeCategories } from "@/components/sections/CakeCategories";
 import { ComboOffersSection } from "@/components/sections/ComboOffersSection";
 import { CustomCakeBuilder } from "@/components/sections/CustomCakeBuilder";
@@ -13,11 +13,11 @@ import { OrderProcess } from "@/components/sections/OrderProcess";
 import { Reviews } from "@/components/sections/Reviews";
 import { contactInfo } from "@/lib/contact";
 import { siteImages } from "@/lib/images";
-import { buildPageMetadata, siteUrl } from "@/lib/seo";
-import { siteConfig, socialLinks } from "@/lib/site";
+import { buildPageMetadata, siteBrandName, siteUrl } from "@/lib/seo";
+import { socialLinks } from "@/lib/site";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Custom Cakes Bakery",
+  title: siteBrandName,
   description:
     "DoughArt crafts custom cakes for birthdays, weddings, and celebrations in Lahore. Browse designs, place orders online, or request a bespoke cake.",
   path: "/",
@@ -27,11 +27,11 @@ export default function Home() {
   const bakeryStructuredData = {
     "@context": "https://schema.org",
     "@type": "Bakery",
-    name: siteConfig.name,
+    name: siteBrandName,
     url: siteUrl,
     image: new URL(siteImages.hero, siteUrl).toString(),
     logo: new URL(siteImages.logo, siteUrl).toString(),
-    telephone: contactInfo.phoneDisplay,
+    telephone: contactInfo.phoneInternational,
     email: contactInfo.email,
     address: {
       "@type": "PostalAddress",
@@ -52,7 +52,6 @@ export default function Home() {
           __html: JSON.stringify(bakeryStructuredData),
         }}
       />
-      <TopBar />
       <Header />
       <main
         id="home"
@@ -62,6 +61,7 @@ export default function Home() {
       >
         <Hero />
         <FeatureStrip />
+        <AboutUs />
         <CakeCategories />
         <MostPopularItems />
         <CustomCakeBuilder />

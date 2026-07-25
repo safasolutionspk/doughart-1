@@ -48,7 +48,7 @@ export async function CakeCard({
   const whatsappHref = buildWhatsAppOrderUrl(cake.name, waNumber);
 
   const imageClassName = compactPopular
-    ? "image-zoom-wrap relative h-32 w-full shrink-0 overflow-hidden bg-brand-pink-lighter sm:h-32 md:h-36 lg:h-40"
+    ? "image-zoom-wrap relative aspect-square w-full shrink-0 overflow-hidden bg-brand-pink-lighter p-1.5 sm:p-2"
     : catalogCardImageClassName;
 
   const bodyClassName = compactPopular
@@ -76,8 +76,7 @@ export async function CakeCard({
             fallbackSrc={fallback}
             alt={cake.name}
             sizes="(max-width: 640px) 10rem, (max-width: 1280px) 33vw, 25vw"
-            objectFit={compactPopular ? "contain" : "cover"}
-            className={compactPopular ? "sm:object-cover" : undefined}
+            objectFit="contain"
           />
           <span className="pink-overlay" aria-hidden />
         </div>

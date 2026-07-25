@@ -280,7 +280,7 @@ export function SettingsForm() {
                 value={form.whatsapp}
                 disabled={isSaving}
                 onChange={(event) => updateField("whatsapp", event.target.value)}
-                placeholder="03046736831 or 923046736831"
+                placeholder="0327 7707333 or 923277707333"
                 className={inputClassName}
               />
             </div>

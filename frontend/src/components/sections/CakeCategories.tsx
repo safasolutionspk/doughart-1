@@ -89,6 +89,8 @@ function CategoryCard({ category }: CategoryCardProps) {
             fallbackSrc={category.imageFallback}
             alt={category.title}
             sizes="(max-width: 1024px) 8.5rem, 11rem"
+            objectFit="cover"
+            className="rounded-full"
           />
         </div>
 

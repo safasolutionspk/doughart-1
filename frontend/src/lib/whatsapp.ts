@@ -1,44 +1,25 @@
 import { contactInfo } from "@/lib/contact";
-import { fetchPublicSettings, getWhatsAppDigitsFromSettings } from "@/lib/settings";
 
+/**
+ * Public WhatsApp number is always sourced from shared contactInfo.
+ * Admin settings and NEXT_PUBLIC_WHATSAPP* env values are intentionally ignored
+ * so an outdated override cannot replace the authoritative public number.
+ */
 const DEFAULT_WHATSAPP_NUMBER = contactInfo.whatsappNumber;
 
-function getEnvWhatsAppNumber(): string | undefined {
-  // Prefer NEXT_PUBLIC_WHATSAPP. Keep NEXT_PUBLIC_WHATSAPP_NUMBER as a documented alias.
-  return (
-    process.env.NEXT_PUBLIC_WHATSAPP?.trim() ||
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim()
-  );
-}
-
 export async function getWhatsAppNumber(): Promise<string> {
-  const settings = await fetchPublicSettings();
-  const fromSettings = getWhatsAppDigitsFromSettings(settings);
-  if (fromSettings) {
-    return fromSettings;
-  }
-
-  const raw = getEnvWhatsAppNumber();
-  if (!raw) {
-    return DEFAULT_WHATSAPP_NUMBER;
-  }
-  const digits = raw.replace(/\D/g, "");
-  return digits.length > 0 ? digits : DEFAULT_WHATSAPP_NUMBER;
+  return DEFAULT_WHATSAPP_NUMBER;
 }
 
 /** Sync fallback for client components that cannot await settings */
 export function getWhatsAppNumberSync(): string {
-  const raw = getEnvWhatsAppNumber();
-  if (!raw) {
-    return DEFAULT_WHATSAPP_NUMBER;
-  }
-  const digits = raw.replace(/\D/g, "");
-  return digits.length > 0 ? digits : DEFAULT_WHATSAPP_NUMBER;
+  return DEFAULT_WHATSAPP_NUMBER;
 }
 
 export function buildWhatsAppUrl(text: string, phone?: string): string {
-  const number = phone ?? getWhatsAppNumberSync();
-  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+  // phone retained for call-site compatibility; public number is always contactInfo.
+  void phone;
+  return `https://wa.me/${DEFAULT_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }
 
 export function buildWhatsAppOrderUrl(cakeName: string, phone?: string): string {

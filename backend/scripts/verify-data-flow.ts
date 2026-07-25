@@ -259,7 +259,7 @@ async function main() {
     fail("Public reviews", foundReview ? "HTTP ok but missing review" : `HTTP ${pubReviews.status}`);
   }
 
-  const testWhatsApp = "923046736831";
+  const testWhatsApp = "923277707333";
   const settingsPatch = await apiJson<{ whatsapp?: string }>("/api/settings", {
     method: "PATCH",
     headers: { ...auth, "Content-Type": "application/json" },

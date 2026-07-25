@@ -166,6 +166,39 @@ export function Footer() {
                   </a>
                 </li>
               </ul>
+
+              <div className="mt-6 border-t border-brand-border/50 pt-5">
+                <h3 className="font-display text-sm font-bold tracking-tight text-brand-brown sm:text-[0.9375rem]">
+                  Website Developed By
+                </h3>
+                <p className="mt-3.5 text-sm text-brand-muted">Safa Solutions</p>
+                <ul className="mt-2.5 space-y-2.5">
+                  <li>
+                    <a
+                      href="https://safasolutions.org"
+                      className={footerLinkClassName}
+                      {...externalLinkProps}
+                    >
+                      safasolutions.org
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://www.instagram.com/safasolutions/"
+                      className={cn(
+                        "inline-flex min-h-7 items-center gap-1.5 rounded-sm font-medium text-rose-500",
+                        "drop-shadow-[0_0_4px_rgba(244,63,94,0.35)] transition-colors hover:text-rose-600",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2",
+                        "motion-safe:animate-[pulse_3s_ease-in-out_infinite] motion-reduce:animate-none",
+                      )}
+                      {...externalLinkProps}
+                    >
+                      <SocialIcon name="instagram" className="h-3.5 w-3.5" />
+                      Visit our Instagram profile
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </Reveal>
         </div>

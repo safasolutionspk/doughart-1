@@ -23,7 +23,7 @@ Edit `.env.local`:
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | Yes | Backend URL, no trailing slash (e.g. `http://localhost:5000`) |
 | `NEXT_PUBLIC_SITE_URL` | No | Canonical site URL for SEO (default: `https://www.sweetbite.com`) |
-| `NEXT_PUBLIC_WHATSAPP` | No | WhatsApp digits for wa.me links (e.g. `923046736831` for 03046736831) |
+| `NEXT_PUBLIC_WHATSAPP` | No | Legacy optional value. Public WhatsApp uses `src/lib/contact.ts` (`923277707333`) and is not overridden by ENV or Admin settings. |
 
 ```bash
 npm run dev
@@ -104,8 +104,10 @@ npm run start
 NODE_ENV=production
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 NEXT_PUBLIC_SITE_URL=https://www.yourdomain.com
-NEXT_PUBLIC_WHATSAPP=923046736831
+NEXT_PUBLIC_WHATSAPP=923277707333
 ```
+
+Public phone and WhatsApp on the shop come from `src/lib/contact.ts` (`0327 7707333` / `923277707333`). `NEXT_PUBLIC_WHATSAPP` does not override those public links.
 
 Deploy to Vercel, Netlify, or any Node host. Set env vars in the hosting dashboard.
 

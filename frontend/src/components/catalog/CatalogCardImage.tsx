@@ -14,7 +14,7 @@ type CatalogCardImageProps = {
   sizes: string;
   className?: string;
   priority?: boolean;
-  /** Defaults to cover. Use contain for homepage popular cards on mobile. */
+  /** Defaults to contain so Admin-uploaded product images are not cropped. */
   objectFit?: "cover" | "contain";
 };
 
@@ -29,7 +29,7 @@ export function CatalogCardImage({
   sizes,
   className,
   priority,
-  objectFit = "cover",
+  objectFit = "contain",
 }: CatalogCardImageProps) {
   const trimmedApiImage = apiImage?.trim() ?? "";
   const resetKey = `${trimmedApiImage}|${fallbackSrc}|${objectFit}`;
@@ -55,7 +55,7 @@ function CatalogCardImageInner({
   sizes,
   className,
   priority,
-  objectFit = "cover",
+  objectFit = "contain",
 }: CatalogCardImageProps) {
   const trimmedApiImage = apiImage?.trim() ?? "";
   const [primaryFailed, setPrimaryFailed] = useState(false);

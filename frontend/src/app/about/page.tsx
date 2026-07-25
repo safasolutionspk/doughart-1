@@ -47,12 +47,12 @@ export default function AboutPage() {
               </div>
             </Reveal>
             <Reveal delay={0.2} direction="scale">
-              <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl border border-brand-border/60 shadow-lg shadow-brand-primary/15 lg:max-w-none">
+              <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl border border-brand-border/60 bg-brand-pink-lighter/50 p-2 shadow-lg shadow-brand-primary/15 lg:max-w-none sm:p-3">
                 <Image
-                  src={siteImages.customCake}
-                  alt=""
+                  src={siteImages.aboutUs}
+                  alt="DoughArt About Us"
                   fill
-                  className="object-cover object-center"
+                  className="object-contain object-center"
                   sizes="(max-width: 1024px) 100vw, 480px"
                   priority
                 />

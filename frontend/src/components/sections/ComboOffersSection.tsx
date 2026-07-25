@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { CakeCard } from "@/components/catalog/CakeCard";
 import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
 import { Reveal } from "@/components/animation/Reveal";
@@ -62,15 +61,6 @@ export async function ComboOffersSection() {
             ))}
           </PopularItemsCarousel>
         </div>
-
-        <p className="mt-5 text-center lg:hidden">
-          <Link
-            href="/cakes/combo-offers"
-            className="text-sm font-semibold text-brand-primary underline-offset-2 hover:underline"
-          >
-            View all combo offers
-          </Link>
-        </p>
       </div>
     </section>
   );

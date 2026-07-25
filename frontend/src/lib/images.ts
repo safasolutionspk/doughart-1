@@ -28,4 +28,5 @@ export const siteImages = {
     "/images/real/gallery-4.jpg",
     "/images/real/gallery-5.jpg",
   ],
+  aboutUs: "/images/real/about-us.png",
 } as const;

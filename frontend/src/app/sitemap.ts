@@ -11,6 +11,7 @@ const staticPaths = [
   "/contact",
   "/gallery",
   "/reviews",
+  "/privacy-policy",
   "/login",
   "/signup",
 ] as const;
