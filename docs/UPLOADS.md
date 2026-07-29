@@ -120,15 +120,15 @@ UPLOAD_PROVIDER=cloudinary
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
-CLOUDINARY_FOLDER=sweetbite
+CLOUDINARY_FOLDER=doughart
 ```
 
 ### Behavior
 
 - Multer still receives the file locally for validation (max **5 MB**, magic-byte check).
 - After validation:
-  - Catalog uploads go to folder `CLOUDINARY_FOLDER` (default `sweetbite`)
-  - Gallery uploads go to folder `CLOUDINARY_FOLDER/gallery` (e.g. `sweetbite/gallery`)
+  - Catalog uploads go to folder `CLOUDINARY_FOLDER` (default `doughart`)
+  - Gallery uploads go to folder `CLOUDINARY_FOLDER/gallery` (e.g. `doughart/gallery`)
 - Catalog MongoDB fields store the **full `secure_url`** (HTTPS).
 - Gallery MongoDB records store the URL plus an internal `storageKey` (Cloudinary `public_id`).
 - Gallery delete uses the server-side `storageKey` from the Gallery record — never a client-supplied public ID.

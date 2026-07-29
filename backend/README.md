@@ -66,7 +66,7 @@ See [../docs/PRODUCTION_LAUNCH.md](../docs/PRODUCTION_LAUNCH.md) and [../docs/UP
 ```env
 NODE_ENV=production
 PORT=5000
-MONGODB_URI=mongodb+srv://DB_USER:DB_PASSWORD@cluster0.example.mongodb.net/sweetbite?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://DB_USER:DB_PASSWORD@cluster0.example.mongodb.net/doughart?retryWrites=true&w=majority
 JWT_SECRET=replace-with-a-long-random-secret-at-least-32-characters
 JWT_EXPIRES_IN=7d
 ADMIN_EMAIL=admin@yourdomain.com
@@ -79,7 +79,7 @@ CORS_ORIGIN=https://www.yourdomain.com,https://admin.yourdomain.com
 **Local**
 
 ```text
-mongodb://127.0.0.1:27017/sweetbite
+mongodb://127.0.0.1:27017/doughart
 ```
 
 **Atlas**

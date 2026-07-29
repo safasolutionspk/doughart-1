@@ -8,7 +8,7 @@ Backup **MongoDB** and **uploaded images** before every production deploy and on
 
 | Asset | When | Tool |
 | --- | --- | --- |
-| MongoDB (`sweetbite` database) | Daily minimum | Atlas automated backup **or** `mongodump` |
+| MongoDB (`doughart` database) | Daily minimum | Atlas automated backup **or** `mongodump` |
 | `backend/uploads/images/` | Daily if `UPLOAD_PROVIDER=local` | `rsync` / volume snapshot |
 | Cloudinary assets | Weekly export (optional) | Cloudinary Media Library export / API |
 | `backend/.env` (secrets) | On change | Host secret store / encrypted vault — **not git** |
@@ -37,8 +37,8 @@ Backup **MongoDB** and **uploaded images** before every production deploy and on
 ### Manual export (any tier)
 
 ```bash
-mongodump --uri="$MONGODB_URI" --out=/backups/sweetbite-$(date +%Y%m%d)
-tar -czf /backups/sweetbite-$(date +%Y%m%d).tar.gz -C /backups sweetbite-$(date +%Y%m%d)
+mongodump --uri="$MONGODB_URI" --out=/backups/doughart-$(date +%Y%m%d)
+tar -czf /backups/doughart-$(date +%Y%m%d).tar.gz -C /backups doughart-$(date +%Y%m%d)
 ```
 
 Upload archive to S3, Backblaze, or another region.
@@ -46,8 +46,8 @@ Upload archive to S3, Backblaze, or another region.
 ### Restore (mongorestore)
 
 ```bash
-tar -xzf sweetbite-20260520.tar.gz -C /tmp/restore
-mongorestore --uri="$MONGODB_URI" --drop /tmp/restore/sweetbite-20260520
+tar -xzf doughart-20260520.tar.gz -C /tmp/restore
+mongorestore --uri="$MONGODB_URI" --drop /tmp/restore/doughart-20260520
 ```
 
 `--drop` removes existing collections first — use only during planned maintenance.
@@ -62,8 +62,8 @@ mongorestore --uri="$MONGODB_URI" --drop /tmp/restore/sweetbite-20260520
 
 ```bash
 rsync -a --delete \
-  /var/lib/sweetbite/uploads/images/ \
-  /backups/sweetbite/uploads/images/
+  /var/lib/doughart/uploads/images/ \
+  /backups/doughart/uploads/images/
 ```
 
 Or include in nightly VPS snapshot (LVM, cloud provider backup).
@@ -71,11 +71,11 @@ Or include in nightly VPS snapshot (LVM, cloud provider backup).
 ### Restore
 
 ```bash
-rsync -a /backups/sweetbite/uploads/images/ /var/lib/sweetbite/uploads/images/
-pm2 restart sweetbite-backend
+rsync -a /backups/doughart/uploads/images/ /var/lib/doughart/uploads/images/
+pm2 restart doughart-backend
 ```
 
-Verify: open a known image URL `https://api.sweetbite.com/uploads/images/<filename>`.
+Verify: open a known image URL `https://api.doughart.com/uploads/images/<filename>`.
 
 ---
 

@@ -1,1 +1,1 @@
-export const CATEGORIES_REFRESH_EVENT = "sweetbite:categories-refresh";
+export const CATEGORIES_REFRESH_EVENT = "doughart:categories-refresh";

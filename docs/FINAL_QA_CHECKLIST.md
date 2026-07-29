@@ -7,7 +7,7 @@ Complete on **staging** or **production** URLs after all three apps are deployed
 ```bash
 cd backend
 # API must be running with valid MongoDB
-$env:MONGODB_URI='mongodb://127.0.0.1:27017/sweetbite'   # PowerShell
+$env:MONGODB_URI='mongodb://127.0.0.1:27017/doughart'   # PowerShell
 $env:ADMIN_EMAIL='admin@example.com'
 $env:ADMIN_PASSWORD='your-seed-password'
 npx tsx scripts/verify-data-flow.ts

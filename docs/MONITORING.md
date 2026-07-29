@@ -6,7 +6,7 @@ Use this for daily ops and uptime alerts. No APM is bundled — start with healt
 
 ## 1. API health (uptime)
 
-**Endpoint:** `GET https://api.sweetbite.com/api/health`
+**Endpoint:** `GET https://api.doughart.com/api/health`
 
 **Healthy response:**
 
@@ -28,7 +28,7 @@ Use this for daily ops and uptime alerts. No APM is bundled — start with healt
 | Alert | Email/SMS/Slack on 2+ failures |
 
 ```bash
-curl -sf https://api.sweetbite.com/api/health | jq -e '.success and .data.database == "connected"'
+curl -sf https://api.doughart.com/api/health | jq -e '.success and .data.database == "connected"'
 ```
 
 ---
@@ -44,14 +44,14 @@ pm2 monit
 
 | Process | Expected |
 | --- | --- |
-| `sweetbite-backend` | online |
-| `sweetbite-frontend` | online (if on VPS) |
-| `sweetbite-admin` | online (if on VPS) |
+| `doughart-backend` | online |
+| `doughart-frontend` | online (if on VPS) |
+| `doughart-admin` | online (if on VPS) |
 
 Alert if any process is `errored`, restart count spikes, or memory at `max_memory_restart` repeatedly.
 
 ```bash
-pm2 logs sweetbite-backend --lines 100 --nostream
+pm2 logs doughart-backend --lines 100 --nostream
 ```
 
 ---
@@ -60,8 +60,8 @@ pm2 logs sweetbite-backend --lines 100 --nostream
 
 ```bash
 df -h
-du -sh /opt/sweetbite/backend/uploads/images
-du -sh /opt/sweetbite/backend/logs
+du -sh /opt/doughart/backend/uploads/images
+du -sh /opt/doughart/backend/logs
 du -sh /var/log/nginx
 ```
 
@@ -71,7 +71,7 @@ du -sh /var/log/nginx
 | Uploads growing fast | Confirm Cloudinary migration or expand backup volume |
 
 ```bash
-# Optional: logrotate for PM2 logs (create /etc/logrotate.d/sweetbite)
+# Optional: logrotate for PM2 logs (create /etc/logrotate.d/doughart)
 ```
 
 ---
@@ -79,8 +79,8 @@ du -sh /var/log/nginx
 ## 4. Upload directory size (local provider)
 
 ```bash
-find /opt/sweetbite/backend/uploads/images -type f | wc -l
-du -sh /opt/sweetbite/backend/uploads/images
+find /opt/doughart/backend/uploads/images -type f | wc -l
+du -sh /opt/doughart/backend/uploads/images
 ```
 
 Sudden drop may indicate data loss; sudden spike may indicate abuse — check access logs.
@@ -102,7 +102,7 @@ Optional: Atlas alert → email when cluster down.
 
 ## 6. SMTP / email errors
 
-Backend logs (`pm2 logs sweetbite-backend` or `backend/logs/pm2-error.log`):
+Backend logs (`pm2 logs doughart-backend` or `backend/logs/pm2-error.log`):
 
 ```text
 "type":"error","message":"[email] Failed to send"

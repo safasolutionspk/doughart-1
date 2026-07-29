@@ -7,7 +7,7 @@ Run after all three apps are built and started (local or staging). Automated scr
 ```bash
 cd backend
 # Use a reachable MongoDB URI
-$env:MONGODB_URI='mongodb://127.0.0.1:27017/sweetbite'   # PowerShell
+$env:MONGODB_URI='mongodb://127.0.0.1:27017/doughart'   # PowerShell
 npm run dev
 # Another terminal:
 $env:ADMIN_EMAIL='admin@example.com'

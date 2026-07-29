@@ -20,12 +20,12 @@ Step-by-step guide to deploy the **backend API**, **admin dashboard**, and **pub
 
 ## 2. MongoDB Atlas
 
-1. Create cluster and database user (read/write on `sweetbite` database).
+1. Create cluster and database user (read/write on `doughart` database).
 2. Network access: allow only your API server IP(s).
 3. Copy connection string:
 
 ```text
-mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/sweetbite?retryWrites=true&w=majority
+mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/doughart?retryWrites=true&w=majority
 ```
 
 Set as `MONGODB_URI` in **backend** `.env` only.

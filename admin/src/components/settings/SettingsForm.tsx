@@ -239,7 +239,7 @@ export function SettingsForm() {
                 value={form.facebook}
                 disabled={isSaving}
                 onChange={(event) => updateField("facebook", event.target.value)}
-                placeholder="https://www.facebook.com/sweetbitelahore"
+                placeholder="https://www.facebook.com/artdough.1"
                 className={inputClassName}
               />
             </div>
@@ -253,7 +253,7 @@ export function SettingsForm() {
                 value={form.instagram}
                 disabled={isSaving}
                 onChange={(event) => updateField("instagram", event.target.value)}
-                placeholder="https://www.instagram.com/sweetbitelahore/"
+                placeholder="https://www.instagram.com/dough.art/"
                 className={inputClassName}
               />
             </div>
@@ -267,7 +267,7 @@ export function SettingsForm() {
                 value={form.tiktok}
                 disabled={isSaving}
                 onChange={(event) => updateField("tiktok", event.target.value)}
-                placeholder="https://www.tiktok.com/@sweetbitelahore"
+                placeholder="https://www.tiktok.com/@doughart"
                 className={inputClassName}
               />
             </div>

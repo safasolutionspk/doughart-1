@@ -1,16 +1,16 @@
 /**
  * Example: all three apps on one VPS via PM2.
- * Copy to /opt/sweetbite/ecosystem.config.cjs and adjust paths/domains.
+ * Copy to /opt/doughart/ecosystem.config.cjs and adjust paths/domains.
  *
- *   cp deploy/ecosystem.all.cjs.example /opt/sweetbite/ecosystem.config.cjs
- *   pm2 start /opt/sweetbite/ecosystem.config.cjs --env production
+ *   cp deploy/ecosystem.all.cjs.example /opt/doughart/ecosystem.config.cjs
+ *   pm2 start /opt/doughart/ecosystem.config.cjs --env production
  */
-const REPO = "/opt/sweetbite";
+const REPO = "/opt/doughart";
 
 module.exports = {
   apps: [
     {
-      name: "sweetbite-backend",
+      name: "doughart-backend",
       cwd: `${REPO}/backend`,
       script: "dist/index.js",
       instances: 1,
@@ -25,7 +25,7 @@ module.exports = {
       time: true,
     },
     {
-      name: "sweetbite-frontend",
+      name: "doughart-frontend",
       cwd: `${REPO}/frontend`,
       script: "node_modules/next/dist/bin/next",
       args: "start -p 3000",
@@ -41,7 +41,7 @@ module.exports = {
       time: true,
     },
     {
-      name: "sweetbite-admin",
+      name: "doughart-admin",
       cwd: `${REPO}/admin`,
       script: "node_modules/next/dist/bin/next",
       args: "start -p 3001",

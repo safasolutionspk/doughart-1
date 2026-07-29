@@ -6,9 +6,9 @@ Replace example domains:
 
 | Role | Example |
 | --- | --- |
-| Shop | `https://sweetbite.com` |
-| Admin | `https://admin.sweetbite.com` |
-| API | `https://api.sweetbite.com` |
+| Shop | `https://doughart.com` |
+| Admin | `https://admin.doughart.com` |
+| API | `https://api.doughart.com` |
 
 ---
 
@@ -34,9 +34,9 @@ node -v   # v20+
 
 | Hostname | Points to |
 | --- | --- |
-| `api.sweetbite.com` | VPS public IP |
-| `sweetbite.com` | VPS IP **or** Vercel |
-| `admin.sweetbite.com` | VPS IP **or** Vercel |
+| `api.doughart.com` | VPS public IP |
+| `doughart.com` | VPS IP **or** Vercel |
+| `admin.doughart.com` | VPS IP **or** Vercel |
 
 Set `CORS_ORIGIN` on the API to the **exact** HTTPS origins of shop + admin (comma-separated, no trailing slash).
 
@@ -45,9 +45,9 @@ Set `CORS_ORIGIN` on the API to the **exact** HTTPS origins of shop + admin (com
 ## 3. Clone and build
 
 ```bash
-sudo mkdir -p /opt/sweetbite
-sudo chown $USER:$USER /opt/sweetbite
-cd /opt/sweetbite
+sudo mkdir -p /opt/doughart
+sudo chown $USER:$USER /opt/doughart
+cd /opt/doughart
 git clone <your-repo-url> .
 git checkout <release-tag-or-main>
 
@@ -80,9 +80,9 @@ MONGODB_URI=mongodb+srv://...
 JWT_SECRET=<32+ random chars>
 ADMIN_EMAIL=...
 ADMIN_PASSWORD=<12+ chars — seed once>
-CORS_ORIGIN=https://sweetbite.com,https://admin.sweetbite.com
-FRONTEND_URL=https://sweetbite.com
-ADMIN_URL=https://admin.sweetbite.com
+CORS_ORIGIN=https://doughart.com,https://admin.doughart.com
+FRONTEND_URL=https://doughart.com
+ADMIN_URL=https://admin.doughart.com
 UPLOAD_PROVIDER=cloudinary
 # or UPLOAD_PROVIDER=local + persistent uploads volume
 ```
@@ -90,21 +90,21 @@ UPLOAD_PROVIDER=cloudinary
 `frontend/.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=https://api.sweetbite.com
-NEXT_PUBLIC_SITE_URL=https://sweetbite.com
+NEXT_PUBLIC_API_URL=https://api.doughart.com
+NEXT_PUBLIC_SITE_URL=https://doughart.com
 ```
 
 `admin/.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=https://api.sweetbite.com
+NEXT_PUBLIC_API_URL=https://api.doughart.com
 JWT_SECRET=<same as backend JWT_SECRET>
 ```
 
 First deploy only:
 
 ```bash
-cd /opt/sweetbite/backend && npm run seed
+cd /opt/doughart/backend && npm run seed
 ```
 
 ---
@@ -114,7 +114,7 @@ cd /opt/sweetbite/backend && npm run seed
 From `backend/`:
 
 ```bash
-cd /opt/sweetbite/backend
+cd /opt/doughart/backend
 mkdir -p logs uploads/images
 pm2 start ecosystem.config.cjs --env production
 pm2 save
@@ -126,19 +126,19 @@ pm2 startup   # follow printed command for boot on reboot
 | Action | Command |
 | --- | --- |
 | Status | `pm2 status` |
-| Logs | `pm2 logs sweetbite-backend` |
-| Restart | `pm2 restart sweetbite-backend` |
-| Stop | `pm2 stop sweetbite-backend` |
+| Logs | `pm2 logs doughart-backend` |
+| Restart | `pm2 restart doughart-backend` |
+| Stop | `pm2 stop doughart-backend` |
 
 Logs also written to `backend/logs/pm2-*.log`.
 
 ### Local uploads volume (if `UPLOAD_PROVIDER=local`)
 
 ```bash
-sudo mkdir -p /var/lib/sweetbite/uploads/images
-sudo chown $USER:$USER /var/lib/sweetbite/uploads/images
+sudo mkdir -p /var/lib/doughart/uploads/images
+sudo chown $USER:$USER /var/lib/doughart/uploads/images
 # Symlink or bind-mount into backend/uploads/images
-ln -sfn /var/lib/sweetbite/uploads/images /opt/sweetbite/backend/uploads/images
+ln -sfn /var/lib/doughart/uploads/images /opt/doughart/backend/uploads/images
 ```
 
 See [UPLOADS.md](./UPLOADS.md).
@@ -150,21 +150,21 @@ See [UPLOADS.md](./UPLOADS.md).
 Option A — use example all-in-one config:
 
 ```bash
-cp /opt/sweetbite/deploy/ecosystem.all.cjs.example /opt/sweetbite/ecosystem.config.cjs
+cp /opt/doughart/deploy/ecosystem.all.cjs.example /opt/doughart/ecosystem.config.cjs
 # Edit REPO path if needed
-mkdir -p /opt/sweetbite/frontend/logs /opt/sweetbite/admin/logs
-pm2 start /opt/sweetbite/ecosystem.config.cjs --env production
+mkdir -p /opt/doughart/frontend/logs /opt/doughart/admin/logs
+pm2 start /opt/doughart/ecosystem.config.cjs --env production
 pm2 save
 ```
 
 Option B — start individually:
 
 ```bash
-cd /opt/sweetbite/frontend
-pm2 start node_modules/next/dist/bin/next --name sweetbite-frontend -- start -p 3000
+cd /opt/doughart/frontend
+pm2 start node_modules/next/dist/bin/next --name doughart-frontend -- start -p 3000
 
-cd /opt/sweetbite/admin
-pm2 start node_modules/next/dist/bin/next --name sweetbite-admin -- start -p 3001
+cd /opt/doughart/admin
+pm2 start node_modules/next/dist/bin/next --name doughart-admin -- start -p 3001
 
 pm2 save
 ```
@@ -187,7 +187,7 @@ pm2 save
 | Build | `npm run build` (default Next.js) |
 | Env | Same `NEXT_PUBLIC_*` / `JWT_SECRET` as above |
 
-Point `sweetbite.com` and `admin.sweetbite.com` DNS to Vercel. Keep API on VPS with `api.sweetbite.com`.
+Point `doughart.com` and `admin.doughart.com` DNS to Vercel. Keep API on VPS with `api.doughart.com`.
 
 ---
 
@@ -196,11 +196,11 @@ Point `sweetbite.com` and `admin.sweetbite.com` DNS to Vercel. Keep API on VPS w
 Copy examples from [deployment/nginx/](./deployment/nginx/):
 
 ```bash
-sudo cp docs/deployment/nginx/api.sweetbite.conf.example /etc/nginx/sites-available/sweetbite-api
-sudo cp docs/deployment/nginx/shop.sweetbite.conf.example /etc/nginx/sites-available/sweetbite-shop
-sudo cp docs/deployment/nginx/admin.sweetbite.conf.example /etc/nginx/sites-available/sweetbite-admin
+sudo cp docs/deployment/nginx/api.doughart.conf.example /etc/nginx/sites-available/doughart-api
+sudo cp docs/deployment/nginx/shop.doughart.conf.example /etc/nginx/sites-available/doughart-shop
+sudo cp docs/deployment/nginx/admin.doughart.conf.example /etc/nginx/sites-available/doughart-admin
 
-sudo ln -s /etc/nginx/sites-available/sweetbite-api /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/doughart-api /etc/nginx/sites-enabled/
 # Enable shop/admin only if hosted on this VPS
 
 sudo nginx -t && sudo systemctl reload nginx
@@ -209,9 +209,9 @@ sudo nginx -t && sudo systemctl reload nginx
 ### SSL (Certbot)
 
 ```bash
-sudo certbot --nginx -d api.sweetbite.com
-sudo certbot --nginx -d sweetbite.com -d www.sweetbite.com
-sudo certbot --nginx -d admin.sweetbite.com
+sudo certbot --nginx -d api.doughart.com
+sudo certbot --nginx -d doughart.com -d www.doughart.com
+sudo certbot --nginx -d admin.doughart.com
 ```
 
 Renewal is automatic via systemd timer (`certbot renew`).
@@ -222,7 +222,7 @@ Renewal is automatic via systemd timer (`certbot renew`).
 
 - Browser CORS is enforced by **Express** using `CORS_ORIGIN` in `backend/.env`.
 - Nginx must **not** add conflicting `Access-Control-Allow-Origin` headers.
-- After changing shop/admin domains, update `CORS_ORIGIN` and restart API: `pm2 restart sweetbite-backend`.
+- After changing shop/admin domains, update `CORS_ORIGIN` and restart API: `pm2 restart doughart-backend`.
 - `FRONTEND_URL` / `ADMIN_URL` are for emails and links, not CORS.
 
 ---
@@ -230,11 +230,11 @@ Renewal is automatic via systemd timer (`certbot renew`).
 ## 10. Post-deploy verification
 
 ```bash
-curl -s https://api.sweetbite.com/api/health | jq .
+curl -s https://api.doughart.com/api/health | jq .
 # Expect: success true, database "connected"
 
-cd /opt/sweetbite && npm run smoke
-API_BASE=https://api.sweetbite.com npm run smoke
+cd /opt/doughart && npm run smoke
+API_BASE=https://api.doughart.com npm run smoke
 ```
 
 Manual: admin login, test order (checkout shows Cash on Delivery only).

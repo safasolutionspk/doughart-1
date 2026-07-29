@@ -19,7 +19,7 @@ Quick verification that the API, shop, and admin are running correctly before pr
 **Backend** (`backend/.env`):
 
 ```env
-MONGODB_URI=mongodb://127.0.0.1:27017/sweetbite
+MONGODB_URI=mongodb://127.0.0.1:27017/doughart
 JWT_SECRET=dev-secret-at-least-16-chars
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=change-me-strong-password

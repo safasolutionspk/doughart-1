@@ -14,7 +14,7 @@ import {
 
 export function orderCreatedCustomerEmail(ctx: OrderEmailContext): EmailContent {
   const myOrderUrl = buildMyOrderUrl();
-  const subject = `Order received — ${ctx.orderNumber}`;
+  const subject = `DoughArt Order Confirmation — ${ctx.orderNumber}`;
 
   const intro = ctx.awaitingQuote
     ? "Thank you for your custom cake request. We have received your order and will send you a quote soon."
@@ -31,7 +31,7 @@ export function orderCreatedCustomerEmail(ctx: OrderEmailContext): EmailContent 
       ? `Track your order anytime: ${myOrderUrl}`
       : "You can track your order on our website under My Order (use your order number and phone).",
     "",
-    "DoughArt",
+    "DoughArt Bakers",
   ];
 
   let bodyHtml =
@@ -98,8 +98,8 @@ export function adminNewOrderEmail(ctx: OrderEmailContext): EmailContent {
   const isCustomCake = ctx.awaitingQuote;
   const adminUrl = buildAdminOrderUrl(ctx);
   const subject = isCustomCake
-    ? `[DoughArt] New custom cake request ${ctx.orderNumber}`
-    : `[DoughArt] New order ${ctx.orderNumber}`;
+    ? `New DoughArt Custom Cake Request ${ctx.orderNumber}`
+    : `New DoughArt Order ${ctx.orderNumber}`;
 
   const heading = isCustomCake
     ? "New Custom Cake Request Received"
@@ -150,7 +150,7 @@ export function adminNewOrderEmail(ctx: OrderEmailContext): EmailContent {
     textLines.push("Open Admin Panel: (ADMIN_URL not configured)");
   }
 
-  textLines.push("", "DoughArt Admin");
+  textLines.push("", "DoughArt Bakers Admin");
 
   let bodyHtml =
     htmlHeading(heading) +

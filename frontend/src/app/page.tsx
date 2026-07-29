@@ -17,7 +17,7 @@ import { buildPageMetadata, siteBrandName, siteUrl } from "@/lib/seo";
 import { socialLinks } from "@/lib/site";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: siteBrandName,
+  title: "DoughArt Bakers | Custom Cakes & Cake Delivery in Lahore",
   description:
     "DoughArt crafts custom cakes for birthdays, weddings, and celebrations in Lahore. Browse designs, place orders online, or request a bespoke cake.",
   path: "/",

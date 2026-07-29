@@ -20,7 +20,7 @@ export function quoteReadyCustomerEmail(ctx: OrderEmailContext): EmailContent {
       ? formatCurrency(ctx.quotedAmount)
       : "See your order for details";
 
-  const subject = `Your cake quote is ready — ${ctx.orderNumber}`;
+  const subject = `DoughArt Order Status Update — quote ready (${ctx.orderNumber})`;
 
   const textLines = [
     `Hi ${ctx.customerName},`,
@@ -37,7 +37,7 @@ export function quoteReadyCustomerEmail(ctx: OrderEmailContext): EmailContent {
       ? `View your order: ${myOrderUrl}`
       : "Visit our website and use My Order with your order number and phone.",
     "",
-    "DoughArt",
+    "DoughArt Bakers",
   ].filter(Boolean);
 
   let bodyHtml =

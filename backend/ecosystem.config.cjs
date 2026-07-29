@@ -13,7 +13,7 @@ const path = require("path");
 module.exports = {
   apps: [
     {
-      name: "sweetbite-backend",
+      name: "doughart-backend",
       script: path.join(__dirname, "dist", "index.js"),
       cwd: __dirname,
       instances: 1,

@@ -85,7 +85,7 @@ const envSchema = z
     CLOUDINARY_CLOUD_NAME: z.string().optional(),
     CLOUDINARY_API_KEY: z.string().optional(),
     CLOUDINARY_API_SECRET: z.string().optional(),
-    CLOUDINARY_FOLDER: z.string().default("sweetbite"),
+    CLOUDINARY_FOLDER: z.string().default("doughart"),
     EMAIL_ENABLED: z
       .string()
       .optional()

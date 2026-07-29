@@ -1,8 +1,11 @@
 import { env } from "../../../config/env";
 import type { OrderEmailContext } from "../types";
 
-const BRAND_NAME = "DoughArt";
+const BRAND_NAME = "DoughArt Bakers";
 const BRAND_TAGLINE = "Handcrafted cakes for every celebration";
+const BRAND_EMAIL = "doughartbakers@gmail.com";
+const BRAND_PHONE = "0327 7707333";
+const BRAND_ADDRESS = "Thokkar Niaz Baig, Lahore, Punjab, Pakistan";
 const COLOR_PRIMARY = "#b83d6a";
 const COLOR_BROWN = "#3d2c29";
 const COLOR_MUTED = "#6b5c58";
@@ -124,8 +127,11 @@ export function wrapEmailHtml(options: {
           </tr>
           <tr>
             <td style="padding:20px 28px;background:${COLOR_BG};border-top:1px solid ${COLOR_BORDER};font-size:12px;color:${COLOR_MUTED};text-align:center;line-height:1.5;">
-              <p style="margin:0;">${BRAND_NAME} · This is an automated message.</p>
-              <p style="margin:8px 0 0;">Questions? Reply to this email or contact us via the website.</p>
+              <p style="margin:0;font-weight:bold;color:${COLOR_BROWN};">${BRAND_NAME}</p>
+              <p style="margin:8px 0 0;">${escapeHtml(BRAND_EMAIL)}</p>
+              <p style="margin:4px 0 0;">${escapeHtml(BRAND_PHONE)}</p>
+              <p style="margin:4px 0 0;">${escapeHtml(BRAND_ADDRESS)}</p>
+              <p style="margin:12px 0 0;">This is an automated message. Questions? Reply to this email or contact us via the website.</p>
               ${
                 whatsapp
                   ? `<p style="margin:8px 0 0;">WhatsApp: ${escapeHtml(whatsapp)}</p>`

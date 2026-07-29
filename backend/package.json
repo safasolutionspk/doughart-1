@@ -1,5 +1,5 @@
 {
-  "name": "sweetbite-backend",
+  "name": "doughart-backend",
   "version": "1.0.0",
   "description": "DoughArt bakery API — Express, TypeScript, MongoDB",
   "main": "dist/index.js",
@@ -13,7 +13,7 @@
     "smoke": "tsx scripts/smoke.ts",
     "verify:data-flow": "tsx scripts/verify-data-flow.ts",
     "pm2:start": "pm2 start ecosystem.config.cjs --env production",
-    "pm2:restart": "pm2 restart sweetbite-backend"
+    "pm2:restart": "pm2 restart doughart-backend"
   },
   "keywords": [],
   "author": "",

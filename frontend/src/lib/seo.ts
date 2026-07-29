@@ -7,9 +7,9 @@ export const siteBrandName = "DoughArt Bakers";
 export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-const defaultTitle = siteBrandName;
+const defaultTitle = "DoughArt Bakers | Custom Cakes & Cake Delivery in Lahore";
 const defaultDescription =
-  "Order handcrafted custom cakes for weddings, birthdays, and celebrations. DoughArt bakes premium cakes with fresh ingredients and designs made just for you.";
+  "Order handcrafted custom cakes for weddings, birthdays, and celebrations. DoughArt Bakers crafts premium cakes with fresh ingredients and designs made just for you.";
 const defaultOgImage = siteImages.hero;
 
 export const siteKeywords = [
@@ -18,9 +18,11 @@ export const siteKeywords = [
   "wedding cakes",
   "birthday cakes",
   "DoughArt",
+  "DoughArt Bakers",
   "cake delivery",
   "celebration cakes",
   "handcrafted cakes",
+  "Lahore cakes",
 ] as const;
 
 export const shopKeywords = [
@@ -85,10 +87,12 @@ export function buildPageMetadata({
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
   const pageUrl = new URL(canonicalPath, siteUrl).toString();
   const socialTitle =
-    title === siteBrandName ? siteBrandName : `${title} | ${siteBrandName}`;
+    title === siteBrandName || title === defaultTitle
+      ? defaultTitle
+      : `${title} | ${siteBrandName}`;
 
   return {
-    title,
+    title: title === defaultTitle ? { absolute: defaultTitle } : title,
     description,
     keywords: keywords ? [...siteKeywords, ...keywords] : [...siteKeywords],
     alternates: {

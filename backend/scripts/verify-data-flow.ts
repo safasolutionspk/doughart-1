@@ -1,6 +1,6 @@
 /**
  * Phase 3 data-flow verification (run with backend on localhost:5000).
- * Usage: MONGODB_URI=mongodb://127.0.0.1:27017/sweetbite npx tsx scripts/verify-data-flow.ts
+ * Usage: MONGODB_URI=mongodb://127.0.0.1:27017/doughart npx tsx scripts/verify-data-flow.ts
  */
 import fs from "fs/promises";
 import path from "path";

@@ -73,10 +73,10 @@ function customerPasswordResetEmail(ctx: CustomerPasswordResetContext): EmailCon
     ? `${baseUrl}/reset-password?token=${encodeURIComponent(ctx.token)}`
     : "";
 
-  const subject = "Reset your DoughArt password";
+  const subject = "Reset your DoughArt Bakers password";
 
   const lines = [
-    "We received a request to reset your DoughArt account password.",
+    "We received a request to reset your DoughArt Bakers account password.",
     "",
     resetUrl ? `Reset link: ${resetUrl}` : "Password reset link is unavailable. Please contact support.",
     `This link expires in ${ctx.expiresMinutes} minutes.`,
@@ -85,7 +85,7 @@ function customerPasswordResetEmail(ctx: CustomerPasswordResetContext): EmailCon
   ];
 
   const text = lines.join("\n");
-  const html = `<p>We received a request to reset your DoughArt account password.</p>
+  const html = `<p>We received a request to reset your DoughArt Bakers account password.</p>
 <p>${
     resetUrl
       ? `<a href="${resetUrl}">Reset your password</a>`

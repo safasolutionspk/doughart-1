@@ -31,16 +31,16 @@ export async function seedBusinessSettings(): Promise<void> {
   }
 
   await BusinessSettings.create({
-    businessName: "DoughArt",
+    businessName: "DoughArt Bakers",
     tagline: "Custom Cakes",
-    email: "Sweetbitelahore@gmail.com",
+    email: "doughartbakers@gmail.com",
     phone: "0327 7707333",
-    address: "Main Market Gulberg 2 Lahore",
+    address: "Thokkar Niaz Baig, Lahore, Punjab, Pakistan",
     deliveryInfo:
       "We deliver across the local area. Order at least 48 hours ahead for custom cakes.",
-    facebook: "https://www.facebook.com/sweetbitelahore",
-    instagram: "https://www.instagram.com/sweetbitelahore/",
-    tiktok: "https://www.tiktok.com/@sweetbitelahore",
+    facebook: "https://www.facebook.com/artdough.1",
+    instagram: "https://www.instagram.com/dough.art/",
+    tiktok: "",
     whatsapp: "923277707333",
   });
 

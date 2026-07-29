@@ -18,17 +18,17 @@ Use this checklist when deploying the **backend** (API), **admin** (dashboard), 
 ### Option A — Local (development only)
 
 ```text
-mongodb://127.0.0.1:27017/sweetbite
+mongodb://127.0.0.1:27017/doughart
 ```
 
 ### Option B — MongoDB Atlas (production)
 
-1. Create a cluster and database user with read/write on the `sweetbite` database.
+1. Create a cluster and database user with read/write on the `doughart` database.
 2. Network access: restrict to your API server IP(s); avoid `0.0.0.0/0` in production unless temporary for debugging.
 3. Connection string (replace placeholders):
 
 ```text
-mongodb+srv://DB_USER:DB_PASSWORD@cluster0.example.mongodb.net/sweetbite?retryWrites=true&w=majority&appName=Cluster0
+mongodb+srv://DB_USER:DB_PASSWORD@cluster0.example.mongodb.net/doughart?retryWrites=true&w=majority&appName=Cluster0
 ```
 
 Set `MONGODB_URI` in **backend** `.env` only.
@@ -138,7 +138,7 @@ Quick checks:
 
 For a single-server or API-only VPS setup, follow **[VPS_DEPLOYMENT.md](./VPS_DEPLOYMENT.md)**:
 
-- Backend: `backend/ecosystem.config.cjs` → PM2 app `sweetbite-backend` (`dist/index.js`)
+- Backend: `backend/ecosystem.config.cjs` → PM2 app `doughart-backend` (`dist/index.js`)
 - Optional all-in-one: `deploy/ecosystem.all.cjs.example` (shop :3000, admin :3001)
 - Nginx examples: [deployment/nginx/](./deployment/nginx/) (`api`, `shop`, `admin` hostnames)
 - SSL: Certbot with `--nginx`
