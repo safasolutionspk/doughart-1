@@ -1,88 +1,19 @@
 import type { EmailContent, OrderEmailContext } from "../types";
 import {
+  brandPlainTextFooter,
   buildAdminOrderUrl,
-  buildMyOrderUrl,
   formatCurrency,
+  formatOrderAmount,
+  formatOrderStatus,
   htmlButton,
   htmlDetailsTable,
   htmlHeading,
   htmlParagraph,
+  htmlProminentTotal,
   orderDetailsRows,
-  orderSummaryLines,
+  orderItemDetailRows,
   wrapEmailHtml,
 } from "./shared";
-
-export function orderCreatedCustomerEmail(ctx: OrderEmailContext): EmailContent {
-  const myOrderUrl = buildMyOrderUrl();
-  const subject = `DoughArt Order Confirmation — ${ctx.orderNumber}`;
-
-  const intro = ctx.awaitingQuote
-    ? "Thank you for your custom cake request. We have received your order and will send you a quote soon."
-    : "Thank you for your order. We have received it and will contact you shortly to confirm details.";
-
-  const textLines = [
-    `Hi ${ctx.customerName},`,
-    "",
-    intro,
-    "",
-    ...orderSummaryLines(ctx),
-    "",
-    myOrderUrl
-      ? `Track your order anytime: ${myOrderUrl}`
-      : "You can track your order on our website under My Order (use your order number and phone).",
-    "",
-    "DoughArt Bakers",
-  ];
-
-  let bodyHtml =
-    htmlHeading("Your order is confirmed") +
-    htmlParagraph(`Hi ${ctx.customerName},`) +
-    htmlParagraph(intro) +
-    htmlDetailsTable(orderDetailsRows(ctx));
-
-  if (myOrderUrl) {
-    bodyHtml +=
-      htmlParagraph(
-        "Use your order number and phone number on our My Order page to check your order status.",
-      ) + htmlButton(myOrderUrl, "View My Order");
-  } else {
-    bodyHtml += htmlParagraph(
-      "Visit our website and open My Order — enter your order number and phone to check status.",
-    );
-  }
-
-  return {
-    subject,
-    text: textLines.join("\n"),
-    html: wrapEmailHtml({
-      title: subject,
-      preheader: `Order ${ctx.orderNumber} received`,
-      bodyHtml,
-    }),
-  };
-}
-
-function formatItemLines(ctx: OrderEmailContext): string[] {
-  if (!ctx.items.length) {
-    return ["- No item details available"];
-  }
-
-  return ctx.items.map((item) => {
-    const qty = Number.isFinite(item.quantity) ? item.quantity : 1;
-    const lineTotal = (item.unitPrice ?? 0) * qty;
-    const parts = [
-      `- ${item.cakeName} x${qty}`,
-      `Unit: ${formatCurrency(item.unitPrice ?? 0)}`,
-      `Line total: ${formatCurrency(lineTotal)}`,
-    ];
-
-    if (item.notes?.trim()) {
-      parts.push(`Notes: ${item.notes.trim()}`);
-    }
-
-    return parts.join(" | ");
-  });
-}
 
 function formatAdminTotal(ctx: OrderEmailContext): string {
   if (ctx.quotedAmount != null && ctx.quotedAmount > 0) {
@@ -94,6 +25,7 @@ function formatAdminTotal(ctx: OrderEmailContext): string {
   return "To be confirmed";
 }
 
+/** Owner notification for a newly persisted order. */
 export function adminNewOrderEmail(ctx: OrderEmailContext): EmailContent {
   const isCustomCake = ctx.awaitingQuote;
   const adminUrl = buildAdminOrderUrl(ctx);
@@ -102,11 +34,11 @@ export function adminNewOrderEmail(ctx: OrderEmailContext): EmailContent {
     : `New DoughArt Order ${ctx.orderNumber}`;
 
   const heading = isCustomCake
-    ? "New Custom Cake Request Received"
-    : "New DoughArt Order Received";
+    ? "New Custom Cake Request"
+    : "New DoughArt Order";
   const intro = isCustomCake
-    ? "A new custom cake request has been received in the admin panel."
-    : "A new order has been received in the admin panel.";
+    ? "A new custom cake request has been received."
+    : "A new order has been received.";
 
   const customNotes = [ctx.designNotes, ctx.specialInstructions]
     .filter((value): value is string => Boolean(value?.trim()))
@@ -115,34 +47,59 @@ export function adminNewOrderEmail(ctx: OrderEmailContext): EmailContent {
     ? ctx.designNotes.trim()
     : undefined;
 
-  const detailLines = isCustomCake
+  const detailRows = isCustomCake
     ? [
-        `Customer name: ${ctx.customerName}`,
-        `Phone: ${ctx.customerPhone}`,
-        ...(ctx.customerEmail ? [`Email: ${ctx.customerEmail}`] : []),
-        ...(ctx.cakeSize ? [`Cake size/servings: ${ctx.cakeSize}`] : []),
-        ...(ctx.flavour ? [`Flavor: ${ctx.flavour}`] : []),
-        ...(customNotes ? [`Theme/design notes: ${customNotes}`] : []),
-        ...(ctx.eventDate ? [`Delivery date/time: ${ctx.eventDate}`] : []),
-        ...(ctx.deliveryAddress ? [`Delivery address: ${ctx.deliveryAddress}`] : []),
-        `Budget/total: ${formatAdminTotal(ctx)}`,
-        ...(referenceImageLink ? [`Reference image link: ${referenceImageLink}`] : []),
+        { label: "Order number", value: ctx.orderNumber },
+        ...(ctx.createdAt
+          ? [{ label: "Created", value: ctx.createdAt }]
+          : []),
+        ...(ctx.status
+          ? [{ label: "Status", value: formatOrderStatus(ctx.status) }]
+          : []),
+        { label: "Customer name", value: ctx.customerName },
+        { label: "Phone", value: ctx.customerPhone },
+        ...(ctx.customerEmail?.trim()
+          ? [{ label: "Email", value: ctx.customerEmail.trim() }]
+          : []),
+        ...(ctx.cakeSize
+          ? [{ label: "Cake size/servings", value: ctx.cakeSize }]
+          : []),
+        ...(ctx.flavour ? [{ label: "Flavor", value: ctx.flavour }] : []),
+        ...(customNotes
+          ? [{ label: "Theme/design notes", value: customNotes }]
+          : []),
+        ...(ctx.eventDate
+          ? [{ label: "Delivery date/time", value: ctx.eventDate }]
+          : []),
+        ...(ctx.deliveryAddress
+          ? [{ label: "Delivery address", value: ctx.deliveryAddress }]
+          : []),
+        { label: "Budget/total", value: formatAdminTotal(ctx) },
+        ...(referenceImageLink
+          ? [{ label: "Reference image link", value: referenceImageLink }]
+          : []),
       ]
     : [
-        `Order number: ${ctx.orderNumber}`,
-        `Customer name: ${ctx.customerName}`,
-        `Phone: ${ctx.customerPhone}`,
-        ...(ctx.customerEmail ? [`Email: ${ctx.customerEmail}`] : []),
-        ...(ctx.deliveryAddress ? [`Delivery address: ${ctx.deliveryAddress}`] : []),
-        ...(ctx.eventDate ? [`Delivery date/time: ${ctx.eventDate}`] : []),
-        `Payment method: ${ctx.paymentMethod}`,
-        `Payment status: ${ctx.paymentStatus}`,
-        `Total amount: ${formatAdminTotal(ctx)}`,
-        "Items:",
-        ...formatItemLines(ctx),
+        ...orderDetailsRows(ctx),
+        { label: "Final total", value: formatOrderAmount(ctx) },
       ];
 
-  const textLines = [heading, "", intro, "", ...detailLines, ""];
+  const textLines = [
+    heading,
+    "",
+    intro,
+    "",
+    ...detailRows.map((row) => `${row.label}: ${row.value}`),
+    "",
+  ];
+
+  if (!isCustomCake) {
+    textLines.push("Items:");
+    for (const row of orderItemDetailRows(ctx)) {
+      textLines.push(`- ${row.value}`);
+    }
+    textLines.push("");
+  }
 
   if (adminUrl) {
     textLines.push(`Open Admin Panel: ${adminUrl}`);
@@ -150,69 +107,18 @@ export function adminNewOrderEmail(ctx: OrderEmailContext): EmailContent {
     textLines.push("Open Admin Panel: (ADMIN_URL not configured)");
   }
 
-  textLines.push("", "DoughArt Bakers Admin");
+  textLines.push("", brandPlainTextFooter());
 
   let bodyHtml =
-    htmlHeading(heading) +
-    htmlParagraph(intro) +
-    (isCustomCake
-      ? htmlDetailsTable([
-          { label: "Order number", value: ctx.orderNumber },
-          { label: "Customer name", value: ctx.customerName },
-          { label: "Phone", value: ctx.customerPhone },
-          ...(ctx.customerEmail
-            ? [{ label: "Email", value: ctx.customerEmail }]
-            : []),
-          ...(ctx.cakeSize
-            ? [{ label: "Cake size/servings", value: ctx.cakeSize }]
-            : []),
-          ...(ctx.flavour ? [{ label: "Flavor", value: ctx.flavour }] : []),
-          ...(customNotes
-            ? [{ label: "Theme/design notes", value: customNotes }]
-            : []),
-          ...(ctx.eventDate
-            ? [{ label: "Delivery date/time", value: ctx.eventDate }]
-            : []),
-          ...(ctx.deliveryAddress
-            ? [{ label: "Delivery address", value: ctx.deliveryAddress }]
-            : []),
-          { label: "Budget/total", value: formatAdminTotal(ctx) },
-          ...(referenceImageLink
-            ? [{ label: "Reference image link", value: referenceImageLink }]
-            : []),
-        ])
-      : htmlDetailsTable([
-          ...orderDetailsRows(ctx),
-          { label: "Customer name", value: ctx.customerName },
-          { label: "Phone", value: ctx.customerPhone },
-          ...(ctx.customerEmail
-            ? [{ label: "Email", value: ctx.customerEmail }]
-            : []),
-          ...(ctx.deliveryAddress
-            ? [{ label: "Delivery address", value: ctx.deliveryAddress }]
-            : []),
-          ...(ctx.eventDate
-            ? [{ label: "Delivery date/time", value: ctx.eventDate }]
-            : []),
-        ]));
+    htmlHeading(heading) + htmlParagraph(intro) + htmlDetailsTable(detailRows);
 
   if (!isCustomCake) {
-    bodyHtml += htmlParagraph("Items:");
-    bodyHtml += htmlDetailsTable(
-      ctx.items.length
-        ? ctx.items.map((item) => {
-            const qty = Number.isFinite(item.quantity) ? item.quantity : 1;
-            const total = formatCurrency((item.unitPrice ?? 0) * qty);
-            const itemValue = `${item.cakeName} x${qty} | ${formatCurrency(item.unitPrice ?? 0)} each | ${total}`;
-            return {
-              label: "Item",
-              value: item.notes?.trim()
-                ? `${itemValue} | Notes: ${item.notes.trim()}`
-                : itemValue,
-            };
-          })
-        : [{ label: "Item", value: "No item details available" }],
-    );
+    bodyHtml +=
+      htmlParagraph("Ordered items:") +
+      htmlDetailsTable(orderItemDetailRows(ctx)) +
+      htmlProminentTotal("Final total", formatOrderAmount(ctx));
+  } else {
+    bodyHtml += htmlProminentTotal("Budget/total", formatAdminTotal(ctx));
   }
 
   bodyHtml += htmlParagraph(

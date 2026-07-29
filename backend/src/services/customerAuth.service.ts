@@ -125,6 +125,7 @@ export async function requestPasswordReset(input: CustomerForgotPasswordInput) {
 
     notifyCustomerPasswordReset({
       customerEmail: customer.email,
+      customerId: customer._id.toString(),
       token: rawToken,
       expiresMinutes: PASSWORD_RESET_EXPIRY_MS / (60 * 1000),
     });

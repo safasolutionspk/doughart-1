@@ -323,7 +323,10 @@ export function CheckoutForm({
           </div>
           <div>
             <label htmlFor="checkout-email" className={labelClassName}>
-              Email <span className="text-brand-primary">*</span>
+              Email{" "}
+              <span className="font-normal normal-case text-brand-muted">
+                (optional)
+              </span>
             </label>
             <input
               id="checkout-email"
@@ -333,9 +336,14 @@ export function CheckoutForm({
               disabled={status === "loading"}
               onChange={(event) => updateField("email", event.target.value)}
               aria-invalid={Boolean(fieldErrors.email)}
+              placeholder="Optional — for order updates"
               className={cn(inputClassName, fieldErrors.email && inputErrorClassName)}
             />
             <FieldError message={fieldErrors.email} />
+            <p className="mt-1 text-xs text-brand-muted">
+              Phone is required. Leave email blank if you prefer WhatsApp or SMS
+              contact only.
+            </p>
           </div>
         </div>
       </section>

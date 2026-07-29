@@ -6,6 +6,9 @@ export const consoleEmailNotifier: IEmailNotifier = {
     console.info(divider);
     console.info("[email_preview]");
     console.info(`To: ${message.to}`);
+    if (message.replyTo) {
+      console.info(`Reply-To: ${message.replyTo}`);
+    }
     console.info(`Subject: ${message.subject}`);
     console.info("Text:");
     console.info(message.text);

@@ -1,126 +1,276 @@
+import { randomUUID } from "crypto";
 import { env } from "../../config/env";
 import { safeErrorLog } from "../../utils/safeLog";
-import { consoleEmailNotifier } from "./console";
-import { noopEmailNotifier } from "./noop";
-import { smtpEmailNotifier } from "./smtp";
+import { sendTrackedEmailAsync } from "./emailAttempt.service";
+import {
+  classifyEmailAddress,
+  isValidEmailSyntax,
+  sanitizeEmailHeader,
+} from "./emailValidation";
 import {
   adminNewOrderEmail,
-  orderCreatedCustomerEmail,
+  contactOwnerNotificationEmail,
+  customerOrderConfirmedEmail,
   quoteReadyCustomerEmail,
+  type ContactOwnerEmailContext,
 } from "./templates";
-import type {
+import {
+  brandPlainTextFooter,
+  escapeHtml,
+  htmlButton,
+  htmlHeading,
+  htmlParagraph,
+  wrapEmailHtml,
+} from "./templates/shared";
+import type { EmailContent, OrderEmailContext } from "./types";
+
+export type {
+  EmailMessage,
   EmailContent,
   IEmailNotifier,
   OrderEmailContext,
 } from "./types";
 
-export type { EmailMessage, EmailContent, IEmailNotifier, OrderEmailContext } from "./types";
-
 type CustomerPasswordResetContext = {
   customerEmail: string;
+  customerId?: string;
   token: string;
   expiresMinutes: number;
 };
 
-function getEmailNotifier(): IEmailNotifier {
-  if (!env.EMAIL_ENABLED) {
-    return noopEmailNotifier;
-  }
-
-  switch (env.EMAIL_PROVIDER) {
-    case "smtp":
-      return smtpEmailNotifier;
-    case "noop":
-      return noopEmailNotifier;
-    case "console":
-    default:
-      return consoleEmailNotifier;
-  }
-}
-
-function hasCustomerEmail(ctx: OrderEmailContext): boolean {
-  return Boolean(ctx.customerEmail?.trim());
-}
-
-function getAdminNotificationRecipient(): string {
+function getOwnerOrderRecipient(): string {
   return (
     env.ORDER_NOTIFICATION_EMAIL?.trim() ||
     env.ADMIN_EMAIL.trim()
   );
 }
 
-function sendAsync(to: string, content: EmailContent): void {
-  const notifier = getEmailNotifier();
-
-  void notifier
-    .send({
-      to,
-      subject: content.subject,
-      text: content.text,
-      html: content.html,
-    })
-    .catch((error) => {
-      safeErrorLog("[email] Failed to send", error, {
-        to,
-        subject: content.subject,
-      });
-    });
+function getContactOwnerRecipient(): string | undefined {
+  const configured =
+    env.CONTACT_NOTIFICATION_EMAIL?.trim() ||
+    env.ORDER_NOTIFICATION_EMAIL?.trim() ||
+    env.ADMIN_EMAIL.trim();
+  return configured || undefined;
 }
 
-function customerPasswordResetEmail(ctx: CustomerPasswordResetContext): EmailContent {
+function customerPasswordResetEmail(
+  ctx: CustomerPasswordResetContext,
+): EmailContent {
   const baseUrl = env.FRONTEND_URL?.trim();
   const resetUrl = baseUrl
-    ? `${baseUrl}/reset-password?token=${encodeURIComponent(ctx.token)}`
+    ? `${baseUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(ctx.token)}`
     : "";
 
-  const subject = "Reset your DoughArt Bakers password";
+  const subject = sanitizeEmailHeader(
+    "Reset your DoughArt Bakers password",
+    200,
+  );
 
-  const lines = [
+  const text = [
     "We received a request to reset your DoughArt Bakers account password.",
     "",
-    resetUrl ? `Reset link: ${resetUrl}` : "Password reset link is unavailable. Please contact support.",
+    resetUrl
+      ? `Reset link: ${resetUrl}`
+      : "Password reset link is unavailable. Please contact support.",
     `This link expires in ${ctx.expiresMinutes} minutes.`,
     "",
     "If you did not request this, you can ignore this email.",
-  ];
+    "",
+    brandPlainTextFooter(),
+  ].join("\n");
 
-  const text = lines.join("\n");
-  const html = `<p>We received a request to reset your DoughArt Bakers account password.</p>
-<p>${
-    resetUrl
-      ? `<a href="${resetUrl}">Reset your password</a>`
-      : "Password reset link is unavailable. Please contact support."
-  }</p>
-<p>This link expires in ${ctx.expiresMinutes} minutes.</p>
-<p>If you did not request this, you can ignore this email.</p>`;
+  let bodyHtml =
+    htmlHeading("Reset your password") +
+    htmlParagraph(
+      "We received a request to reset your DoughArt Bakers account password.",
+    );
 
-  return { subject, text, html };
-}
-
-/** Customer order confirmation + optional admin alert. Never throws. */
-export function notifyOrderCreated(ctx: OrderEmailContext): void {
-  if (hasCustomerEmail(ctx)) {
-    sendAsync(ctx.customerEmail.trim(), orderCreatedCustomerEmail(ctx));
+  if (resetUrl) {
+    bodyHtml +=
+      htmlParagraph("Use the button below to choose a new password.") +
+      htmlButton(resetUrl, "Reset your password") +
+      htmlParagraph(
+        `Or copy this link: ${resetUrl}`,
+      );
+  } else {
+    bodyHtml += htmlParagraph(
+      "Password reset link is unavailable. Please contact support.",
+    );
   }
 
-  sendAsync(getAdminNotificationRecipient(), adminNewOrderEmail(ctx));
+  bodyHtml +=
+    htmlParagraph(
+      `This link expires in ${ctx.expiresMinutes} minutes.`,
+    ) +
+    htmlParagraph("If you did not request this, you can ignore this email.");
+
+  return {
+    subject,
+    text,
+    html: wrapEmailHtml({
+      title: subject,
+      preheader: "Password reset for your DoughArt Bakers account",
+      bodyHtml,
+    }),
+  };
 }
 
-/** Customer quote-ready email when admin sets a quote. Never throws. */
-export function notifyQuoteReady(ctx: OrderEmailContext): void {
-  if (!hasCustomerEmail(ctx)) {
+/**
+ * Owner new-order notification after successful persistence.
+ * Does not send a customer email. Never throws.
+ */
+export function notifyOwnerOrderCreated(ctx: OrderEmailContext): void {
+  if (!ctx.orderId) {
+    safeErrorLog(
+      "[email] Skipping owner order notification — missing orderId",
+      new Error("missing_order_id"),
+      { orderNumber: ctx.orderNumber },
+    );
     return;
   }
 
-  sendAsync(ctx.customerEmail.trim(), quoteReadyCustomerEmail(ctx));
+  const recipient = getOwnerOrderRecipient();
+
+  sendTrackedEmailAsync({
+    attemptKey: `owner_order_created:${ctx.orderId}`,
+    emailType: "owner_order_created",
+    audience: "owner",
+    relatedOrderId: ctx.orderId,
+    orderNumber: ctx.orderNumber,
+    recipientEmail: recipient,
+    trustRecipient: true,
+    buildContent: () => adminNewOrderEmail(ctx),
+  });
 }
 
-/** Customer password reset email. Never throws. */
-export function notifyCustomerPasswordReset(ctx: CustomerPasswordResetContext): void {
+/**
+ * Customer confirmation — only after first transition to confirmed.
+ * Never throws. Missing/invalid email → skipped attempt.
+ */
+export function notifyCustomerOrderConfirmed(ctx: OrderEmailContext): void {
+  if (!ctx.orderId) {
+    safeErrorLog(
+      "[email] Skipping customer confirmation — missing orderId",
+      new Error("missing_order_id"),
+      { orderNumber: ctx.orderNumber },
+    );
+    return;
+  }
+
+  sendTrackedEmailAsync({
+    attemptKey: `customer_order_confirmed:${ctx.orderId}`,
+    emailType: "customer_order_confirmed",
+    audience: "customer",
+    relatedOrderId: ctx.orderId,
+    orderNumber: ctx.orderNumber,
+    recipientEmail: ctx.customerEmail,
+    buildContent: () =>
+      customerOrderConfirmedEmail({
+        ...ctx,
+        status: ctx.status || "confirmed",
+      }),
+  });
+}
+
+/**
+ * First-quote-only customer notification (caller must gate on first quote).
+ * Never throws.
+ */
+export function notifyQuoteReady(ctx: OrderEmailContext): void {
+  if (!ctx.orderId) {
+    safeErrorLog(
+      "[email] Skipping quote-ready — missing orderId",
+      new Error("missing_order_id"),
+      { orderNumber: ctx.orderNumber },
+    );
+    return;
+  }
+
+  sendTrackedEmailAsync({
+    attemptKey: `customer_quote_ready:${ctx.orderId}`,
+    emailType: "customer_quote_ready",
+    audience: "customer",
+    relatedOrderId: ctx.orderId,
+    orderNumber: ctx.orderNumber,
+    recipientEmail: ctx.customerEmail,
+    buildContent: () => quoteReadyCustomerEmail(ctx),
+  });
+}
+
+/** Customer password reset. Never throws. Does not log tokens. */
+export function notifyCustomerPasswordReset(
+  ctx: CustomerPasswordResetContext,
+): void {
   const to = ctx.customerEmail.trim();
   if (!to) {
     return;
   }
 
-  sendAsync(to, customerPasswordResetEmail(ctx));
+  const attemptId = randomUUID();
+  sendTrackedEmailAsync({
+    attemptKey: `customer_password_reset:${ctx.customerId || "unknown"}:${attemptId}`,
+    emailType: "customer_password_reset",
+    audience: "customer",
+    relatedCustomerId: ctx.customerId,
+    recipientEmail: to,
+    buildContent: () => customerPasswordResetEmail(ctx),
+  });
 }
+
+export type ContactNotificationInput = {
+  submissionId: string;
+  name: string;
+  phone: string;
+  email?: string;
+  subject?: string;
+  message: string;
+};
+
+/**
+ * Owner Contact Us notification. Recipient is always server-controlled.
+ * Visitor email is Reply-To only when syntactically valid.
+ * Never throws.
+ */
+export function notifyContactOwner(input: ContactNotificationInput): void {
+  const recipient = getContactOwnerRecipient();
+  if (!recipient) {
+    safeErrorLog(
+      "[email] Contact notification skipped — no owner recipient configured",
+      new Error("configuration_missing"),
+      { submissionId: input.submissionId },
+    );
+    return;
+  }
+
+  const visitorEmail = input.email?.trim();
+  const replyTo =
+    visitorEmail && isValidEmailSyntax(visitorEmail)
+      ? visitorEmail.toLowerCase()
+      : undefined;
+
+  const ctx: ContactOwnerEmailContext = {
+    submissionId: input.submissionId,
+    name: input.name,
+    phone: input.phone,
+    email: visitorEmail && isValidEmailSyntax(visitorEmail) ? visitorEmail : undefined,
+    subject: input.subject,
+    message: input.message,
+  };
+
+  sendTrackedEmailAsync({
+    attemptKey: `contact_owner_notification:${input.submissionId}`,
+    emailType: "contact_owner_notification",
+    audience: "owner",
+    recipientEmail: recipient,
+    trustRecipient: true,
+    replyTo,
+    buildContent: () => contactOwnerNotificationEmail(ctx),
+  });
+}
+
+/** @deprecated Use notifyOwnerOrderCreated — kept only if any legacy import remains. */
+export function notifyOrderCreated(ctx: OrderEmailContext): void {
+  notifyOwnerOrderCreated(ctx);
+}
+
+export { classifyEmailAddress, escapeHtml };

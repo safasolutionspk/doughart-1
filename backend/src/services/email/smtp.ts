@@ -47,6 +47,7 @@ export const smtpEmailNotifier: IEmailNotifier = {
         subject: message.subject,
         text: message.text,
         html: message.html,
+        ...(message.replyTo ? { replyTo: message.replyTo } : {}),
       });
     } catch (error) {
       safeErrorLog("[email:smtp] send failed", error, {

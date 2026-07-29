@@ -19,7 +19,8 @@ export interface IOrder {
   orderNumber: string;
   customerId?: Types.ObjectId;
   customerName: string;
-  customerEmail: string;
+  /** Optional — phone is the primary contact method */
+  customerEmail?: string;
   customerPhone: string;
   deliveryAddress?: string;
   eventDate?: Date;
@@ -71,7 +72,13 @@ const orderSchema = new Schema<IOrderDocument>(
     orderNumber: { type: String, required: true, unique: true, trim: true },
     customerId: { type: Schema.Types.ObjectId, ref: "Customer", index: true },
     customerName: { type: String, required: true, trim: true },
-    customerEmail: { type: String, required: true, trim: true, lowercase: true },
+    customerEmail: {
+      type: String,
+      required: false,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
     customerPhone: { type: String, required: true, trim: true },
     deliveryAddress: { type: String, trim: true },
     eventDate: { type: Date },

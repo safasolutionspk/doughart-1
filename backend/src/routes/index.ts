@@ -7,6 +7,7 @@ import categoryRoutes from "./category.routes";
 import galleryRoutes from "./gallery.routes";
 import healthRoutes from "./health.routes";
 import newsletterRoutes from "./newsletter.routes";
+import contactRoutes from "./contact.routes";
 import orderRoutes from "./order.routes";
 import reviewRoutes from "./review.routes";
 import settingsRoutes from "./settings.routes";
@@ -29,5 +30,6 @@ router.use("/uploads", uploadRoutes);
 router.use("/settings", settingsRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/newsletter", newsletterRoutes);
+router.use("/contact", contactRoutes);
 
 export default router;

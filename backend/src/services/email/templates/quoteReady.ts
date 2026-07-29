@@ -1,5 +1,6 @@
 import type { EmailContent, OrderEmailContext } from "../types";
 import {
+  brandPlainTextFooter,
   buildMyOrderUrl,
   formatCurrency,
   formatPaymentMethod,
@@ -37,7 +38,7 @@ export function quoteReadyCustomerEmail(ctx: OrderEmailContext): EmailContent {
       ? `View your order: ${myOrderUrl}`
       : "Visit our website and use My Order with your order number and phone.",
     "",
-    "DoughArt Bakers",
+    brandPlainTextFooter(),
   ].filter(Boolean);
 
   let bodyHtml =

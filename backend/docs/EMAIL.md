@@ -1,108 +1,106 @@
 # DoughArt — Email notifications
 
-Transactional emails are sent from the API using a small provider abstraction. **Order creation and quotes always succeed even if email fails** — errors are logged without SMTP secrets.
+Transactional emails are sent from the API using a provider abstraction with
+**EmailAttempt** tracking. **Order creation, status updates, and Contact Us
+always succeed even if email fails** — errors are logged without SMTP secrets.
+
+## Behaviour
+
+| Event | Recipient | When |
+| --- | --- | --- |
+| New order (owner) | `ORDER_NOTIFICATION_EMAIL` (fallback `ADMIN_EMAIL`) | After order is saved (`pending`) |
+| Order confirmed (customer) | Saved order email | First Admin transition **to** `confirmed` only |
+| Quote ready (customer) | Saved order email | First time `quotedAmount` is set (&gt; 0) |
+| Contact Us (owner) | `CONTACT_NOTIFICATION_EMAIL` (fallback order/admin) | Valid Contact Us form submit |
+| Password reset | Customer account email | Forgot-password request |
+
+Customer email is **optional** at checkout. Phone remains required. There is **no OTP**.
+
+Statuses shown in Admin:
+
+- **Sent** — the configured provider accepted the message. **Does not guarantee inbox delivery.**
+- **Failed** — provider/send error (safe reason code only)
+- **Skipped** — e.g. missing/invalid email, or `EMAIL_ENABLED=false`
+- **Pending** — reserved but not yet finalized (rare)
+
+There is **no** delivery webhook and **no** automatic retry queue in this phase.
 
 ## Enable / disable
 
 | Variable | Effect |
 | --- | --- |
-| `EMAIL_ENABLED=false` | No emails sent (noop provider) |
-| `EMAIL_ENABLED=true` + `EMAIL_PROVIDER=console` | Log safe previews to server console (dev/staging) |
+| `EMAIL_ENABLED=false` | Attempts are tracked as `skipped` / `email_disabled` |
+| `EMAIL_ENABLED=true` + `EMAIL_PROVIDER=console` | Log safe previews to server console |
 | `EMAIL_ENABLED=true` + `EMAIL_PROVIDER=smtp` | Send via nodemailer |
 
-## Environment variables
-
-### Required for SMTP
-
-```env
-EMAIL_ENABLED=true
-EMAIL_PROVIDER=smtp
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-address@gmail.com
-SMTP_PASSWORD=your-app-password
-SMTP_FROM="DoughArt <your-address@gmail.com>"
-```
-
-`SMTP_PASS` is accepted as an alias for `SMTP_PASSWORD`.
-
-### Recommended
-
-```env
-FRONTEND_URL=https://shop.example.com
-ADMIN_URL=https://admin.example.com
-NOTIFY_ADMIN_EMAIL=orders@example.com
-```
-
-- `FRONTEND_URL` — adds **My Order** links in customer emails  
-- `ADMIN_URL` — adds **Open order in admin** links in staff emails  
-- `NOTIFY_ADMIN_EMAIL` — receives new-order alerts
-
-## Gmail app password setup
-
-1. Use a Google account with 2-Step Verification enabled.  
-2. Open [Google Account → Security → App passwords](https://myaccount.google.com/apppasswords).  
-3. Create an app password for **Mail** (or **Other** → “DoughArt API”).  
-4. Copy the 16-character password into `SMTP_PASSWORD` (no spaces).  
-5. Example Gmail SMTP:
-
-```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=you@gmail.com
-SMTP_PASSWORD=xxxx xxxx xxxx xxxx
-SMTP_FROM="DoughArt <you@gmail.com>"
-```
-
-For Google Workspace, the admin may need to allow SMTP relay or app passwords for the mailbox.
-
-## Test mode (console provider)
-
-Without SMTP credentials:
+## Environment variables (names only — never commit real values)
 
 ```env
 EMAIL_ENABLED=true
 EMAIL_PROVIDER=console
-FRONTEND_URL=http://localhost:3000
-ADMIN_URL=http://localhost:3001
-NOTIFY_ADMIN_EMAIL=admin@example.com
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+ORDER_NOTIFICATION_EMAIL=
+CONTACT_NOTIFICATION_EMAIL=
+FRONTEND_URL=
+ADMIN_URL=
 ```
 
-Place a test order. The API logs JSON lines like:
+`SMTP_PASS` is accepted as an alias for `SMTP_PASSWORD`.
 
-```json
-{"type":"email_preview","to":"customer@example.com","subject":"Order received — SA-...","textPreview":"...","htmlLength":4200}
-```
+- `ORDER_NOTIFICATION_EMAIL` — owner new-order recipient (server-controlled)
+- `CONTACT_NOTIFICATION_EMAIL` — Contact Us owner recipient (server-controlled; never from visitor input)
+- `FRONTEND_URL` — My Order / password-reset links
+- `ADMIN_URL` — Admin deep links in owner emails
 
-No mail is sent; use this to verify templates and routing before enabling SMTP.
+## Idempotency
 
-## Email events
+Stable `attemptKey` values (unique index):
 
-| Event | Recipient | When |
-| --- | --- | --- |
-| Order confirmation | Customer (if email on order) | After `POST /api/orders` |
-| New order alert | `NOTIFY_ADMIN_EMAIL` | After order create (if set) |
-| Quote ready | Customer (if email on order) | Admin sets `quotedAmount` on custom cake |
+- `owner_order_created:{orderId}`
+- `customer_order_confirmed:{orderId}`
+- `customer_quote_ready:{orderId}`
+- `contact_owner_notification:{submissionId}`
 
-## Templates
+Only the request that successfully reserves the attempt may send. Duplicate keys do not resend.
 
-HTML + plain-text templates live under `src/services/email/templates/`:
+## Admin reporting
 
-- DoughArt branding (header, colors, footer)
-- Order number, customer name, cake summary
-- Payment method / status
-- My Order link (`FRONTEND_URL/my-order`)
-- Admin order link (`ADMIN_URL/dashboard/orders/{id}`)
+Protected endpoints (Admin JWT required):
+
+- `GET /api/analytics/emails/summary` — total / sent / failed / skipped
+- `GET /api/analytics/emails/attempts` — paginated recent attempts (safe fields only)
+
+Tracking stores **no** full email body, SMTP credentials, stacks, or secrets.
+Recipient addresses are masked or omitted.
 
 ## Security
 
-- SMTP passwords are never logged (`safeErrorLog` redacts sensitive keys).  
-- Failed sends do not roll back orders.
-- Console provider only logs a short text preview, not full HTML body.
+- HTML escaping for customer-controlled fields
+- Subject/header injection stripping (`\\r` / `\\n`)
+- Owner recipients are always server ENV — never visitor-controlled
+- Visitor email is Reply-To on Contact Us **only** when syntactically valid
+- SMTP passwords are never logged (`safeErrorLog` redacts sensitive keys)
+- Failed sends do not roll back orders or status updates
+
+## Templates
+
+HTML + plain-text under `src/services/email/templates/` with shared DoughArt footer:
+
+```
+DoughArt Bakers
+Crafting beautiful custom cakes for life’s sweetest moments.
+0327 7707333
+doughartbakers@gmail.com
+Thokkar Niaz Baig, Lahore, Punjab, Pakistan
+WhatsApp: https://wa.me/923277707333
+```
 
 ## Related
 
-- [PRODUCTION_LAUNCH.md](../../docs/PRODUCTION_LAUNCH.md) — deploy checklist  
-- [backend/.env.example](../.env.example) — variable template  
+- [PRODUCTION_LAUNCH.md](../../docs/PRODUCTION_LAUNCH.md)
+- [backend/.env.example](../.env.example)

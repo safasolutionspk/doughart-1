@@ -1,6 +1,7 @@
 import { Cake, Order, type IOrderDocument } from "../models";
 import {
-  notifyOrderCreated,
+  notifyCustomerOrderConfirmed,
+  notifyOwnerOrderCreated,
   notifyQuoteReady,
   type OrderEmailContext,
 } from "./email";
@@ -71,7 +72,7 @@ function toOrderEmailContext(order: {
   _id?: { toString(): string };
   orderNumber: string;
   customerName: string;
-  customerEmail: string;
+  customerEmail?: string;
   customerPhone: string;
   deliveryAddress?: string;
   cakeType: string;
@@ -79,11 +80,14 @@ function toOrderEmailContext(order: {
   flavour?: string;
   designNotes?: string;
   specialInstructions?: string;
+  messageOnCake?: string;
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
   paymentMethod: string;
   paymentStatus: string;
+  status?: string;
+  createdAt?: Date;
   items?: Array<{ cakeName: string; quantity: number; unitPrice: number; notes?: string }>;
   eventDate?: Date;
 }): OrderEmailContext {
@@ -91,7 +95,7 @@ function toOrderEmailContext(order: {
     orderId: order._id?.toString(),
     orderNumber: order.orderNumber,
     customerName: order.customerName,
-    customerEmail: order.customerEmail,
+    customerEmail: order.customerEmail?.trim() ?? "",
     customerPhone: order.customerPhone,
     deliveryAddress: order.deliveryAddress,
     cakeType: order.cakeType,
@@ -99,11 +103,16 @@ function toOrderEmailContext(order: {
     flavour: order.flavour,
     designNotes: order.designNotes,
     specialInstructions: order.specialInstructions,
+    messageOnCake: order.messageOnCake,
     totalAmount: order.totalAmount,
     quotedAmount: order.quotedAmount,
     quoteNotes: order.quoteNotes,
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
+    status: order.status,
+    createdAt: order.createdAt
+      ? order.createdAt.toISOString().replace("T", " ").slice(0, 19)
+      : undefined,
     items: (order.items ?? []).map((item) => ({
       cakeName: item.cakeName,
       quantity: item.quantity,
@@ -415,7 +424,7 @@ export async function createOrder(
     );
   }
 
-  notifyOrderCreated(toOrderEmailContext(order));
+  notifyOwnerOrderCreated(toOrderEmailContext(order));
 
   return toPublicOrderResponse(order);
 }
@@ -502,7 +511,9 @@ export async function lookupPublicOrder(query: LookupOrderQuery) {
 }
 
 export async function updateOrderQuote(id: string, input: UpdateOrderQuoteInput) {
-  const previous = await Order.findById(id).select("quotedAmount status").lean();
+  const previous = await Order.findById(id)
+    .select("quotedAmount status")
+    .lean();
 
   if (!previous) {
     throw ApiError.notFound("Order not found");
@@ -543,6 +554,10 @@ export async function updateOrderQuote(id: string, input: UpdateOrderQuoteInput)
     notifyQuoteReady(toOrderEmailContext(order));
   }
 
+  if (order.status === "confirmed" && previous.status !== "confirmed") {
+    notifyCustomerOrderConfirmed(toOrderEmailContext(order));
+  }
+
   return toAdminOrderResponse(order);
 }
 
@@ -577,6 +592,12 @@ export async function updateOrderStatus(
   id: string,
   input: UpdateOrderStatusInput,
 ) {
+  const previous = await Order.findById(id).select("status").lean();
+
+  if (!previous) {
+    throw ApiError.notFound("Order not found");
+  }
+
   const updates: Record<string, unknown> = {};
 
   if (input.status !== undefined) {
@@ -609,6 +630,13 @@ export async function updateOrderStatus(
 
   if (!order) {
     throw ApiError.notFound("Order not found");
+  }
+
+  if (
+    input.status === "confirmed" &&
+    previous.status !== "confirmed"
+  ) {
+    notifyCustomerOrderConfirmed(toOrderEmailContext(order));
   }
 
   return toAdminOrderResponse(order);

@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
+import { EmailAnalyticsPanel } from "@/components/dashboard/EmailAnalyticsPanel";
 import { NewOrderAlerts } from "@/components/dashboard/NewOrderAlerts";
 import { backendFetch } from "@/lib/backend/fetch";
 import type { DashboardAnalytics } from "@/lib/analytics/types";
+import type {
+  EmailAnalyticsSummary,
+  EmailAttemptRow,
+} from "@/lib/email/types";
 import { getAdminSession } from "@/lib/auth/session";
 
 const emptyAnalytics: DashboardAnalytics = {
@@ -22,14 +27,40 @@ export default async function DashboardPage() {
   let analytics = emptyAnalytics;
   let analyticsError: string | null = null;
 
-  const result = await backendFetch<DashboardAnalytics>("/api/analytics/dashboard", {
-    cache: "no-store",
-  });
+  let emailSummary: EmailAnalyticsSummary | null = null;
+  let emailAttempts: EmailAttemptRow[] = [];
+  let emailError: string | null = null;
 
-  if (result.ok && result.data) {
-    analytics = result.data;
-  } else if (!result.ok) {
-    analyticsError = result.message;
+  const [analyticsResult, emailSummaryResult, emailAttemptsResult] =
+    await Promise.all([
+      backendFetch<DashboardAnalytics>("/api/analytics/dashboard", {
+        cache: "no-store",
+      }),
+      backendFetch<EmailAnalyticsSummary>("/api/analytics/emails/summary", {
+        cache: "no-store",
+      }),
+      backendFetch<EmailAttemptRow[]>(
+        "/api/analytics/emails/attempts?limit=20&page=1",
+        { cache: "no-store" },
+      ),
+    ]);
+
+  if (analyticsResult.ok && analyticsResult.data) {
+    analytics = analyticsResult.data;
+  } else if (!analyticsResult.ok) {
+    analyticsError = analyticsResult.message;
+  }
+
+  if (emailSummaryResult.ok && emailSummaryResult.data) {
+    emailSummary = emailSummaryResult.data;
+  } else if (!emailSummaryResult.ok) {
+    emailError = emailSummaryResult.message;
+  }
+
+  if (emailAttemptsResult.ok && emailAttemptsResult.data) {
+    emailAttempts = emailAttemptsResult.data;
+  } else if (!emailAttemptsResult.ok && !emailError) {
+    emailError = emailAttemptsResult.message;
   }
 
   return (
@@ -40,8 +71,8 @@ export default async function DashboardPage() {
           {admin ? `Hello, ${admin.name}` : "Admin dashboard"}
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-muted">
-          Monitor order pipeline and payment collection with safe indicators based
-          on current order and revenue data.
+          Monitor order pipeline, payment collection, and transactional email
+          attempts with safe indicators based on current data.
         </p>
       </section>
 
@@ -68,6 +99,12 @@ export default async function DashboardPage() {
         </div>
         <DashboardStats analytics={analytics} />
       </section>
+
+      <EmailAnalyticsPanel
+        summary={emailSummary}
+        attempts={emailAttempts}
+        error={emailError}
+      />
 
       <section className="admin-card">
         <h2 className="font-display text-base font-semibold text-brand-brown">Quick actions</h2>

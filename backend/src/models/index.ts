@@ -1,6 +1,15 @@
 export { Admin, type IAdminDocument } from "./Admin";
 export { Customer, type ICustomerDocument } from "./Customer";
 export { Order, type IOrder, type IOrderDocument } from "./Order";
+export {
+  EmailAttempt,
+  type IEmailAttempt,
+  type IEmailAttemptDocument,
+  type EmailType,
+  type EmailAudience,
+  type EmailAttemptStatus,
+  type EmailReasonCode,
+} from "./EmailAttempt";
 export { Category, type ICategoryDocument } from "./Category";
 export { Cake, type ICakeDocument } from "./Cake";
 export { Review, type IReviewDocument } from "./Review";

@@ -20,7 +20,8 @@ export type PublicOrderLineItem = {
 export type PublicOrderPayload = {
   name: string;
   phone: string;
-  email: string;
+  /** Optional — phone is the primary contact method */
+  email?: string;
   cakeType: string;
   flavor?: string;
   size?: string;

@@ -3,6 +3,7 @@ export type EmailMessage = {
   subject: string;
   text: string;
   html?: string;
+  replyTo?: string;
 };
 
 export type EmailContent = {
@@ -23,11 +24,14 @@ export type OrderEmailContext = {
   deliveryAddress?: string;
   designNotes?: string;
   specialInstructions?: string;
+  messageOnCake?: string;
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
   paymentMethod: string;
   paymentStatus: string;
+  status?: string;
+  createdAt?: string;
   items: Array<{
     cakeName: string;
     quantity: number;

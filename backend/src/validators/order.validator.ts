@@ -13,7 +13,16 @@ const orderItemSchema = z.object({
 /** Internal shape stored in MongoDB */
 export const createOrderSchema = z.object({
   customerName: z.string().min(2, "Customer name is required").max(120),
-  customerEmail: z.string().email("Valid email is required").max(160),
+  customerEmail: z
+    .string()
+    .max(160)
+    .optional()
+    .default("")
+    .transform((val) => val.trim().toLowerCase())
+    .refine(
+      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      "Enter a valid email address or leave this field blank.",
+    ),
   customerPhone: z
     .string()
     .min(7, "Valid phone number is required")
@@ -60,7 +69,16 @@ export const publicCreateOrderSchema = z
   .object({
     name: z.string().min(2, "Name is required").max(120),
     phone: z.string().min(7, "Valid phone number is required").max(30),
-    email: z.string().email("Valid email is required").max(160),
+    email: z
+      .string()
+      .max(160)
+      .optional()
+      .default("")
+      .transform((val) => val.trim().toLowerCase())
+      .refine(
+        (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+        "Enter a valid email address or leave this field blank.",
+      ),
     cakeType: z.string().min(1, "Cake type is required").max(120),
     flavor: z.string().max(120).optional(),
     size: z.string().max(80).optional(),
@@ -156,7 +174,7 @@ export const publicCreateOrderSchema = z
   .transform((data) => ({
     customerName: data.name.trim(),
     customerPhone: data.phone.trim(),
-    customerEmail: data.email.trim().toLowerCase(),
+    customerEmail: data.email || "",
     cakeType: data.cakeType.trim(),
     cakeSize: data.size?.trim() || undefined,
     flavour: data.flavor?.trim() || undefined,

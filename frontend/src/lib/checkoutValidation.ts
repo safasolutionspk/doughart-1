@@ -49,10 +49,8 @@ export function validateCheckoutForm(
   }
 
   const email = values.email.trim();
-  if (!email) {
-    errors.email = "Email is required so we can confirm your order.";
-  } else if (!EMAIL_PATTERN.test(email)) {
-    errors.email = "Please enter a valid email address.";
+  if (email && !EMAIL_PATTERN.test(email)) {
+    errors.email = "Enter a valid email address or leave this field blank.";
   }
 
   if (values.deliveryDate && !isFutureOrToday(values.deliveryDate)) {
