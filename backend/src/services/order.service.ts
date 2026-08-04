@@ -1,14 +1,14 @@
 import { Cake, Order, type IOrderDocument } from "../models";
 import {
   notifyCustomerOrderConfirmed,
+  notifyCustomerOrderCreated,
   notifyOwnerOrderCreated,
   notifyQuoteReady,
   type OrderEmailContext,
 } from "./email";
-import { resolvePayableAmount } from "./payment/amounts";
-import { resolveGatewayForMethod } from "./payment";
 import type { CustomerOrderSummary } from "../types/customerOrder";
 import type { PublicOrderResponse } from "../types/publicOrder";
+import { COD_PAYMENT_METHOD } from "../types/payment";
 import { ApiError } from "../utils/ApiError";
 import type {
   ListOrdersQuery,
@@ -84,8 +84,7 @@ function toOrderEmailContext(order: {
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
-  paymentMethod: string;
-  paymentStatus: string;
+  paymentMethod?: string;
   status?: string;
   createdAt?: Date;
   items?: Array<{ cakeName: string; quantity: number; unitPrice: number; notes?: string }>;
@@ -107,8 +106,7 @@ function toOrderEmailContext(order: {
     totalAmount: order.totalAmount,
     quotedAmount: order.quotedAmount,
     quoteNotes: order.quoteNotes,
-    paymentMethod: order.paymentMethod,
-    paymentStatus: order.paymentStatus,
+    paymentMethod: order.paymentMethod || COD_PAYMENT_METHOD,
     status: order.status,
     createdAt: order.createdAt
       ? order.createdAt.toISOString().replace("T", " ").slice(0, 19)
@@ -138,12 +136,10 @@ function toCustomerOrderSummary(order: {
   deliveryAddress?: string;
   eventDate?: Date;
   createdAt?: Date;
-  paymentStatus: string;
-  paymentMethod: string;
+  paymentMethod?: string;
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
-  proofImage?: string;
   items?: Array<{ cakeName: string; quantity: number; unitPrice: number; notes?: string }>;
 }): CustomerOrderSummary {
   const finalAmount = resolveFinalAmount(order);
@@ -159,13 +155,12 @@ function toCustomerOrderSummary(order: {
     messageOnCake: order.messageOnCake,
     specialInstructions: order.specialInstructions,
     deliveryAddress: order.deliveryAddress,
-    paymentMethod: order.paymentMethod as CustomerOrderSummary["paymentMethod"],
-    paymentStatus: order.paymentStatus as CustomerOrderSummary["paymentStatus"],
+    paymentMethod: (order.paymentMethod ||
+      COD_PAYMENT_METHOD) as CustomerOrderSummary["paymentMethod"],
     totalAmount: order.totalAmount,
     quotedAmount: order.quotedAmount,
     quoteNotes: order.quoteNotes,
     finalAmount,
-    payableAmount: resolvePayableAmount(finalAmount, order.paymentMethod),
     awaitingQuote,
     isCustomCake: order.totalAmount === 0,
     items: order.items?.map((item) => ({
@@ -178,7 +173,6 @@ function toCustomerOrderSummary(order: {
       ? order.eventDate.toISOString().split("T")[0]
       : undefined,
     createdAt: (order.createdAt ?? new Date()).toISOString(),
-    paymentProofSubmitted: Boolean(order.proofImage?.trim()),
   };
 }
 
@@ -191,12 +185,10 @@ function toPublicOrderResponse(order: {
   flavour?: string;
   eventDate?: Date;
   createdAt?: Date;
-  paymentMethod: string;
-  paymentStatus: string;
+  paymentMethod?: string;
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
-  proofImage?: string;
 }): PublicOrderResponse {
   const finalAmount = resolveFinalAmount(order);
   const awaitingQuote = isAwaitingQuote(order);
@@ -212,15 +204,13 @@ function toPublicOrderResponse(order: {
       ? order.eventDate.toISOString().split("T")[0]
       : undefined,
     createdAt: (order.createdAt ?? new Date()).toISOString(),
-    paymentMethod: order.paymentMethod as PublicOrderResponse["paymentMethod"],
-    paymentStatus: order.paymentStatus as PublicOrderResponse["paymentStatus"],
+    paymentMethod: (order.paymentMethod ||
+      COD_PAYMENT_METHOD) as PublicOrderResponse["paymentMethod"],
     totalAmount: order.totalAmount,
     quotedAmount: order.quotedAmount,
     finalAmount,
-    payableAmount: resolvePayableAmount(finalAmount, order.paymentMethod),
     quoteNotes: order.quoteNotes,
     awaitingQuote,
-    paymentProofSubmitted: Boolean(order.proofImage?.trim()),
     message: awaitingQuote
       ? "Your custom cake request was received. We will send you a final price quote soon."
       : "Thank you! Your order has been received. We will contact you shortly to confirm details.",
@@ -274,11 +264,43 @@ function isDuplicateOrderNumberError(error: unknown): boolean {
   return mongoError.keyValue?.orderNumber != null;
 }
 
-function toAdminOrderResponse<T extends { customerId?: unknown }>(
+type AdminOrderSource = {
+  customerId?: unknown;
+  paymentStatus?: unknown;
+  paymentGateway?: unknown;
+  proofImage?: unknown;
+  transactionId?: unknown;
+  gatewayResponse?: unknown;
+  paymentMethod?: string;
+  [key: string]: unknown;
+};
+
+/** Strip payment-workflow fields from admin API responses; keep COD method. */
+function toAdminOrderResponse<T extends AdminOrderSource>(
   order: T,
-): T & { isRegisteredCustomer: boolean } {
+): Omit<
+  T,
+  | "paymentStatus"
+  | "paymentGateway"
+  | "proofImage"
+  | "transactionId"
+  | "gatewayResponse"
+> & {
+  paymentMethod: string;
+  isRegisteredCustomer: boolean;
+} {
+  const {
+    paymentStatus: _paymentStatus,
+    paymentGateway: _paymentGateway,
+    proofImage: _proofImage,
+    transactionId: _transactionId,
+    gatewayResponse: _gatewayResponse,
+    ...rest
+  } = order;
+
   return {
-    ...order,
+    ...rest,
+    paymentMethod: order.paymentMethod || COD_PAYMENT_METHOD,
     isRegisteredCustomer: Boolean(order.customerId),
   };
 }
@@ -363,7 +385,7 @@ export async function createOrder(
 
   // Public checkout is Cash on Delivery only — enforced server-side in
   // addition to schema validation, so no client payload can override it.
-  orderInput.paymentMethod = "cash_on_delivery";
+  orderInput.paymentMethod = COD_PAYMENT_METHOD;
 
   const resolvedCatalog = await resolveCatalogOrderItems(
     catalogItems ?? [],
@@ -388,8 +410,6 @@ export async function createOrder(
           },
         ];
 
-  const paymentGateway = resolveGatewayForMethod(orderInput.paymentMethod);
-
   let order: IOrderDocument | null = null;
   let attempt = 0;
 
@@ -398,14 +418,14 @@ export async function createOrder(
     const orderNumber = generateOrderNumber();
 
     try {
+      // Do not write paymentStatus / paymentGateway / proof fields on new orders.
       order = new Order({
         ...orderInput,
         orderNumber,
         ...(customerId ? { customerId } : {}),
         items,
         status: "pending",
-        paymentStatus: orderInput.paymentStatus ?? "pending",
-        paymentGateway,
+        paymentMethod: COD_PAYMENT_METHOD,
         adminSeen: false,
       });
       await order.save();
@@ -424,7 +444,9 @@ export async function createOrder(
     );
   }
 
-  notifyOwnerOrderCreated(toOrderEmailContext(order));
+  const emailCtx = toOrderEmailContext(order);
+  notifyOwnerOrderCreated(emailCtx);
+  notifyCustomerOrderCreated(emailCtx);
 
   return toPublicOrderResponse(order);
 }
@@ -480,7 +502,7 @@ export async function listOrdersForCustomer(
   const orders = await Order.find({ customerId })
     .sort({ createdAt: -1 })
     .select(
-      "orderNumber customerPhone status cakeType cakeSize flavour messageOnCake specialInstructions deliveryAddress eventDate createdAt paymentMethod paymentStatus totalAmount quotedAmount quoteNotes proofImage items",
+      "orderNumber customerPhone status cakeType cakeSize flavour messageOnCake specialInstructions deliveryAddress eventDate createdAt paymentMethod totalAmount quotedAmount quoteNotes items",
     )
     .lean();
 
@@ -603,20 +625,8 @@ export async function updateOrderStatus(
   if (input.status !== undefined) {
     updates.status = input.status;
   }
-  if (input.paymentStatus !== undefined) {
-    updates.paymentStatus = input.paymentStatus;
-  }
   if (input.adminNotes !== undefined) {
     updates.adminNotes = input.adminNotes;
-  }
-  if (input.transactionId !== undefined) {
-    updates.transactionId = input.transactionId;
-  }
-  if (input.paymentGateway !== undefined) {
-    updates.paymentGateway = input.paymentGateway;
-  }
-  if (input.gatewayResponse !== undefined) {
-    updates.gatewayResponse = input.gatewayResponse;
   }
 
   if (Object.keys(updates).length === 0) {

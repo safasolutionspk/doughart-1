@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useCustomerAuth } from "@/components/auth/CustomerAuthProvider";
@@ -31,7 +30,7 @@ import {
   type CheckoutFieldErrors,
 } from "@/lib/checkoutValidation";
 import { cn } from "@/lib/cn";
-import { formatPrice, type PublicCake } from "@/lib/catalog";
+import { formatPrice, getCategoryRef, type PublicCake } from "@/lib/catalog";
 import { buildLoginRedirectUrl } from "@/lib/auth/returnUrl";
 import { COD_PAYMENT_LABEL } from "@/lib/payment";
 
@@ -75,7 +74,7 @@ export function CheckoutForm({
   const searchParams = useSearchParams();
   const { customer, hydrated: authHydrated, isAuthenticated } =
     useCustomerAuth();
-  const { items: cartItems, hydrated: cartHydrated, clear: clearCart } =
+  const { items: cartItems, hydrated: cartHydrated, clear: clearCart, addItem } =
     useCart();
   const draftRestored = useRef(false);
 
@@ -143,6 +142,27 @@ export function CheckoutForm({
     }
   }
 
+  function ensureSelectedCakeInCart() {
+    if (!selectedCake) {
+      return;
+    }
+    const category = getCategoryRef(selectedCake);
+    addItem({
+      cakeSlug: selectedCake.slug,
+      categorySlug: category.slug,
+      name: selectedCake.name,
+      image: selectedCake.image,
+      unitPrice: selectedCake.price,
+      quantity: 1,
+    });
+  }
+
+  function goToLoginForCheckout() {
+    saveCheckoutDraft({ form });
+    ensureSelectedCakeInCart();
+    router.push(buildLoginRedirectUrl("/checkout"));
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -151,8 +171,7 @@ export function CheckoutForm({
     }
 
     if (authHydrated && !isAuthenticated) {
-      saveCheckoutDraft({ form });
-      router.push(buildLoginRedirectUrl("/checkout"));
+      goToLoginForCheckout();
       return;
     }
 
@@ -230,16 +249,25 @@ export function CheckoutForm({
         >
           <p>{AUTH_REQUIRED_MESSAGE}</p>
           <p className="mt-2">
-            <Link
-              href={buildLoginRedirectUrl("/checkout")}
+            <button
+              type="button"
+              onClick={goToLoginForCheckout}
               className="font-semibold text-brand-primary hover:underline"
             >
               Sign in
-            </Link>
+            </button>
             {" · "}
-            <Link href="/signup?returnUrl=%2Fcheckout" className="font-semibold text-brand-primary hover:underline">
+            <button
+              type="button"
+              onClick={() => {
+                saveCheckoutDraft({ form });
+                ensureSelectedCakeInCart();
+                router.push("/signup?returnUrl=%2Fcheckout");
+              }}
+              className="font-semibold text-brand-primary hover:underline"
+            >
               Create account
-            </Link>
+            </button>
           </p>
         </div>
       ) : null}

@@ -1,10 +1,5 @@
 import { adminFetch, parseAdminJson } from "@/lib/api/client";
-import type {
-  ListOrdersResponse,
-  Order,
-  OrderStatus,
-  PaymentStatus,
-} from "./types";
+import type { ListOrdersResponse, Order, OrderStatus } from "./types";
 
 export async function fetchOrders(params: {
   search?: string;
@@ -52,10 +47,7 @@ export async function updateOrderStatus(
   id: string,
   payload: {
     status?: OrderStatus;
-    paymentStatus?: PaymentStatus;
     adminNotes?: string;
-    transactionId?: string;
-    paymentGateway?: string;
   },
 ): Promise<Order> {
   const response = await adminFetch(`/api/orders/${id}/status`, {

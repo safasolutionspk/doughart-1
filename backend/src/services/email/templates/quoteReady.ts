@@ -4,7 +4,6 @@ import {
   buildMyOrderUrl,
   formatCurrency,
   formatPaymentMethod,
-  formatPaymentStatus,
   htmlButton,
   htmlDetailsTable,
   htmlHeading,
@@ -29,8 +28,7 @@ export function quoteReadyCustomerEmail(ctx: OrderEmailContext): EmailContent {
     `Your quote for order ${ctx.orderNumber} is ready.`,
     `Quoted amount: ${quoted}`,
     ctx.quoteNotes ? `Notes from our team: ${ctx.quoteNotes}` : "",
-    `Payment method: ${formatPaymentMethod(ctx.paymentMethod)}`,
-    `Payment status: ${formatPaymentStatus(ctx.paymentStatus)}`,
+    `Payment method: ${formatPaymentMethod(ctx.paymentMethod || "cash_on_delivery")}`,
     "",
     ...orderSummaryLines(ctx).slice(0, 3),
     "",
@@ -52,13 +50,10 @@ export function quoteReadyCustomerEmail(ctx: OrderEmailContext): EmailContent {
       ...(ctx.quoteNotes
         ? [{ label: "Quote notes", value: ctx.quoteNotes }]
         : []),
-    ]);
-
-  if (ctx.paymentMethod === "cash_on_delivery") {
-    bodyHtml += htmlParagraph(
+    ]) +
+    htmlParagraph(
       "Payment is cash on delivery — pay when your order is delivered.",
     );
-  }
 
   if (myOrderUrl) {
     bodyHtml += htmlButton(myOrderUrl, "View My Order");

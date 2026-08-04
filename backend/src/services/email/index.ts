@@ -11,6 +11,7 @@ import {
   adminNewOrderEmail,
   contactOwnerNotificationEmail,
   customerOrderConfirmedEmail,
+  customerOrderReceivedEmail,
   quoteReadyCustomerEmail,
   type ContactOwnerEmailContext,
 } from "./templates";
@@ -117,7 +118,7 @@ function customerPasswordResetEmail(
 
 /**
  * Owner new-order notification after successful persistence.
- * Does not send a customer email. Never throws.
+ * Never throws.
  */
 export function notifyOwnerOrderCreated(ctx: OrderEmailContext): void {
   if (!ctx.orderId) {
@@ -140,6 +141,31 @@ export function notifyOwnerOrderCreated(ctx: OrderEmailContext): void {
     recipientEmail: recipient,
     trustRecipient: true,
     buildContent: () => adminNewOrderEmail(ctx),
+  });
+}
+
+/**
+ * Customer "Order Received" acknowledgement after successful persistence.
+ * Never throws. Missing/invalid email → skipped attempt via tracked send.
+ */
+export function notifyCustomerOrderCreated(ctx: OrderEmailContext): void {
+  if (!ctx.orderId) {
+    safeErrorLog(
+      "[email] Skipping customer order acknowledgement — missing orderId",
+      new Error("missing_order_id"),
+      { orderNumber: ctx.orderNumber },
+    );
+    return;
+  }
+
+  sendTrackedEmailAsync({
+    attemptKey: `customer_order_created:${ctx.orderId}`,
+    emailType: "customer_order_created",
+    audience: "customer",
+    relatedOrderId: ctx.orderId,
+    orderNumber: ctx.orderNumber,
+    recipientEmail: ctx.customerEmail,
+    buildContent: () => customerOrderReceivedEmail(ctx),
   });
 }
 

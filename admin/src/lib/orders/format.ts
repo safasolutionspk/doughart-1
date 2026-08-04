@@ -1,4 +1,4 @@
-import { ORDER_STATUSES, type OrderStatus, PaymentMethod, PaymentStatus } from "./types";
+import { ORDER_STATUSES, type OrderStatus, type PaymentMethod } from "./types";
 
 const statusLabels: Record<OrderStatus, string> = {
   pending: "Pending",
@@ -27,18 +27,11 @@ const paymentMethodLabels: Record<PaymentMethod, string> = {
   online_payment_advance: "50% Advance Payment",
 };
 
-const paymentStatusLabels: Record<PaymentStatus, string> = {
-  pending: "Pending",
-  paid: "Paid",
-  failed: "Failed",
-};
-
-export function formatPaymentMethod(method: PaymentMethod): string {
-  return paymentMethodLabels[method] ?? method;
-}
-
-export function formatPaymentStatus(status: PaymentStatus): string {
-  return paymentStatusLabels[status] ?? status;
+export function formatPaymentMethod(method: PaymentMethod | string): string {
+  return (
+    paymentMethodLabels[method as PaymentMethod] ??
+    String(method).replace(/_/g, " ")
+  );
 }
 
 export function formatCurrency(amount: number): string {

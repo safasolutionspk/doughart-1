@@ -2,6 +2,7 @@ import { Schema, model, type Document, type Model, type Types } from "mongoose";
 
 export const EMAIL_TYPES = [
   "owner_order_created",
+  "customer_order_created",
   "customer_order_confirmed",
   "customer_quote_ready",
   "contact_owner_notification",

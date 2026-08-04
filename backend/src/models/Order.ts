@@ -37,11 +37,17 @@ export interface IOrder {
   quotedAmount?: number;
   quoteNotes?: string;
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
+  /** Historical only — no longer written or required on new orders. */
+  paymentStatus?: PaymentStatus;
+  /** Historical only — no longer written on new orders. */
   paymentGateway?: PaymentGateway;
+  /** Historical only — no longer written via API. */
   transactionId?: string;
+  /** Historical only — bank-transfer proof era. */
   proofImage?: string;
+  /** Historical only — no longer written via API. */
   gatewayResponse?: Record<string, unknown>;
+
   status: OrderStatus;
   adminNotes?: string;
   /** False for new orders until admin views the relevant orders page */
@@ -99,19 +105,21 @@ const orderSchema = new Schema<IOrderDocument>(
       required: true,
       default: "cash_on_delivery",
     },
+    // Optional: retained for historical documents; new orders omit these fields.
     paymentStatus: {
       type: String,
       enum: PAYMENT_STATUSES,
-      required: true,
-      default: "pending",
+      required: false,
     },
     paymentGateway: {
       type: String,
       enum: PAYMENT_GATEWAYS,
+      required: false,
     },
     transactionId: { type: String, trim: true, maxlength: 120 },
     proofImage: { type: String, trim: true, maxlength: 500 },
     gatewayResponse: { type: Schema.Types.Mixed },
+
     status: {
       type: String,
       enum: ORDER_STATUSES,

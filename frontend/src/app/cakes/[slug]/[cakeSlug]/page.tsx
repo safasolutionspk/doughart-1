@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { CakeDetailAddToCart } from "@/components/cart/CakeDetailAddToCart";
-import { Button } from "@/components/ui/Button";
 import { CatalogCardImage } from "@/components/catalog/CatalogCardImage";
 import {
   fetchPublicCakeBySlug,
@@ -61,7 +60,6 @@ export default async function CakeDetailPage({ params }: PageProps) {
 
   const { apiImage, fallback } = getCakeImageSrc(cake.image, category.slug);
   const displayImage = apiImage ?? fallback;
-  const orderHref = `/checkout?cake=${encodeURIComponent(cake.slug)}`;
   const waNumber = await getWhatsAppNumber();
   const whatsappHref = buildWhatsAppOrderUrl(cake.name, waNumber);
   const imageUrl = displayImage.startsWith("http")
@@ -183,16 +181,8 @@ export default async function CakeDetailPage({ params }: PageProps) {
                     image: displayImage,
                     unitPrice: cake.price,
                   }}
+                  whatsappHref={whatsappHref}
                 />
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                  <Button href={orderHref} size="lg" className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
-                    Order Now
-                  </Button>
-                  <Button href={whatsappHref} variant="outline" size="lg" className="w-full sm:w-auto sm:flex-1 sm:max-w-xs">
-                    WhatsApp Order
-                  </Button>
-                </div>
 
                 <p className="text-xs text-brand-muted">
                   Questions? Call us at{" "}

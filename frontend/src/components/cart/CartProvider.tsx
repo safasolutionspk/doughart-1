@@ -96,30 +96,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const addItem = useCallback((input: AddToCartInput) => {
+    initializeCartStore();
     setCartState({
       items: addToCart(cartState.items, input),
-      hydrated: cartState.hydrated,
+      hydrated: true,
     });
   }, []);
 
   const removeItem = useCallback((id: string) => {
+    initializeCartStore();
     setCartState({
       items: removeFromCart(cartState.items, id),
-      hydrated: cartState.hydrated,
+      hydrated: true,
     });
   }, []);
 
   const setQuantity = useCallback((id: string, quantity: number) => {
+    initializeCartStore();
     setCartState({
       items: updateCartQuantity(cartState.items, id, quantity),
-      hydrated: cartState.hydrated,
+      hydrated: true,
     });
   }, []);
 
   const clear = useCallback(() => {
+    initializeCartStore();
     setCartState({
       items: clearCart(),
-      hydrated: cartState.hydrated,
+      hydrated: true,
     });
   }, []);
 

@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
 import type { CustomerOrderSummary } from "@/lib/customer/orders";
 import { parseCustomCakeNotes } from "@/lib/orders/customCakeNotes";
-import { formatPaymentStatus } from "@/lib/payment";
+import { formatPaymentMethod } from "@/lib/payment";
 
 function formatOrderStatus(status: string): string {
   return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -104,7 +104,7 @@ export function CustomerOrderCard({ order }: { order: CustomerOrderSummary }) {
         <div>
           <dt className="text-brand-muted">Payment</dt>
           <dd className="font-medium text-brand-brown">
-            {formatPaymentStatus(order.paymentStatus)}
+            {formatPaymentMethod(order.paymentMethod ?? "cash_on_delivery")}
           </dd>
         </div>
         <div>

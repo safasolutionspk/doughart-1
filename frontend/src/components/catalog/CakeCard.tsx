@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { OrderNowButton } from "@/components/cart/OrderNowButton";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CatalogCardImage } from "@/components/catalog/CatalogCardImage";
@@ -43,9 +44,15 @@ export async function CakeCard({
   const { apiImage, fallback } = getCakeImageSrc(cake.image, category.slug);
   const displayImage = apiImage ?? fallback;
   const detailHref = `/cakes/${category.slug}/${cake.slug}`;
-  const orderHref = `/checkout?cake=${encodeURIComponent(cake.slug)}`;
   const waNumber = await getWhatsAppNumber();
   const whatsappHref = buildWhatsAppOrderUrl(cake.name, waNumber);
+  const cartItem = {
+    cakeSlug: cake.slug,
+    categorySlug: category.slug,
+    name: cake.name,
+    image: displayImage,
+    unitPrice: cake.price,
+  };
 
   const imageClassName = compactPopular
     ? "image-zoom-wrap relative aspect-square w-full shrink-0 overflow-hidden bg-brand-pink-lighter p-1.5 sm:p-2"
@@ -114,13 +121,7 @@ export async function CakeCard({
 
         <div className={actionsClassName}>
           <AddToCartButton
-            item={{
-              cakeSlug: cake.slug,
-              categorySlug: category.slug,
-              name: cake.name,
-              image: displayImage,
-              unitPrice: cake.price,
-            }}
+            item={cartItem}
             className={cn(primaryButtonClassName, "!min-w-0")}
           />
           <div
@@ -129,9 +130,12 @@ export async function CakeCard({
               compactPopular ? "gap-1 sm:gap-1.5" : "gap-1 sm:gap-1.5",
             )}
           >
-            <Button href={orderHref} size="sm" className={sideButtonClassName}>
-              Order
-            </Button>
+            <OrderNowButton
+              item={cartItem}
+              size="sm"
+              label="Order"
+              className={sideButtonClassName}
+            />
             <Button
               href={whatsappHref}
               variant="outline"

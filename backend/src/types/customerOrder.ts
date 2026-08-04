@@ -1,5 +1,5 @@
 import type { OrderStatus } from "./orderStatus";
-import type { PaymentMethod, PaymentStatus } from "./payment";
+import type { PaymentMethod } from "./payment";
 
 export type CustomerOrderItemSummary = {
   cakeName: string;
@@ -8,7 +8,7 @@ export type CustomerOrderItemSummary = {
   notes?: string;
 };
 
-/** Customer account order list item — no admin or sensitive fields. */
+/** Customer account order list item — no admin or payment-workflow fields. */
 export type CustomerOrderSummary = {
   orderNumber: string;
   /** Phone on the order — used for order lookup links (may differ from account phone). */
@@ -21,16 +21,13 @@ export type CustomerOrderSummary = {
   specialInstructions?: string;
   deliveryAddress?: string;
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
   finalAmount: number;
-  payableAmount: number;
   awaitingQuote: boolean;
   isCustomCake: boolean;
   items?: CustomerOrderItemSummary[];
   eventDate?: string;
   createdAt: string;
-  paymentProofSubmitted?: boolean;
 };

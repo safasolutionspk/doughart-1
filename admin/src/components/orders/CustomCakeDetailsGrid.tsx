@@ -10,7 +10,6 @@ import {
   formatDateTime,
   formatOrderStatus,
   formatPaymentMethod,
-  formatPaymentStatus,
 } from "@/lib/orders/format";
 import type { Order } from "@/lib/orders/types";
 import { ReferenceImagePreview } from "@/components/orders/ReferenceImagePreview";
@@ -70,10 +69,9 @@ export function CustomCakeDetailsGrid({ order }: CustomCakeDetailsGridProps) {
 
       <DetailsSection title="Order / payment">
         <DetailItem label="Order reference" value={dashOr(order.orderNumber)} />
-        <DetailItem label="Payment option" value={formatPaymentMethod(order.paymentMethod)} />
         <DetailItem
-          label="Payment status"
-          value={formatPaymentStatus(order.paymentStatus ?? "pending")}
+          label="Payment option"
+          value={formatPaymentMethod(order.paymentMethod ?? "cash_on_delivery")}
         />
         <DetailItem label="Order status" value={formatOrderStatus(order.status)} />
         <DetailItem label="Approved price" value={approvedPrice} />

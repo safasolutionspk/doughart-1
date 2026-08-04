@@ -1,3 +1,5 @@
+import "./config/dnsServers";
+
 import { createApp } from "./app";
 import { connectDatabase } from "./config/database";
 import { env } from "./config/env";

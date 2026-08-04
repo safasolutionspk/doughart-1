@@ -9,11 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { lookupOrder, type PublicOrderResponse } from "@/lib/api";
 import { formatPrice } from "@/lib/catalog";
 import { cn } from "@/lib/cn";
-import {
-  formatPaymentMethod,
-  formatPaymentStatus,
-  resolvePayableAmount,
-} from "@/lib/payment";
+import { formatPaymentMethod } from "@/lib/payment";
 import { buildWhatsAppOrderConfirmationUrl } from "@/lib/whatsapp";
 
 const inputClass = cn(
@@ -183,9 +179,6 @@ function OrderDetails({ order }: { order: PublicOrderResponse }) {
     order.cakeType,
     order.finalAmount,
   );
-  const payableAmount =
-    order.payableAmount ??
-    resolvePayableAmount(order.finalAmount, order.paymentMethod);
 
   return (
     <div className="reveal-up space-y-5 rounded-2xl border border-brand-border bg-white p-5 shadow-sm sm:p-6">
@@ -199,15 +192,10 @@ function OrderDetails({ order }: { order: PublicOrderResponse }) {
 
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <Detail label="Status" value={formatOrderStatus(order.status)} />
-        <Detail label="Payment" value={formatPaymentMethod(order.paymentMethod)} />
-        <Detail label="Payment status" value={formatPaymentStatus(order.paymentStatus)} />
-        {!order.awaitingQuote && payableAmount > 0 ? (
-          <Detail
-            label="Payable amount"
-            value={formatPrice(payableAmount)}
-            className="text-brand-primary sm:col-span-2"
-          />
-        ) : null}
+        <Detail
+          label="Payment"
+          value={formatPaymentMethod(order.paymentMethod ?? "cash_on_delivery")}
+        />
         {order.awaitingQuote ? (
           <Detail label="Price" value="Quote pending" className="sm:col-span-2 text-brand-primary" />
         ) : (
@@ -228,11 +216,9 @@ function OrderDetails({ order }: { order: PublicOrderResponse }) {
         {order.eventDate ? <Detail label="Delivery" value={order.eventDate} /> : null}
       </dl>
 
-      {order.paymentMethod === "cash_on_delivery" ? (
-        <p className="text-sm text-brand-muted">
-          Pay when your order is delivered.
-        </p>
-      ) : null}
+      <p className="text-sm text-brand-muted">
+        Pay when your order is delivered.
+      </p>
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button href={whatsappHref}>WhatsApp us</Button>

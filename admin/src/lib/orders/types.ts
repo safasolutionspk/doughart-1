@@ -9,6 +9,7 @@ export const ORDER_STATUSES = [
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+/** Stored payment methods — new orders are always cash_on_delivery. */
 export const PAYMENT_METHODS = [
   "cash_on_delivery",
   "bank_transfer",
@@ -18,10 +19,6 @@ export const PAYMENT_METHODS = [
 ] as const;
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
-
-export const PAYMENT_STATUSES = ["pending", "paid", "failed"] as const;
-
-export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export type Order = {
   _id: string;
@@ -50,11 +47,6 @@ export type Order = {
   quotedAmount?: number;
   quoteNotes?: string;
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
-  paymentGateway?: string;
-  transactionId?: string;
-  proofImage?: string;
-  gatewayResponse?: Record<string, unknown>;
   status: OrderStatus;
   adminNotes?: string;
   createdAt: string;

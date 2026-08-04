@@ -17,23 +17,6 @@ export const PAYMENT_METHODS = [
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-/**
- * Historical orders created with a 50% advance method keep their original
- * payable amount so old records remain readable.
- */
-export function resolvePayableAmount(
-  finalAmount: number,
-  paymentMethod: PaymentMethod | string,
-): number {
-  if (finalAmount <= 0) {
-    return 0;
-  }
-  if (paymentMethod === "online_payment_advance") {
-    return Math.round(finalAmount * 0.5);
-  }
-  return finalAmount;
-}
-
 /** Labels for stored orders — legacy values only appear on historical records. */
 const paymentMethodLabels: Record<string, string> = {
   cash_on_delivery: "Cash on Delivery",
@@ -45,13 +28,4 @@ const paymentMethodLabels: Record<string, string> = {
 
 export function formatPaymentMethod(method: PaymentMethod | string): string {
   return paymentMethodLabels[method] ?? method;
-}
-
-export function formatPaymentStatus(status: string): string {
-  const labels: Record<string, string> = {
-    pending: "Pending",
-    paid: "Paid",
-    failed: "Failed",
-  };
-  return labels[status] ?? status;
 }

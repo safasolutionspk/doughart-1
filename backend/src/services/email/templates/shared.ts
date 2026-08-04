@@ -23,12 +23,6 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   online_payment_advance: "50% Advance Payment",
 };
 
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  paid: "Paid",
-  failed: "Failed",
-};
-
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
   confirmed: "Confirmed",
@@ -40,10 +34,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function formatPaymentMethod(method: string): string {
   return PAYMENT_METHOD_LABELS[method] ?? method.replace(/_/g, " ");
-}
-
-export function formatPaymentStatus(status: string): string {
-  return PAYMENT_STATUS_LABELS[status] ?? status.replace(/_/g, " ");
 }
 
 export function formatOrderStatus(status?: string): string {
@@ -106,8 +96,7 @@ export function orderSummaryLines(ctx: OrderEmailContext): string[] {
     `Customer: ${ctx.customerName}`,
     `Cake: ${ctx.cakeType}`,
     `Amount: ${formatOrderAmount(ctx)}`,
-    `Payment method: ${formatPaymentMethod(ctx.paymentMethod)}`,
-    `Payment status: ${formatPaymentStatus(ctx.paymentStatus)}`,
+    `Payment method: ${formatPaymentMethod(ctx.paymentMethod || "cash_on_delivery")}`,
   ];
 
   if (ctx.status) {
@@ -288,10 +277,10 @@ export function orderDetailsRows(ctx: OrderEmailContext): Array<{
     rows.push({ label: "Delivery / event date", value: ctx.eventDate });
   }
 
-  rows.push(
-    { label: "Payment method", value: formatPaymentMethod(ctx.paymentMethod) },
-    { label: "Payment status", value: formatPaymentStatus(ctx.paymentStatus) },
-  );
+  rows.push({
+    label: "Payment method",
+    value: formatPaymentMethod(ctx.paymentMethod || "cash_on_delivery"),
+  });
 
   if (ctx.totalAmount > 0 && ctx.quotedAmount != null && ctx.quotedAmount > 0) {
     rows.push({ label: "Subtotal", value: formatCurrency(ctx.totalAmount) });

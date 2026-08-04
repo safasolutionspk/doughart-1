@@ -29,7 +29,6 @@ export type OrderEmailContext = {
   quotedAmount?: number;
   quoteNotes?: string;
   paymentMethod: string;
-  paymentStatus: string;
   status?: string;
   createdAt?: string;
   items: Array<{

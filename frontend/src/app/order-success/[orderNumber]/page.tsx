@@ -6,11 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { OrderNumberBadge } from "@/components/orders/OrderNumberBadge";
 import { fetchPublicOrderByNumber } from "@/lib/api";
 import { formatPrice } from "@/lib/catalog";
-import {
-  formatPaymentMethod,
-  formatPaymentStatus,
-  resolvePayableAmount,
-} from "@/lib/payment";
+import { formatPaymentMethod } from "@/lib/payment";
 import { buildPageMetadata } from "@/lib/seo";
 import { buildWhatsAppOrderConfirmationUrl, getWhatsAppNumber } from "@/lib/whatsapp";
 
@@ -51,9 +47,6 @@ export default async function OrderSuccessPage({ params, searchParams }: PagePro
     order.finalAmount,
     waNumber,
   );
-  const payableAmount =
-    order.payableAmount ??
-    resolvePayableAmount(order.finalAmount, order.paymentMethod);
 
   return (
     <PublicPageLayout mainId="order-success" ariaLabel="Order confirmation">
@@ -105,21 +98,7 @@ export default async function OrderSuccessPage({ params, searchParams }: PagePro
                 <div className="flex justify-between gap-4">
                   <dt className="text-brand-muted">Payment</dt>
                   <dd className="text-right font-medium text-brand-brown">
-                    {formatPaymentMethod(order.paymentMethod)}
-                  </dd>
-                </div>
-                {!order.awaitingQuote && payableAmount > 0 ? (
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-brand-muted">Payable amount</dt>
-                    <dd className="font-semibold text-brand-primary">
-                      {formatPrice(payableAmount)}
-                    </dd>
-                  </div>
-                ) : null}
-                <div className="flex justify-between gap-4">
-                  <dt className="text-brand-muted">Payment status</dt>
-                  <dd className="text-right font-medium text-brand-brown">
-                    {formatPaymentStatus(order.paymentStatus)}
+                    {formatPaymentMethod(order.paymentMethod ?? "cash_on_delivery")}
                   </dd>
                 </div>
                 {order.cakeSize ? (
@@ -148,11 +127,9 @@ export default async function OrderSuccessPage({ params, searchParams }: PagePro
                 ) : null}
               </dl>
 
-              {order.paymentMethod === "cash_on_delivery" ? (
-                <p className="mt-4 text-sm text-brand-muted">
-                  Pay when your order is delivered.
-                </p>
-              ) : null}
+              <p className="mt-4 text-sm text-brand-muted">
+                Pay when your order is delivered.
+              </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button href={whatsappHref} className="w-full sm:flex-1">

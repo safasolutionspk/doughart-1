@@ -48,14 +48,11 @@ export type PublicOrderResponse = {
   eventDate?: string;
   createdAt: string;
   paymentMethod: PaymentMethod;
-  paymentStatus: string;
   totalAmount: number;
   quotedAmount?: number;
   finalAmount: number;
-  payableAmount?: number;
   quoteNotes?: string;
   awaitingQuote: boolean;
-  paymentProofSubmitted?: boolean;
   message: string;
 };
 

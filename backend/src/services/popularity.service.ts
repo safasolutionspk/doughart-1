@@ -39,7 +39,6 @@ function buildEligibleOrderMatch(
 ): ScopeFilter {
   const eligible: ScopeFilter = {
     status: { $in: [...POPULARITY_ELIGIBLE_STATUSES] },
-    paymentStatus: { $ne: "failed" },
   };
 
   if (

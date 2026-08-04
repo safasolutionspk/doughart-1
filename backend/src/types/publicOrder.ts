@@ -1,5 +1,5 @@
 import type { OrderStatus } from "./orderStatus";
-import type { PaymentMethod, PaymentStatus } from "./payment";
+import type { PaymentMethod } from "./payment";
 
 export type PublicOrderResponse = {
   orderNumber: string;
@@ -10,15 +10,12 @@ export type PublicOrderResponse = {
   flavour?: string;
   eventDate?: string;
   createdAt: string;
+  /** Always Cash on Delivery for new orders; may be a legacy value on old records. */
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
   totalAmount: number;
   quotedAmount?: number;
   finalAmount: number;
-  payableAmount: number;
   quoteNotes?: string;
   awaitingQuote: boolean;
-  /** True when customer has uploaded bank transfer proof (no URL exposed). */
-  paymentProofSubmitted?: boolean;
   message: string;
 };

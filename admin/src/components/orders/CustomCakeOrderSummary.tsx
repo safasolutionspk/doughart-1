@@ -7,7 +7,6 @@ import {
   formatDate,
   formatOrderStatus,
   formatPaymentMethod,
-  formatPaymentStatus,
 } from "@/lib/orders/format";
 import type { Order } from "@/lib/orders/types";
 
@@ -64,10 +63,9 @@ export function CustomCakeOrderSummary({
         value={dashOr(parsed.extraNotes)}
         className="col-span-2"
       />
-      <SummaryItem label="Payment" value={formatPaymentMethod(order.paymentMethod)} />
       <SummaryItem
-        label="Payment status"
-        value={formatPaymentStatus(order.paymentStatus ?? "pending")}
+        label="Payment"
+        value={formatPaymentMethod(order.paymentMethod ?? "cash_on_delivery")}
       />
       <SummaryItem label="Order status" value={formatOrderStatus(order.status)} />
       <SummaryItem label="Approved price" value={approvedPrice} />

@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { OrderNumberBadge } from "@/components/orders/OrderNumberBadge";
 import { OrderQuoteReadOnly } from "@/components/orders/OrderQuoteReadOnly";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
-import { PaymentStatusBadge } from "@/components/orders/PaymentStatusBadge";
 import { CustomCakeDetailsGrid } from "@/components/orders/CustomCakeDetailsGrid";
 import { ReferenceImageThumbnail } from "@/components/orders/ReferenceImagePreview";
 import {
@@ -27,15 +26,11 @@ import {
   formatDateTime,
   formatOrderStatus,
   formatPaymentMethod,
-  formatPaymentStatus,
 } from "@/lib/orders/format";
-import { PAYMENT_GATEWAY_LABELS, type PaymentGateway } from "@/lib/orders/payment";
 import {
   ORDER_STATUSES,
-  PAYMENT_STATUSES,
   type Order,
   type OrderStatus,
-  type PaymentStatus,
 } from "@/lib/orders/types";
 
 type DetailState =
@@ -47,8 +42,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const router = useRouter();
   const [state, setState] = useState<DetailState>({ type: "loading" });
   const [status, setStatus] = useState<OrderStatus>("pending");
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("pending");
-  const [transactionId, setTransactionId] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
   const [quotedAmount, setQuotedAmount] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -66,8 +59,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
         const order = await fetchOrder(orderId);
         if (cancelled) return;
         setStatus(order.status);
-        setPaymentStatus(order.paymentStatus ?? "pending");
-        setTransactionId(order.transactionId ?? "");
         setAdminNotes(order.adminNotes ?? "");
         setQuotedAmount(
           order.quotedAmount != null ? String(order.quotedAmount) : "",
@@ -100,9 +91,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
     try {
       const updated = await updateOrderStatus(orderId, {
         status,
-        paymentStatus,
         adminNotes: adminNotes.trim() || undefined,
-        transactionId: transactionId.trim() || undefined,
       });
       setState({ type: "success", order: updated });
       setSaveSuccess(true);
@@ -205,7 +194,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             ) : null}
             <div className="flex flex-wrap gap-2">
               <OrderStatusBadge status={order.status} />
-              <PaymentStatusBadge status={order.paymentStatus ?? "pending"} />
             </div>
           </div>
         </div>
@@ -216,15 +204,25 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           <Detail
             label="Account"
-            value={order.isRegisteredCustomer ? "Registered customer" : "Guest checkout"}
+            value={
+              order.isRegisteredCustomer
+                ? "Registered customer"
+                : "Guest checkout"
+            }
           />
           <Detail label="Phone" value={order.customerPhone} />
           <Detail label="Email" value={order.customerEmail} />
           <Detail label="Address" value={order.deliveryAddress ?? "—"} />
           <Detail label="List price" value={formatCurrency(order.totalAmount)} />
-          <Detail label="Final / approved" value={formatCurrency(finalAmount)} highlight />
-          <Detail label="Payment" value={formatPaymentMethod(order.paymentMethod)} />
-          <Detail label="Proof uploaded" value={order.proofImage ? "Yes" : "—"} />
+          <Detail
+            label="Final / approved"
+            value={formatCurrency(finalAmount)}
+            highlight
+          />
+          <Detail
+            label="Payment"
+            value={formatPaymentMethod(order.paymentMethod ?? "cash_on_delivery")}
+          />
           <Detail label="Delivery" value={formatDate(order.eventDate)} />
           <Detail label="Created" value={formatDateTime(order.createdAt)} />
         </dl>
@@ -264,8 +262,8 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             Approve price
           </h2>
           <p className="mt-1 text-sm text-brand-muted">
-            Set the approved price the customer sees on My Order and their account.
-            Saving confirms the order when status is pending.
+            Set the approved price the customer sees on My Order and their
+            account. Saving confirms the order when status is pending.
           </p>
           <form onSubmit={handleQuoteSubmit} className="mt-4 grid max-w-lg gap-4">
             <div>
@@ -286,7 +284,11 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             {quoteSuccess ? (
               <p className="text-sm text-emerald-700">Price saved.</p>
             ) : null}
-            <button type="submit" disabled={isSavingQuote} className="admin-btn-primary w-fit">
+            <button
+              type="submit"
+              disabled={isSavingQuote}
+              className="admin-btn-primary w-fit"
+            >
               {isSavingQuote ? "Saving…" : "Save Price"}
             </button>
           </form>
@@ -304,7 +306,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
 
       <section className="admin-card">
         <h2 className="font-display text-base font-semibold text-brand-brown">
-          Status & payment
+          Order status
         </h2>
         <form onSubmit={handleStatusSubmit} className="mt-4 grid max-w-lg gap-4">
           <div>
@@ -324,45 +326,6 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
                 </option>
               ))}
             </select>
-          </div>
-          <div>
-            <label htmlFor="payment-status" className="admin-label">
-              Payment status
-            </label>
-            <select
-              id="payment-status"
-              value={paymentStatus}
-              disabled={isSaving}
-              onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)}
-              className="admin-input"
-            >
-              {PAYMENT_STATUSES.map((value) => (
-                <option key={value} value={value}>
-                  {formatPaymentStatus(value)}
-                </option>
-              ))}
-            </select>
-          </div>
-          {order.paymentGateway ? (
-            <div>
-              <p className="admin-label">Payment gateway (historical)</p>
-              <p className="text-sm text-brand-brown">
-                {PAYMENT_GATEWAY_LABELS[order.paymentGateway as PaymentGateway] ??
-                  order.paymentGateway}
-              </p>
-            </div>
-          ) : null}
-          <div>
-            <label htmlFor="transaction-id" className="admin-label">
-              Transaction ID
-            </label>
-            <input
-              id="transaction-id"
-              value={transactionId}
-              disabled={isSaving}
-              onChange={(e) => setTransactionId(e.target.value)}
-              className="admin-input"
-            />
           </div>
           <div>
             <label htmlFor="admin-notes" className="admin-label">

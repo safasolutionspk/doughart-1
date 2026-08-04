@@ -19,6 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const TYPE_LABELS: Record<string, string> = {
   owner_order_created: "Owner — new order",
+  customer_order_created: "Customer — order received",
   customer_order_confirmed: "Customer — order confirmed",
   customer_quote_ready: "Customer — quote ready",
   contact_owner_notification: "Owner — contact us",

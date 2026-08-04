@@ -16,18 +16,15 @@ export type CustomerOrderSummary = {
   specialInstructions?: string;
   deliveryAddress?: string;
   paymentMethod?: string;
-  paymentStatus: string;
   totalAmount: number;
   quotedAmount?: number;
   quoteNotes?: string;
   finalAmount: number;
-  payableAmount?: number;
   awaitingQuote: boolean;
   isCustomCake: boolean;
   items?: CustomerOrderItemSummary[];
   eventDate?: string;
   createdAt: string;
-  paymentProofSubmitted?: boolean;
 };
 
 export async function fetchCustomerOrders(): Promise<CustomerOrderSummary[]> {

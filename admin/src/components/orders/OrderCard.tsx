@@ -8,7 +8,6 @@ import { OrderNumberBadge } from "@/components/orders/OrderNumberBadge";
 import { OrderQuoteReadOnly } from "@/components/orders/OrderQuoteReadOnly";
 import { OrderQuoteSave } from "@/components/orders/OrderQuoteSave";
 import { OrderStatusSelect } from "@/components/orders/OrderStatusSelect";
-import { PaymentStatusBadge } from "@/components/orders/PaymentStatusBadge";
 import { ReferenceImageThumbnail } from "@/components/orders/ReferenceImagePreview";
 import { cn } from "@/lib/cn";
 import {
@@ -121,7 +120,6 @@ export function OrderCard({
             >
               {displayTotal(order)}
             </p>
-            <PaymentStatusBadge status={order.paymentStatus ?? "pending"} />
           </div>
         </div>
       </div>

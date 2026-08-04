@@ -13,11 +13,6 @@ import { getAdminSession } from "@/lib/auth/session";
 const emptyAnalytics: DashboardAnalytics = {
   totalOrders: 0,
   pendingOrders: 0,
-  totalRevenue: 0,
-  paidRevenue: 0,
-  unpaidRevenue: 0,
-  paidOrders: 0,
-  unpaidOrders: 0,
 };
 
 export default async function DashboardPage() {
@@ -71,8 +66,8 @@ export default async function DashboardPage() {
           {admin ? `Hello, ${admin.name}` : "Admin dashboard"}
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-muted">
-          Monitor order pipeline, payment collection, and transactional email
-          attempts with safe indicators based on current data.
+          Monitor order pipeline and transactional email attempts with safe
+          indicators based on current data.
         </p>
       </section>
 
@@ -93,8 +88,7 @@ export default async function DashboardPage() {
             Dashboard analytics
           </h2>
           <p className="mt-1 text-sm text-brand-muted">
-            Payment collection, pending workload, and revenue risk from existing
-            analytics totals.
+            Order volume and pending workload from existing analytics totals.
           </p>
         </div>
         <DashboardStats analytics={analytics} />
@@ -116,7 +110,7 @@ export default async function DashboardPage() {
             >
               View orders
               <span className="mt-1 text-xs font-normal text-brand-muted">
-                Manage status & payments
+                Manage status and fulfillment
               </span>
             </Link>
           </li>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PAYMENT_GATEWAYS, PAYMENT_METHODS, PAYMENT_STATUSES } from "../types/payment";
+import { COD_PAYMENT_METHOD } from "../types/payment";
 import { ORDER_STATUSES } from "../types/orderStatus";
 
 const orderItemSchema = z.object({
@@ -38,19 +38,9 @@ export const createOrderSchema = z.object({
   specialInstructions: z.string().max(1000).optional(),
   items: z.array(orderItemSchema).optional().default([]),
   totalAmount: z.coerce.number().min(0).optional().default(0),
-  paymentMethod: z.enum(PAYMENT_METHODS, {
-    errorMap: () => ({ message: "Invalid payment method" }),
-  }),
-  paymentStatus: z
-    .enum(["pending", "paid", "failed"] as const)
-    .optional()
-    .default("pending"),
+  paymentMethod: z.literal(COD_PAYMENT_METHOD),
   quotedAmount: z.coerce.number().min(0).optional(),
   quoteNotes: z.string().max(500).optional(),
-  paymentGateway: z.enum(PAYMENT_GATEWAYS).optional(),
-  transactionId: z.string().max(120).optional(),
-  proofImage: z.string().max(500).optional(),
-  gatewayResponse: z.record(z.unknown()).optional(),
 });
 
 /** Client catalog line identifiers only — name/price resolved server-side */
@@ -99,7 +89,8 @@ export const publicCreateOrderSchema = z
     paymentMethod: z
       .enum(["cash_on_delivery"] as const, {
         errorMap: () => ({
-          message: "Only Cash on Delivery is available. Pay when your order is delivered.",
+          message:
+            "Only Cash on Delivery is available. Pay when your order is delivered.",
         }),
       })
       .optional()
@@ -183,8 +174,7 @@ export const publicCreateOrderSchema = z
     deliveryAddress: data.address?.trim() || undefined,
     specialInstructions: data.notes?.trim() || undefined,
     designNotes: data.referenceImage?.trim() || undefined,
-    paymentMethod: data.paymentMethod,
-    paymentStatus: "pending" as const,
+    paymentMethod: COD_PAYMENT_METHOD,
     cakeSlug: data.cakeSlug?.trim() || undefined,
     catalogItems: (data.items ?? [])
       .map((item) => ({
@@ -223,15 +213,7 @@ export const updateOrderStatusSchema = z.object({
       errorMap: () => ({ message: "Invalid order status" }),
     })
     .optional(),
-  paymentStatus: z
-    .enum(PAYMENT_STATUSES, {
-      errorMap: () => ({ message: "Invalid payment status" }),
-    })
-    .optional(),
   adminNotes: z.string().optional(),
-  transactionId: z.string().max(120).optional(),
-  paymentGateway: z.enum(PAYMENT_GATEWAYS).optional(),
-  gatewayResponse: z.record(z.unknown()).optional(),
 });
 
 export const orderIdParamSchema = z.object({

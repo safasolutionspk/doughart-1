@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { OrderNowButton } from "@/components/cart/OrderNowButton";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import type { AddToCartInput } from "@/lib/cart/types";
@@ -9,9 +10,14 @@ import type { AddToCartInput } from "@/lib/cart/types";
 type CakeDetailAddToCartProps = {
   item: Omit<AddToCartInput, "quantity">;
   className?: string;
+  whatsappHref?: string;
 };
 
-export function CakeDetailAddToCart({ item, className }: CakeDetailAddToCartProps) {
+export function CakeDetailAddToCart({
+  item,
+  className,
+  whatsappHref,
+}: CakeDetailAddToCartProps) {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -87,6 +93,24 @@ export function CakeDetailAddToCart({ item, className }: CakeDetailAddToCartProp
           {item.name} was added to your cart.
         </p>
       ) : null}
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <OrderNowButton
+          item={{ ...item, quantity }}
+          size="lg"
+          className="w-full sm:w-auto sm:flex-1 sm:max-w-xs"
+        />
+        {whatsappHref ? (
+          <Button
+            href={whatsappHref}
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto sm:flex-1 sm:max-w-xs"
+          >
+            WhatsApp Order
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
