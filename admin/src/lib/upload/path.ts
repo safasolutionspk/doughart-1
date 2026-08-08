@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api";
+import { PUBLIC_API_BASE_URL } from "@/lib/api";
 
 const CATALOG_UPLOAD_PREFIX = "/uploads/images";
 const GALLERY_UPLOAD_PREFIX = "/uploads/gallery";
@@ -124,7 +124,7 @@ export function resolveImageSrc(
     const stored = normalizeStoredImagePath(trimmed) ?? pathname;
 
     if (isUploadStoragePath(stored)) {
-      resolved = `${API_BASE_URL}${stored}`;
+      resolved = `${PUBLIC_API_BASE_URL}${stored}`;
     } else if (pathname.startsWith("/")) {
       resolved = pathname;
     } else {

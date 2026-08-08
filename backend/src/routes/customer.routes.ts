@@ -27,12 +27,7 @@ router.post(
   signup,
 );
 
-router.post(
-  "/login",
-  customerAuthLimiter,
-  validate(customerLoginSchema),
-  login,
-);
+router.post("/login", validate(customerLoginSchema), login);
 
 router.post(
   "/forgot-password",

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 function getApiImagePattern(): { protocol: "http" | "https"; hostname: string; port?: string; pathname: string } | null {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -27,6 +28,8 @@ function getApiImagePattern(): { protocol: "http" | "https"; hostname: string; p
 const apiPattern = getApiImagePattern();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd()),
   reactCompiler: true,
   images: {
     remotePatterns: [

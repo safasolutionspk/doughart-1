@@ -2,10 +2,10 @@ import { contactInfo } from "@/lib/contact";
 import { siteImages } from "@/lib/images";
 import { resolveImageSrc } from "@/lib/media";
 import { getBusinessName } from "@/lib/settings";
+import { getApiFetchUrl, getPublicApiUrl } from "@/lib/config/apiUrl";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:5000";
+const API_FETCH_URL = getApiFetchUrl();
+const API_PUBLIC_URL = getPublicApiUrl();
 
 export const galleryCopy = {
   subtitle: "Follow Us On Instagram",
@@ -69,7 +69,7 @@ function toDisplayImage(
     (item.url.startsWith("http://") || item.url.startsWith("https://")
       ? item.url
       : item.url.startsWith("/")
-        ? `${API_BASE_URL}${item.url}`
+        ? `${API_PUBLIC_URL}${item.url}`
         : undefined);
 
   if (!resolved) {
@@ -98,7 +98,7 @@ export async function fetchPublicGalleryImages(
   const name = businessName?.trim() || (await getBusinessName());
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/gallery/public`, {
+    const response = await fetch(`${API_FETCH_URL}/api/gallery/public`, {
       cache: "no-store",
     });
 

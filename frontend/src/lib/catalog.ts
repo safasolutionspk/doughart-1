@@ -1,9 +1,8 @@
 import type { ItemType } from "@/lib/itemTypes";
 import { normalizeItemTypes } from "@/lib/itemTypes";
+import { getApiFetchUrl } from "@/lib/config/apiUrl";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:5000";
+const API_BASE_URL = getApiFetchUrl();
 
 type ApiSuccess<T> = {
   success: true;

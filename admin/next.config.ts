@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 function getApiImagePattern(): {
   protocol: "http" | "https";
@@ -38,6 +39,8 @@ const cloudinaryPattern = {
 };
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd()),
   reactCompiler: true,
   images: {
     remotePatterns: [

@@ -1,7 +1,7 @@
 import { contactInfo } from "@/lib/contact";
+import { getApiFetchUrl } from "@/lib/config/apiUrl";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
+const API_BASE_URL = getApiFetchUrl();
 
 /** Technical fallback when settings cannot be loaded. */
 export const DEFAULT_BUSINESS_NAME = contactInfo.businessName;

@@ -1,6 +1,6 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:5000";
+import { getApiFetchUrl } from "@/lib/config/apiUrl";
+
+const API_BASE_URL = getApiFetchUrl();
 
 /** Stored order methods — legacy values only appear on historical records. */
 export type PaymentMethod =

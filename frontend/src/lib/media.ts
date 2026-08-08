@@ -1,8 +1,7 @@
 import { siteImages } from "@/lib/images";
+import { getPublicApiUrl } from "@/lib/config/apiUrl";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:5000";
+const API_BASE_URL = getPublicApiUrl();
 
 const CATALOG_UPLOAD_PREFIX = "/uploads/images";
 const GALLERY_UPLOAD_PREFIX = "/uploads/gallery";
