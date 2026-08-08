@@ -102,5 +102,4 @@ WhatsApp: https://wa.me/923277707333
 
 ## Related
 
-- [PRODUCTION_LAUNCH.md](../../docs/PRODUCTION_LAUNCH.md)
 - [backend/.env.example](../.env.example)

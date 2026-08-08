@@ -59,7 +59,7 @@ Copy `.env.example` to `.env`.
 
 Customer checkout is **Cash on Delivery only** — new public orders are always created as `cash_on_delivery` (`paymentStatus=pending`) and any other supplied payment method is rejected with a 400 validation error. Historical orders may retain older payment metadata.
 
-See [../docs/PRODUCTION_LAUNCH.md](../docs/PRODUCTION_LAUNCH.md) and [../docs/UPLOADS.md](../docs/UPLOADS.md).
+See [docs/EMAIL.md](./docs/EMAIL.md) and [docs/PAYMENTS.md](./docs/PAYMENTS.md) for email and payment notes.
 
 ### Production example
 

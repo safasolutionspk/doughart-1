@@ -94,4 +94,3 @@ On Vercel, set `JWT_SECRET` and `NEXT_PUBLIC_API_URL` in project environment var
 - Admin is a standard Next.js 16 app; deploy like any App Router project.
 - `JWT_SECRET` is only used in server routes/middleware — do not prefix with `NEXT_PUBLIC_`.
 - Backend must allow your admin origin in `CORS_ORIGIN`.
-- Full production checklist: [../docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).

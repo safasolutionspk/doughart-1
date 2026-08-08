@@ -91,8 +91,6 @@ public/images/                 Static assets
 
 ## Production
 
-Full checklist: [../docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).
-
 ```bash
 npm run build
 npm run start
