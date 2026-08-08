@@ -39,7 +39,7 @@ export async function listReviews(query: ListReviewsQuery) {
 export async function listPublicReviews() {
   return Review.find({ isActive: true })
     .sort({ sortOrder: 1, createdAt: -1 })
-    .select("name role rating text image sortOrder")
+    .select("name role rating text image imageDisplay sortOrder")
     .lean();
 }
 
@@ -66,6 +66,14 @@ export async function updateReview(id: string, input: UpdateReviewInput) {
   if (input.rating !== undefined) review.rating = input.rating;
   if (input.text !== undefined) review.text = input.text;
   if (input.image !== undefined) review.image = input.image;
+  if (input.imageDisplay !== undefined) {
+    if (input.imageDisplay === null) {
+      review.imageDisplay = undefined;
+      review.markModified("imageDisplay");
+    } else {
+      review.imageDisplay = input.imageDisplay;
+    }
+  }
   if (input.isActive !== undefined) review.isActive = input.isActive;
   if (input.sortOrder !== undefined) review.sortOrder = input.sortOrder;
 

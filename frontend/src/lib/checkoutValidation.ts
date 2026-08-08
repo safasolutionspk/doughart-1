@@ -1,18 +1,24 @@
-export type CheckoutFormValues = {
+import type { LineDetailsFieldErrors } from "@/components/checkout/CheckoutItemDetailsSections";
+import {
+  emptyLineDetailsForTypes,
+  hasItemType,
+  type CheckoutLineDetails,
+  type ItemType,
+} from "@/lib/itemTypes";
+
+export type CheckoutContactValues = {
   name: string;
   phone: string;
   email: string;
   deliveryDate: string;
   address: string;
-  size: string;
-  flavor: string;
-  message: string;
-  notes: string;
 };
 
 export type CheckoutFieldErrors = Partial<
-  Record<keyof CheckoutFormValues, string>
->;
+  Record<keyof CheckoutContactValues, string>
+> & {
+  lines?: Record<string, LineDetailsFieldErrors>;
+};
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[\d\s+().-]{7,30}$/;
@@ -27,8 +33,8 @@ function isFutureOrToday(dateValue: string): boolean {
   return date >= today;
 }
 
-export function validateCheckoutForm(
-  values: CheckoutFormValues,
+export function validateContactForm(
+  values: CheckoutContactValues,
 ): CheckoutFieldErrors {
   const errors: CheckoutFieldErrors = {};
   const name = values.name.trim();
@@ -63,31 +69,100 @@ export function validateCheckoutForm(
     errors.address = "Address is too long (maximum 500 characters).";
   }
 
-  if (!values.size.trim()) {
-    errors.size = "Please enter cake pounds.";
-  } else if (values.size.trim().length > 80) {
-    errors.size = "Pounds is too long (maximum 80 characters).";
+  return errors;
+}
+
+export function validateLineDetails(
+  itemTypes: ItemType[],
+  details: CheckoutLineDetails,
+): LineDetailsFieldErrors {
+  const errors: LineDetailsFieldErrors = {};
+
+  if (hasItemType(itemTypes, "cake")) {
+    const size = details.cake?.size?.trim() ?? "";
+    const flavor = details.cake?.flavor?.trim() ?? "";
+    const message = details.cake?.message?.trim() ?? "";
+    const notes = details.cake?.notes?.trim() ?? "";
+
+    if (!size) {
+      errors.size = "Please enter cake pounds.";
+    } else if (size.length > 80) {
+      errors.size = "Pounds is too long (maximum 80 characters).";
+    }
+
+    if (!flavor) {
+      errors.flavor = "Please enter cake flavor.";
+    } else if (flavor.length > 120) {
+      errors.flavor = "Flavor is too long (maximum 120 characters).";
+    }
+
+    if (message.length > 200) {
+      errors.message = "Message on cake is too long (maximum 200 characters).";
+    }
+
+    if (notes.length > 1000) {
+      errors.cakeNotes = "Notes are too long (maximum 1000 characters).";
+    }
   }
 
-  if (!values.flavor.trim()) {
-    errors.flavor = "Please enter cake flavor.";
-  } else if (values.flavor.trim().length > 120) {
-    errors.flavor = "Flavor is too long (maximum 120 characters).";
+  if (hasItemType(itemTypes, "gift")) {
+    const notes = details.gift?.notes?.trim() ?? "";
+    if (notes.length > 1000) {
+      errors.giftNotes = "Notes are too long (maximum 1000 characters).";
+    }
   }
 
-  if (values.message.trim().length > 200) {
-    errors.message = "Message on cake is too long (maximum 200 characters).";
-  }
-
-  if (values.notes.trim().length > 1000) {
-    errors.notes = "Notes are too long (maximum 1000 characters).";
+  if (hasItemType(itemTypes, "other")) {
+    const notes = details.other?.notes?.trim() ?? "";
+    if (notes.length > 1000) {
+      errors.productNotes = "Notes are too long (maximum 1000 characters).";
+    }
   }
 
   return errors;
 }
 
+export function validateCheckoutLines(
+  lines: Array<{ key: string; itemTypes: ItemType[]; details: CheckoutLineDetails }>,
+): Record<string, LineDetailsFieldErrors> {
+  const lineErrors: Record<string, LineDetailsFieldErrors> = {};
+
+  for (const line of lines) {
+    const details =
+      line.details && Object.keys(line.details).length > 0
+        ? line.details
+        : emptyLineDetailsForTypes(line.itemTypes);
+    const errors = validateLineDetails(line.itemTypes, details);
+    if (Object.keys(errors).length > 0) {
+      lineErrors[line.key] = errors;
+    }
+  }
+
+  return lineErrors;
+}
+
+/** @deprecated use validateContactForm + validateCheckoutLines */
+export function validateCheckoutForm(
+  values: CheckoutContactValues & {
+    size?: string;
+    flavor?: string;
+    message?: string;
+    notes?: string;
+  },
+): CheckoutFieldErrors {
+  return validateContactForm(values);
+}
+
 export function hasCheckoutErrors(errors: CheckoutFieldErrors): boolean {
-  return Object.keys(errors).length > 0;
+  if (errors.name || errors.phone || errors.email || errors.deliveryDate || errors.address) {
+    return true;
+  }
+  if (!errors.lines) {
+    return false;
+  }
+  return Object.values(errors.lines).some(
+    (line) => Object.keys(line).length > 0,
+  );
 }
 
 /** Map backend Zod field names to checkout form fields */
@@ -99,16 +174,12 @@ export function mapApiFieldErrors(
   }
 
   const mapped: CheckoutFieldErrors = {};
-  const fieldMap: Record<string, keyof CheckoutFormValues> = {
+  const fieldMap: Record<string, keyof CheckoutContactValues> = {
     name: "name",
     phone: "phone",
     email: "email",
     deliveryDate: "deliveryDate",
     address: "address",
-    size: "size",
-    flavor: "flavor",
-    message: "message",
-    notes: "notes",
   };
 
   for (const [key, messages] of Object.entries(errors)) {
@@ -125,6 +196,25 @@ export function mapApiFieldErrors(
 export function getFirstCheckoutError(
   errors: CheckoutFieldErrors,
 ): string | null {
-  const first = Object.values(errors).find(Boolean);
-  return first ?? null;
+  const contact = [
+    errors.name,
+    errors.phone,
+    errors.email,
+    errors.deliveryDate,
+    errors.address,
+  ].find(Boolean);
+  if (contact) {
+    return contact;
+  }
+
+  if (errors.lines) {
+    for (const line of Object.values(errors.lines)) {
+      const first = Object.values(line).find(Boolean);
+      if (first) {
+        return first;
+      }
+    }
+  }
+
+  return null;
 }

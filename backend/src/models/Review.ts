@@ -1,4 +1,5 @@
 import { Schema, model, type Document, type Model, type Types } from "mongoose";
+import type { ImageDisplay } from "../types/imageDisplay";
 
 export interface IReview {
   tenantId?: Types.ObjectId;
@@ -8,6 +9,8 @@ export interface IReview {
   rating: number;
   text: string;
   image?: string;
+  /** Optional pan/zoom for review avatar circle. */
+  imageDisplay?: ImageDisplay;
   isActive: boolean;
   sortOrder: number;
   createdAt?: Date;
@@ -25,6 +28,11 @@ const reviewSchema = new Schema<IReviewDocument>(
     rating: { type: Number, required: true, min: 1, max: 5 },
     text: { type: String, required: true, trim: true },
     image: { type: String, trim: true },
+    imageDisplay: {
+      zoom: { type: Number, min: 1, max: 3 },
+      x: { type: Number, min: -50, max: 50 },
+      y: { type: Number, min: -50, max: 50 },
+    },
     isActive: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
   },

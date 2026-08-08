@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ImageUploadField } from "@/components/upload/ImageUploadField";
+import { ImageSettingField } from "@/components/upload/ImageSettingField";
 import { cn } from "@/lib/cn";
 import { inputClassName, labelClassName, textareaClassName } from "@/lib/form";
+import { normalizeImageDisplay, type ImageDisplay } from "@/lib/imageDisplay";
 import { createReview, fetchReview, updateReview } from "@/lib/reviews/client";
 
 type ReviewFormProps = {
@@ -18,6 +19,7 @@ const emptyForm = {
   rating: 5,
   text: "",
   image: "",
+  imageDisplay: undefined as ImageDisplay | undefined,
   isActive: true,
   sortOrder: 0,
 };
@@ -52,6 +54,7 @@ export function ReviewForm({ reviewId }: ReviewFormProps) {
           rating: review.rating,
           text: review.text,
           image: review.image ?? "",
+          imageDisplay: normalizeImageDisplay(review.imageDisplay),
           isActive: review.isActive,
           sortOrder: review.sortOrder,
         });
@@ -85,6 +88,7 @@ export function ReviewForm({ reviewId }: ReviewFormProps) {
       rating: Number(form.rating),
       text: form.text.trim(),
       image: form.image.trim() || undefined,
+      imageDisplay: form.imageDisplay ?? (isEdit ? null : undefined),
       isActive: form.isActive,
       sortOrder: Number(form.sortOrder) || 0,
     };
@@ -191,12 +195,20 @@ export function ReviewForm({ reviewId }: ReviewFormProps) {
           />
         </div>
 
-        <ImageUploadField
+        <ImageSettingField
           id="review-image"
           label="Photo"
-          value={form.image}
-          onChange={(image) => setForm({ ...form, image })}
+          image={form.image}
+          imageDisplay={form.imageDisplay}
+          onImageChange={(image) =>
+            setForm((prev) => ({ ...prev, image }))
+          }
+          onImageDisplayChange={(imageDisplay) =>
+            setForm((prev) => ({ ...prev, imageDisplay }))
+          }
           disabled={isSaving}
+          aspectRatio="1 / 1"
+          frameShape="circle"
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

@@ -106,7 +106,7 @@ export async function listCakes(
       .skip(skip)
       .limit(limit)
       .select(
-        "name slug description image categoryId price isCustomizable isFeatured isActive sortOrder createdAt updatedAt",
+        "name slug description image imageDisplay categoryId price itemTypes isCustomizable isFeatured isActive sortOrder createdAt updatedAt",
       )
       .lean(),
     Cake.countDocuments(filter),
@@ -122,7 +122,7 @@ export async function listCakes(
         .skip(skip)
         .limit(limit)
         .select(
-          "name slug description image categoryId price isCustomizable isFeatured isActive sortOrder createdAt updatedAt",
+          "name slug description image imageDisplay categoryId price itemTypes isCustomizable isFeatured isActive sortOrder createdAt updatedAt",
         )
         .lean(),
       Cake.countDocuments(legacyFilter),
@@ -185,7 +185,7 @@ export async function listPublicCakes(
     .populate("categoryId", "name slug")
     .sort({ sortOrder: 1, name: 1 })
     .select(
-      "name slug description image categoryId price isCustomizable isFeatured sortOrder",
+      "name slug description image imageDisplay categoryId price itemTypes isCustomizable isFeatured sortOrder",
     )
     .lean();
 
@@ -194,7 +194,7 @@ export async function listPublicCakes(
       .populate("categoryId", "name slug")
       .sort({ sortOrder: 1, name: 1 })
       .select(
-        "name slug description image categoryId price isCustomizable isFeatured sortOrder",
+        "name slug description image imageDisplay categoryId price itemTypes isCustomizable isFeatured sortOrder",
       )
       .lean();
   }
@@ -345,8 +345,21 @@ export async function updateCake(
     targetCake.image = input.image;
   }
 
+  if (input.imageDisplay !== undefined) {
+    if (input.imageDisplay === null) {
+      targetCake.imageDisplay = undefined;
+      targetCake.markModified("imageDisplay");
+    } else {
+      targetCake.imageDisplay = input.imageDisplay;
+    }
+  }
+
   if (input.price !== undefined) {
     targetCake.price = input.price;
+  }
+
+  if (input.itemTypes !== undefined) {
+    targetCake.itemTypes = input.itemTypes;
   }
 
   if (input.isActive !== undefined) {

@@ -4,13 +4,18 @@ import { Suspense } from "react";
 import { CustomerLoginForm } from "@/components/auth/CustomerLoginForm";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Sign in",
-  description: "Sign in to your DoughArt account.",
-  path: "/login",
-  noIndex: true,
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Sign in",
+    description: `Sign in to your ${businessName} account.`,
+    path: "/login",
+    noIndex: true,
+    brandName: businessName,
+  });
+}
 
 export default function LoginPage() {
   return (

@@ -104,7 +104,6 @@ const envSchema = z
     CONTACT_NOTIFICATION_EMAIL: z.string().email().optional(),
     WHATSAPP_NUMBER: z.string().optional(),
     NOTIFY_ADMIN_EMAIL: z.string().email().optional(),
-    REQUIRE_CUSTOMER_AUTH_FOR_ORDERS: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const origins = data.CORS_ORIGIN.split(",").map((origin) => origin.trim());
@@ -245,27 +244,10 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-function resolveRequireCustomerAuthForOrders(
-  nodeEnv: "development" | "production" | "test",
-  raw: string | undefined,
-): boolean {
-  if (raw === "true" || raw === "1") {
-    return true;
-  }
-  if (raw === "false" || raw === "0") {
-    return false;
-  }
-  return nodeEnv === "production";
-}
-
 const parsedEnv = parsed.data;
 
 export const env = {
   ...parsedEnv,
-  REQUIRE_CUSTOMER_AUTH_FOR_ORDERS: resolveRequireCustomerAuthForOrders(
-    parsedEnv.NODE_ENV,
-    parsedEnv.REQUIRE_CUSTOMER_AUTH_FOR_ORDERS,
-  ),
 };
 
 if (env.NODE_ENV === "development") {

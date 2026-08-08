@@ -1,7 +1,9 @@
-export const reviewsCopy = {
-  subtitle: "Sweet words from customers who celebrated with DoughArt.",
-  heading: "Loved by Our Customers",
-} as const;
+export function getReviewsCopy(businessName: string) {
+  return {
+    subtitle: `Sweet words from customers who celebrated with ${businessName}.`,
+    heading: "Loved by Our Customers",
+  };
+}
 
 export type StaticReview = {
   id: string;
@@ -49,7 +51,7 @@ export const customerReviews: StaticReview[] = [
     id: "review-4",
     name: "Maryam R.",
     initials: "MR",
-    text: "DoughArt turned our idea into a lovely custom cake that felt made for our moment.",
+    text: "turned our idea into a lovely custom cake that felt made for our moment.",
     rating: 5,
   },
   {
@@ -94,6 +96,17 @@ export function staticToDisplayReview(review: StaticReview): DisplayReview {
  * carousel and the /reviews page). No public surface fetches a separate list,
  * so the same six reviews always appear everywhere.
  */
-export function getHomepageDisplayReviews(): DisplayReview[] {
-  return customerReviews.map(staticToDisplayReview);
+export function getHomepageDisplayReviews(
+  businessName: string,
+): DisplayReview[] {
+  return customerReviews.map((review) => {
+    const display = staticToDisplayReview(review);
+    if (review.id === "review-4") {
+      return {
+        ...display,
+        text: `${businessName} turned our idea into a lovely custom cake that felt made for our moment.`,
+      };
+    }
+    return display;
+  });
 }

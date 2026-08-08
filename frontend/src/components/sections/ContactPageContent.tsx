@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useBusinessName } from "@/components/providers/BusinessNameProvider";
 import { Button } from "@/components/ui/Button";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { contactInfo } from "@/lib/contact";
@@ -19,10 +20,13 @@ const inputClassName = cn(
 const labelClassName =
   "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-brand-brown";
 
+function enquiryMessage(businessName: string) {
+  return `Hello! I would like to enquire about a custom cake from ${businessName}.`;
+}
+
 export function ContactPageContent() {
-  const whatsappHref = buildWhatsAppUrl(
-    "Hello! I would like to enquire about a custom cake from DoughArt.",
-  );
+  const businessName = useBusinessName();
+  const whatsappHref = buildWhatsAppUrl(enquiryMessage(businessName));
 
   return (
     <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
@@ -115,7 +119,7 @@ export function ContactPageContent() {
           Share your event date, cake ideas, and guest count. We will reply by
           phone, WhatsApp, or email.
         </p>
-        <ContactForm whatsappHref={whatsappHref} />
+        <ContactForm whatsappHref={whatsappHref} businessName={businessName} />
       </div>
     </div>
   );
@@ -147,13 +151,19 @@ type ContactFormState = {
   message: string;
 };
 
-function ContactForm({ whatsappHref }: { whatsappHref: string }) {
+function ContactForm({
+  whatsappHref,
+  businessName,
+}: {
+  whatsappHref: string;
+  businessName: string;
+}) {
   const [form, setForm] = useState<ContactFormState>({
     name: "",
     phone: "",
     email: "",
     subject: "",
-    message: "Hello! I would like to enquire about a custom cake from DoughArt.",
+    message: enquiryMessage(businessName),
   });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
@@ -338,7 +348,7 @@ function ContactForm({ whatsappHref }: { whatsappHref: string }) {
           WhatsApp instead
         </a>
         <Link
-          href={`${footerCopy.emailHref}?subject=${encodeURIComponent("DoughArt enquiry")}`}
+          href={`${footerCopy.emailHref}?subject=${encodeURIComponent(`${businessName} enquiry`)}`}
           className="inline-flex h-10 items-center justify-center rounded-full border-2 border-brand-border px-5 text-sm font-semibold text-brand-brown transition-colors hover:bg-brand-pink-lighter"
         >
           Email us

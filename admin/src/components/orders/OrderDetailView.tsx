@@ -211,7 +211,14 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
             }
           />
           <Detail label="Phone" value={order.customerPhone} />
-          <Detail label="Email" value={order.customerEmail} />
+          <Detail
+            label="Email"
+            value={
+              order.customerEmail?.trim()
+                ? order.customerEmail.trim()
+                : "Not provided"
+            }
+          />
           <Detail label="Address" value={order.deliveryAddress ?? "—"} />
           <Detail label="List price" value={formatCurrency(order.totalAmount)} />
           <Detail
@@ -244,6 +251,100 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
           </div>
         ) : null}
       </section>
+
+      {!customCake &&
+      order.items.some(
+        (item) => item.cakeDetails || item.giftDetails || item.productDetails,
+      ) ? (
+        <section className="admin-card space-y-5">
+          <h2 className="admin-eyebrow">Item details</h2>
+          {order.items.map((item, index) => {
+            const hasDetails =
+              item.cakeDetails || item.giftDetails || item.productDetails;
+            if (!hasDetails) {
+              return null;
+            }
+            return (
+              <div
+                key={`${item.cakeName}-${index}`}
+                className="rounded-xl border border-brand-border/60 bg-brand-pink-lighter/20 p-4"
+              >
+                {order.items.length > 1 ? (
+                  <p className="mb-3 text-sm font-semibold text-brand-brown">
+                    {item.cakeName}
+                  </p>
+                ) : null}
+                <div className="space-y-4">
+                  {item.cakeDetails ? (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-brand-muted">
+                        Cake details
+                      </p>
+                      <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <Detail
+                          label="Pounds"
+                          value={item.cakeDetails.pounds ?? "—"}
+                        />
+                        <Detail
+                          label="Flavor"
+                          value={item.cakeDetails.flavor ?? "—"}
+                        />
+                        <Detail
+                          label="Message on cake"
+                          value={item.cakeDetails.messageOnCake ?? "—"}
+                        />
+                        <Detail
+                          label="Additional notes"
+                          value={item.cakeDetails.notes ?? "—"}
+                        />
+                      </dl>
+                    </div>
+                  ) : null}
+                  {item.giftDetails?.notes ? (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-brand-muted">
+                        Gift details
+                      </p>
+                      <dl className="mt-2">
+                        <Detail
+                          label="Additional notes / instructions"
+                          value={item.giftDetails.notes}
+                        />
+                      </dl>
+                    </div>
+                  ) : null}
+                  {item.productDetails?.notes ? (
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-brand-muted">
+                        Product details
+                      </p>
+                      <dl className="mt-2">
+                        <Detail
+                          label="Additional notes / instructions"
+                          value={item.productDetails.notes}
+                        />
+                      </dl>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      ) : !customCake && (order.cakeSize || order.flavour || order.messageOnCake) ? (
+        <section className="admin-card">
+          <h2 className="admin-eyebrow">Cake details</h2>
+          <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Detail label="Pounds" value={order.cakeSize ?? "—"} />
+            <Detail label="Flavor" value={order.flavour ?? "—"} />
+            <Detail label="Message on cake" value={order.messageOnCake ?? "—"} />
+            <Detail
+              label="Additional notes"
+              value={order.specialInstructions ?? "—"}
+            />
+          </dl>
+        </section>
+      ) : null}
 
       {customCake ? (
         <section className="admin-card border-violet-100 bg-gradient-to-br from-white to-violet-50/30">

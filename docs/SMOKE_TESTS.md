@@ -108,7 +108,7 @@ Exit code **0** = pass, **1** = fail.
 | --- | --- |
 | `database=disconnected` | Start MongoDB; check `MONGODB_URI` |
 | `fetch failed` / ECONNREFUSED | Start backend on port 5000 |
-| `POST /api/orders` 401 | Set `REQUIRE_CUSTOMER_AUTH_FOR_ORDERS=false` for guest dev, or ensure signup step passed |
+| `POST /api/orders` 401 | Unexpected — guest checkout is always allowed; check validation errors or server logs |
 | Newsletter 429 | Rate limit — wait 1 minute and retry |
 
 ### 2. Full data-flow verification (deeper)

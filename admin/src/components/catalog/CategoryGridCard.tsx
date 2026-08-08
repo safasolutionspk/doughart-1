@@ -45,7 +45,7 @@ export function CategoryGridCard({
             </h2>
             <p className="mt-0.5 truncate text-[10px] text-brand-muted">/{category.slug}</p>
             {isProtected ? (
-              <p className="mt-1 inline-flex rounded-full border border-brand-border/70 bg-brand-pink-lighter/60 px-2 py-0.5 text-[10px] font-semibold text-brand-muted">
+              <p className="mt-1 inline-flex rounded-full border border-brand-border/70 bg-brand-pink-lighter/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-muted">
                 System
               </p>
             ) : null}
@@ -67,7 +67,7 @@ export function CategoryGridCard({
                 isEditPending && "pointer-events-none opacity-60",
               )}
             >
-              {isEditPending ? "…" : "Edit Image"}
+              {isEditPending ? "…" : "Edit"}
             </Link>
           ) : (
             <>

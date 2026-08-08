@@ -249,16 +249,63 @@ export function orderDetailsRows(ctx: OrderEmailContext): Array<{
 
   rows.push({ label: "Cake / product", value: ctx.cakeType });
 
-  if (ctx.cakeSize?.trim()) {
-    rows.push({ label: "Size / variant", value: ctx.cakeSize.trim() });
-  }
+  const hasStructuredItemDetails = (ctx.items ?? []).some(
+    (item) => item.cakeDetails || item.giftDetails || item.productDetails,
+  );
 
-  if (ctx.flavour?.trim()) {
-    rows.push({ label: "Flavour", value: ctx.flavour.trim() });
-  }
+  if (!hasStructuredItemDetails) {
+    if (ctx.cakeSize?.trim()) {
+      rows.push({ label: "Size / variant", value: ctx.cakeSize.trim() });
+    }
 
-  if (ctx.messageOnCake?.trim()) {
-    rows.push({ label: "Message on cake", value: ctx.messageOnCake.trim() });
+    if (ctx.flavour?.trim()) {
+      rows.push({ label: "Flavour", value: ctx.flavour.trim() });
+    }
+
+    if (ctx.messageOnCake?.trim()) {
+      rows.push({ label: "Message on cake", value: ctx.messageOnCake.trim() });
+    }
+  } else {
+    for (const item of ctx.items) {
+      const prefix =
+        ctx.items.length > 1 ? `${item.cakeName}: ` : "";
+      if (item.cakeDetails?.pounds?.trim()) {
+        rows.push({
+          label: `${prefix}Cake pounds`,
+          value: item.cakeDetails.pounds.trim(),
+        });
+      }
+      if (item.cakeDetails?.flavor?.trim()) {
+        rows.push({
+          label: `${prefix}Cake flavor`,
+          value: item.cakeDetails.flavor.trim(),
+        });
+      }
+      if (item.cakeDetails?.messageOnCake?.trim()) {
+        rows.push({
+          label: `${prefix}Message on cake`,
+          value: item.cakeDetails.messageOnCake.trim(),
+        });
+      }
+      if (item.cakeDetails?.notes?.trim()) {
+        rows.push({
+          label: `${prefix}Cake notes`,
+          value: item.cakeDetails.notes.trim(),
+        });
+      }
+      if (item.giftDetails?.notes?.trim()) {
+        rows.push({
+          label: `${prefix}Gift instructions`,
+          value: item.giftDetails.notes.trim(),
+        });
+      }
+      if (item.productDetails?.notes?.trim()) {
+        rows.push({
+          label: `${prefix}Product instructions`,
+          value: item.productDetails.notes.trim(),
+        });
+      }
+    }
   }
 
   if (ctx.designNotes?.trim()) {

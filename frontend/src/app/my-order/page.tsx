@@ -3,14 +3,18 @@ import { Suspense } from "react";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { MyOrderLookup } from "@/components/sections/MyOrderLookup";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Track my order",
-  description:
-    "Look up your DoughArt cake order by order number and phone — see status, payment, and quoted price.",
-  path: "/my-order",
-  noIndex: true,
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Track my order",
+    description: `Look up your ${businessName} cake order by order number and phone — see status, payment, and quoted price.`,
+    path: "/my-order",
+    noIndex: true,
+    brandName: businessName,
+  });
+}
 
 export default function MyOrderPage() {
   return (

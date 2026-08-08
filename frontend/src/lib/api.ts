@@ -15,6 +15,18 @@ export type PublicOrderLineItem = {
   cakeSlug: string;
   quantity: number;
   notes?: string;
+  cakeDetails?: {
+    pounds?: string;
+    flavor?: string;
+    messageOnCake?: string;
+    notes?: string;
+  };
+  giftDetails?: {
+    notes?: string;
+  };
+  productDetails?: {
+    notes?: string;
+  };
 };
 
 export type PublicOrderPayload = {

@@ -1,10 +1,13 @@
 import { ReviewsCarousel } from "@/components/sections/ReviewsCarousel";
 import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
 import { Reveal } from "@/components/animation/Reveal";
-import { getHomepageDisplayReviews, reviewsCopy } from "@/lib/reviews";
+import { getHomepageDisplayReviews, getReviewsCopy } from "@/lib/reviews";
+import { getBusinessName } from "@/lib/settings";
 
-export function Reviews() {
-  const reviews = getHomepageDisplayReviews();
+export async function Reviews() {
+  const businessName = await getBusinessName();
+  const reviewsCopy = getReviewsCopy(businessName);
+  const reviews = getHomepageDisplayReviews(businessName);
 
   return (
     <section

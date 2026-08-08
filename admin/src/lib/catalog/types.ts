@@ -5,15 +5,23 @@ export type Pagination = {
   totalPages: number;
 };
 
+export type ImageDisplay = {
+  zoom: number;
+  x: number;
+  y: number;
+};
+
 export type Category = {
   _id: string;
   name: string;
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: ImageDisplay;
   isActive: boolean;
   sortOrder: number;
   isSystem?: boolean;
+  systemKey?: string;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -35,8 +43,10 @@ export type Cake = {
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: ImageDisplay;
   categoryId: string | CategoryRef;
   price: number;
+  itemTypes?: Array<"cake" | "gift" | "other">;
   isCustomizable: boolean;
   isFeatured: boolean;
   isActive: boolean;
@@ -67,5 +77,9 @@ export function getCategoryId(categoryId: Cake["categoryId"]): string {
 }
 
 export function isSystemCategory(category: Category): boolean {
-  return Boolean(category.isSystem) || category.slug === "combo-offers";
+  return (
+    Boolean(category.isSystem) ||
+    category.systemKey === "combo_offers" ||
+    category.slug === "combo-offers"
+  );
 }

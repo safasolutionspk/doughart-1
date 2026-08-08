@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { Cake, Order } from "../models";
+import { normalizeItemTypes } from "../constants/itemTypes";
 import type { RequestTenantContext } from "../types/tenantContext";
 import {
   POPULARITY_ELIGIBLE_STATUSES,
@@ -76,6 +77,15 @@ function normalizeCakeName(value: string | undefined | null): string {
   return (value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+/** Legacy line items without quantity safely count as 1. */
+function safeItemQuantity(quantity: unknown): number {
+  const n = typeof quantity === "number" ? quantity : Number(quantity);
+  if (!Number.isFinite(n) || n <= 0) {
+    return 1;
+  }
+  return n;
+}
+
 type AggRow = {
   _id: Types.ObjectId;
   totalQuantitySold: number;
@@ -130,6 +140,35 @@ async function buildUniqueCakeNameIndex(
   return unique;
 }
 
+/** Primary: ordered quantity DESC. Ties: revenue, last purchase, cakeId. */
+function compareByOrderedQuantity(
+  a: {
+    totalQuantitySold: number;
+    totalRevenue: number;
+    lastPurchasedAt: Date | null;
+    cakeId: string;
+  },
+  b: {
+    totalQuantitySold: number;
+    totalRevenue: number;
+    lastPurchasedAt: Date | null;
+    cakeId: string;
+  },
+): number {
+  if (b.totalQuantitySold !== a.totalQuantitySold) {
+    return b.totalQuantitySold - a.totalQuantitySold;
+  }
+  if (b.totalRevenue !== a.totalRevenue) {
+    return b.totalRevenue - a.totalRevenue;
+  }
+  const aTime = a.lastPurchasedAt ? a.lastPurchasedAt.getTime() : 0;
+  const bTime = b.lastPurchasedAt ? b.lastPurchasedAt.getTime() : 0;
+  if (bTime !== aTime) {
+    return bTime - aTime;
+  }
+  return a.cakeId.localeCompare(b.cakeId);
+}
+
 function toPopularStats(map: Map<string, MutableStats>): PopularCakeStats[] {
   return [...map.values()]
     .map((row) => ({
@@ -141,26 +180,13 @@ function toPopularStats(map: Map<string, MutableStats>): PopularCakeStats[] {
       latestCakeName: row.latestCakeName,
       latestUnitPrice: row.latestUnitPrice,
     }))
-    .sort((a, b) => {
-      if (b.successfulOrderCount !== a.successfulOrderCount) {
-        return b.successfulOrderCount - a.successfulOrderCount;
-      }
-      if (b.totalRevenue !== a.totalRevenue) {
-        return b.totalRevenue - a.totalRevenue;
-      }
-      const aTime = a.lastPurchasedAt ? a.lastPurchasedAt.getTime() : 0;
-      const bTime = b.lastPurchasedAt ? b.lastPurchasedAt.getTime() : 0;
-      if (bTime !== aTime) {
-        return bTime - aTime;
-      }
-      return a.cakeId.localeCompare(b.cakeId);
-    });
+    .sort(compareByOrderedQuantity);
 }
 
 /**
- * Aggregate purchase stats ranked primarily by distinct successful orders.
- * One order counts once per cake even if quantity > 1 or the cake appears twice.
- * Includes Combo Offer products alongside normal cakes.
+ * Aggregate purchase stats ranked primarily by total ordered quantity.
+ * Cancelled orders are excluded; pending and later non-cancelled statuses count.
+ * Catalog mapping requires cakeId (or unique exact name for legacy lines).
  */
 async function aggregatePurchaseStats(
   tenantContext?: RequestTenantContext,
@@ -179,9 +205,16 @@ async function aggregatePurchaseStats(
       {
         $group: {
           _id: "$items.cakeId",
-          totalQuantitySold: { $sum: "$items.quantity" },
+          totalQuantitySold: {
+            $sum: { $ifNull: ["$items.quantity", 1] },
+          },
           totalRevenue: {
-            $sum: { $multiply: ["$items.quantity", "$items.unitPrice"] },
+            $sum: {
+              $multiply: [
+                { $ifNull: ["$items.quantity", 1] },
+                { $ifNull: ["$items.unitPrice", 0] },
+              ],
+            },
           },
           successfulOrderIds: { $addToSet: "$_id" },
           lastPurchasedAt: { $max: "$createdAt" },
@@ -207,8 +240,8 @@ async function aggregatePurchaseStats(
           _id: 0,
           orderId: "$_id",
           cakeName: "$items.cakeName",
-          quantity: "$items.quantity",
-          unitPrice: "$items.unitPrice",
+          quantity: { $ifNull: ["$items.quantity", 1] },
+          unitPrice: { $ifNull: ["$items.unitPrice", 0] },
           createdAt: "$createdAt",
         },
       },
@@ -239,6 +272,7 @@ async function aggregatePurchaseStats(
       continue;
     }
 
+    const qty = safeItemQuantity(item.quantity);
     const existing = stats.get(cakeId) ?? {
       cakeId,
       orderIds: new Set<string>(),
@@ -252,8 +286,8 @@ async function aggregatePurchaseStats(
     const orderKey = String(item.orderId);
     const alreadyCounted = existing.orderIds.has(orderKey);
     existing.orderIds.add(orderKey);
-    existing.totalQuantitySold += item.quantity;
-    existing.totalRevenue += item.quantity * item.unitPrice;
+    existing.totalQuantitySold += qty;
+    existing.totalRevenue += qty * (item.unitPrice || 0);
     if (
       item.createdAt &&
       (!existing.lastPurchasedAt ||
@@ -278,12 +312,18 @@ type LeanPublicCake = {
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: {
+    zoom: number;
+    x: number;
+    y: number;
+  };
   categoryId: {
     _id: Types.ObjectId;
     name: string;
     slug: string;
   };
   price: number;
+  itemTypes?: string[];
   isCustomizable: boolean;
   isFeatured: boolean;
   sortOrder: number;
@@ -294,15 +334,13 @@ async function loadActivePublicCakes(
   tenantContext?: RequestTenantContext,
 ): Promise<LeanPublicCake[]> {
   const scope = buildCakeScopeFilter(tenantContext);
-  const cakes = await Cake.find({ ...scope, isActive: true })
+  return Cake.find({ ...scope, isActive: true })
     .populate("categoryId", "name slug")
     .select(
-      "name slug description image categoryId price isCustomizable isFeatured sortOrder createdAt",
+      "name slug description image imageDisplay categoryId price itemTypes isCustomizable isFeatured sortOrder createdAt",
     )
-    .sort({ isFeatured: -1, sortOrder: 1, createdAt: -1, _id: 1 })
-    .lean<LeanPublicCake[]>();
-
-  return cakes.filter((cake) => Boolean(cake.categoryId?._id));
+    .lean<LeanPublicCake[]>()
+    .then((cakes) => cakes.filter((cake) => Boolean(cake.categoryId?._id)));
 }
 
 function toPublicCakeShape(
@@ -318,12 +356,14 @@ function toPublicCakeShape(
     slug: cake.slug,
     description: cake.description,
     image: cake.image,
+    imageDisplay: cake.imageDisplay,
     categoryId: {
       _id: String(category._id),
       name: category.name,
       slug: category.slug,
     },
     price: cake.price,
+    itemTypes: normalizeItemTypes(cake.itemTypes),
     isCustomizable: cake.isCustomizable,
     isFeatured: cake.isFeatured,
     sortOrder: cake.sortOrder,
@@ -333,6 +373,10 @@ function toPublicCakeShape(
   };
 }
 
+/**
+ * Public Popular Items: every active catalog product, LEFT JOIN order quantities
+ * (default 0), sorted by ordered quantity DESC. Inactive products stay hidden.
+ */
 export async function listPublicPopularCakes(
   limit: number,
   tenantContext?: RequestTenantContext,
@@ -346,61 +390,67 @@ export async function listPublicPopularCakes(
     return [];
   }
 
-  const activeById = new Map(
-    activeCakes.map((cake) => [String(cake._id), cake]),
+  const statsById = new Map(stats.map((row) => [row.cakeId, row]));
+
+  type RankCandidate = {
+    cake: LeanPublicCake;
+    cakeId: string;
+    totalQuantitySold: number;
+    totalRevenue: number;
+    lastPurchasedAt: Date | null;
+    sortOrder: number;
+    name: string;
+  };
+
+  const ranked: RankCandidate[] = activeCakes.map((cake) => {
+    const cakeId = String(cake._id);
+    const row = statsById.get(cakeId);
+    return {
+      cake,
+      cakeId,
+      totalQuantitySold: row?.totalQuantitySold ?? 0,
+      totalRevenue: row?.totalRevenue ?? 0,
+      lastPurchasedAt: row?.lastPurchasedAt ?? null,
+      sortOrder: cake.sortOrder ?? 0,
+      name: cake.name,
+    };
+  });
+
+  ranked.sort((a, b) => {
+    const byQty = compareByOrderedQuantity(a, b);
+    if (byQty !== 0) {
+      return byQty;
+    }
+    // Catalog tie-break after shared purchase metrics.
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder;
+    }
+    const byName = a.name.localeCompare(b.name);
+    if (byName !== 0) {
+      return byName;
+    }
+    return a.cakeId.localeCompare(b.cakeId);
+  });
+
+  const limited = ranked.slice(0, Math.max(1, limit));
+  const withPurchases = limited.some((row) => row.totalQuantitySold > 0);
+  const withZeros = limited.some((row) => row.totalQuantitySold === 0);
+
+  let listSource: PopularitySource = "fallback";
+  if (withPurchases && withZeros) {
+    listSource = "mixed";
+  } else if (withPurchases) {
+    listSource = "purchases";
+  }
+
+  return limited.map((row, index) =>
+    toPublicCakeShape(
+      row.cake,
+      index + 1,
+      row.totalQuantitySold,
+      row.totalQuantitySold > 0 ? "purchases" : listSource === "fallback" ? "fallback" : "mixed",
+    ),
   );
-
-  const purchased: PublicPopularCake[] = [];
-  const usedIds = new Set<string>();
-
-  for (const row of stats) {
-    if (purchased.length >= limit) {
-      break;
-    }
-    const cake = activeById.get(row.cakeId);
-    if (!cake || !cake.categoryId?._id) {
-      continue;
-    }
-    purchased.push(
-      toPublicCakeShape(
-        cake,
-        purchased.length + 1,
-        row.totalQuantitySold,
-        "purchases",
-      ),
-    );
-    usedIds.add(row.cakeId);
-  }
-
-  if (purchased.length >= limit) {
-    return purchased.map((cake, index) => ({
-      ...cake,
-      rank: index + 1,
-      source: "purchases" as const,
-    }));
-  }
-
-  const fallbackNeeded = limit - purchased.length;
-  const fallbackCakes = activeCakes
-    .filter((cake) => !usedIds.has(String(cake._id)) && cake.categoryId?._id)
-    .slice(0, fallbackNeeded)
-    .map((cake, index) =>
-      toPublicCakeShape(cake, purchased.length + index + 1, 0, "fallback"),
-    );
-
-  const combined = [...purchased, ...fallbackCakes].map((cake, index) => ({
-    ...cake,
-    rank: index + 1,
-  }));
-
-  const source: PopularitySource =
-    purchased.length === 0
-      ? "fallback"
-      : fallbackCakes.length > 0
-        ? "mixed"
-        : "purchases";
-
-  return combined.map((cake) => ({ ...cake, source }));
 }
 
 type LeanAdminCake = {
@@ -410,39 +460,13 @@ type LeanAdminCake = {
   image?: string;
   price: number;
   isActive: boolean;
+  sortOrder?: number;
   categoryId?: { slug?: string } | Types.ObjectId | null;
 };
 
-function compareAdminRows(
-  a: {
-    successfulOrderCount: number;
-    totalRevenue: number;
-    lastPurchasedAt: Date | null;
-    cakeId: string;
-  },
-  b: {
-    successfulOrderCount: number;
-    totalRevenue: number;
-    lastPurchasedAt: Date | null;
-    cakeId: string;
-  },
-): number {
-  if (b.successfulOrderCount !== a.successfulOrderCount) {
-    return b.successfulOrderCount - a.successfulOrderCount;
-  }
-  if (b.totalRevenue !== a.totalRevenue) {
-    return b.totalRevenue - a.totalRevenue;
-  }
-  const aTime = a.lastPurchasedAt ? a.lastPurchasedAt.getTime() : 0;
-  const bTime = b.lastPurchasedAt ? b.lastPurchasedAt.getTime() : 0;
-  if (bTime !== aTime) {
-    return bTime - aTime;
-  }
-  return a.cakeId.localeCompare(b.cakeId);
-}
-
 /**
  * Admin reporting: every Cake (including Combo Offers), with purchase stats merged.
+ * Same quantity-first ranking as the public list (includes inactive for analytics).
  */
 export async function listAdminPopularCakes(
   page: number,
@@ -455,7 +479,7 @@ export async function listAdminPopularCakes(
     aggregatePurchaseStats(tenantContext),
     Cake.find({ ...scope })
       .populate("categoryId", "slug")
-      .select("name slug image price isActive categoryId")
+      .select("name slug image price isActive sortOrder categoryId")
       .lean<LeanAdminCake[]>(),
   ]);
 
@@ -476,10 +500,24 @@ export async function listAdminPopularCakes(
       isActive: Boolean(cake.isActive),
       cakeExists: true,
       slug: cake.slug,
+      sortOrder: cake.sortOrder ?? 0,
     };
   });
 
-  merged.sort(compareAdminRows);
+  merged.sort((a, b) => {
+    const byQty = compareByOrderedQuantity(a, b);
+    if (byQty !== 0) {
+      return byQty;
+    }
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder;
+    }
+    const byName = a.name.localeCompare(b.name);
+    if (byName !== 0) {
+      return byName;
+    }
+    return a.cakeId.localeCompare(b.cakeId);
+  });
 
   const total = merged.length;
   const totalPages = total === 0 ? 0 : Math.ceil(total / limit);

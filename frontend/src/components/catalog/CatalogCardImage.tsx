@@ -3,6 +3,11 @@
 import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
+import {
+  getFramedImageStyle,
+  normalizeImageDisplay,
+  type ImageDisplay,
+} from "@/lib/imageDisplay";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
@@ -16,6 +21,8 @@ type CatalogCardImageProps = {
   priority?: boolean;
   /** Defaults to contain so Admin-uploaded product images are not cropped. */
   objectFit?: "cover" | "contain";
+  /** Optional pan/zoom metadata from admin Set Image. */
+  imageDisplay?: ImageDisplay | null;
 };
 
 function isRemoteApiUrl(src: string): boolean {
@@ -30,9 +37,11 @@ export function CatalogCardImage({
   className,
   priority,
   objectFit = "contain",
+  imageDisplay,
 }: CatalogCardImageProps) {
   const trimmedApiImage = apiImage?.trim() ?? "";
-  const resetKey = `${trimmedApiImage}|${fallbackSrc}|${objectFit}`;
+  const display = normalizeImageDisplay(imageDisplay);
+  const resetKey = `${trimmedApiImage}|${fallbackSrc}|${objectFit}|${display?.zoom ?? ""}|${display?.x ?? ""}|${display?.y ?? ""}`;
 
   return (
     <CatalogCardImageInner
@@ -44,6 +53,7 @@ export function CatalogCardImage({
       className={className}
       priority={priority}
       objectFit={objectFit}
+      imageDisplay={display}
     />
   );
 }
@@ -56,7 +66,8 @@ function CatalogCardImageInner({
   className,
   priority,
   objectFit = "contain",
-}: CatalogCardImageProps) {
+  imageDisplay,
+}: CatalogCardImageProps & { imageDisplay?: ImageDisplay }) {
   const trimmedApiImage = apiImage?.trim() ?? "";
   const [primaryFailed, setPrimaryFailed] = useState(false);
   const currentSrc =
@@ -71,12 +82,20 @@ function CatalogCardImageInner({
 
   const displaySrc = currentSrc || fallbackSrc;
   const showRemote = isRemoteApiUrl(displaySrc) && !useFallbackOnly;
+  const useFramed = Boolean(imageDisplay);
+
   const imageClassName = cn(
-    objectFit === "contain"
-      ? "object-contain object-center"
-      : "object-cover object-center",
+    useFramed
+      ? undefined
+      : objectFit === "contain"
+        ? "object-contain object-center"
+        : "object-cover object-center",
     className,
   );
+
+  const framedStyle = useFramed && imageDisplay
+    ? getFramedImageStyle(imageDisplay)
+    : undefined;
 
   if (showRemote) {
     return (
@@ -84,7 +103,24 @@ function CatalogCardImageInner({
       <img
         src={displaySrc}
         alt={alt}
-        className={cn("absolute inset-0 h-full w-full", imageClassName)}
+        className={cn(
+          useFramed ? undefined : "absolute inset-0 h-full w-full",
+          imageClassName,
+        )}
+        style={framedStyle}
+        onError={handleError}
+      />
+    );
+  }
+
+  if (useFramed && framedStyle) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={displaySrc}
+        alt={alt}
+        className={imageClassName}
+        style={framedStyle}
         onError={handleError}
       />
     );

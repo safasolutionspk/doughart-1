@@ -3,13 +3,18 @@ import { Suspense } from "react";
 import { CustomerForgotPasswordForm } from "@/components/auth/CustomerForgotPasswordForm";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Forgot password",
-  description: "Request password reset instructions for your DoughArt account.",
-  path: "/forgot-password",
-  noIndex: true,
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Forgot password",
+    description: `Request password reset instructions for your ${businessName} account.`,
+    path: "/forgot-password",
+    noIndex: true,
+    brandName: businessName,
+  });
+}
 
 export default function ForgotPasswordPage() {
   return (

@@ -90,6 +90,7 @@ function CategoryCard({ category }: CategoryCardProps) {
             alt={category.title}
             sizes="(max-width: 1024px) 8.5rem, 11rem"
             objectFit="cover"
+            imageDisplay={category.imageDisplay}
             className="rounded-full"
           />
         </div>

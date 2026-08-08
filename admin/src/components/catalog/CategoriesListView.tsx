@@ -108,7 +108,7 @@ export function CategoriesListView() {
       return;
     }
     if (isSystemCategory(deleteTarget)) {
-      setDeleteError("The Combo Offers category cannot be deleted.");
+      setDeleteError("Combo Offers is a system category and cannot be deleted.");
       return;
     }
     const targetId = deleteTarget._id;

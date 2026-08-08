@@ -49,26 +49,10 @@ async function apiJson<T>(
   return { status: response.status, body };
 }
 
-function resolveRequireCustomerAuth(): boolean {
-  const raw = process.env.REQUIRE_CUSTOMER_AUTH_FOR_ORDERS?.trim().toLowerCase();
-  if (raw === "true" || raw === "1") {
-    return true;
-  }
-  if (raw === "false" || raw === "0") {
-    return false;
-  }
-  const nodeEnv = process.env.NODE_ENV ?? "development";
-  return nodeEnv === "production";
-}
-
 async function main() {
-  const requireCustomerAuth = resolveRequireCustomerAuth();
-
   console.log("DoughArt — API smoke test");
   console.log(`Target: ${API}`);
-  console.log(
-    `Order auth: ${requireCustomerAuth ? "customer JWT required" : "guest allowed (dev)"}\n`,
-  );
+  console.log("Order auth: guest checkout allowed (optional customer JWT)\n");
 
   const health = await apiJson<{
     status: string;
@@ -197,6 +181,33 @@ async function main() {
     }
   }
 
+  const guestOrderPayload = {
+    name: "Guest Smoke User",
+    email: `guest-smoke-${Date.now()}@example.com`,
+    phone: "03009876543",
+    cakeType: "Guest Smoke Cake",
+    size: "1 pound",
+    flavor: "Vanilla",
+    address: "456 Guest Street, Lahore",
+    paymentMethod: "cash_on_delivery",
+  };
+
+  const guestOrder = await apiJson<{ orderNumber: string }>("/api/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(guestOrderPayload),
+  });
+
+  if (
+    guestOrder.status === 201 &&
+    guestOrder.body.success &&
+    guestOrder.body.data.orderNumber
+  ) {
+    ok(`POST /api/orders guest (${guestOrder.body.data.orderNumber})`);
+  } else {
+    fail("POST /api/orders guest", describeResponse(guestOrder));
+  }
+
   const orderPayload = {
     name: "Smoke Test User",
     email: smokeEmail,
@@ -222,7 +233,7 @@ async function main() {
   });
 
   if (order.status === 201 && order.body.success && order.body.data.orderNumber) {
-    ok(`POST /api/orders (${order.body.data.orderNumber})`);
+    ok(`POST /api/orders authenticated (${order.body.data.orderNumber})`);
 
     if (customerToken) {
       const myOrders = await apiJson<unknown[]>("/api/customers/orders", {
@@ -234,15 +245,8 @@ async function main() {
         fail("GET /api/customers/orders", describeResponse(myOrders));
       }
     }
-  } else if (order.status === 401 && requireCustomerAuth && !customerToken) {
-    fail(
-      "POST /api/orders",
-      "401 unauthorized — signup/login failed earlier; customer auth required for orders",
-    );
-  } else if (order.status === 401 && !requireCustomerAuth) {
-    fail("POST /api/orders", describeResponse(order));
   } else {
-    fail("POST /api/orders", describeResponse(order));
+    fail("POST /api/orders authenticated", describeResponse(order));
   }
 
   printSummary();

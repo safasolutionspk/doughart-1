@@ -1,3 +1,6 @@
+import type { ItemType } from "@/lib/itemTypes";
+import { normalizeItemTypes } from "@/lib/itemTypes";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
   "http://localhost:5000";
@@ -19,6 +22,11 @@ export type PublicCategory = {
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: {
+    zoom: number;
+    x: number;
+    y: number;
+  };
   sortOrder: number;
 };
 
@@ -34,12 +42,22 @@ export type PublicCake = {
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: {
+    zoom: number;
+    x: number;
+    y: number;
+  };
   categoryId: CategoryRef;
   price: number;
+  itemTypes?: ItemType[];
   isCustomizable: boolean;
   isFeatured: boolean;
   sortOrder: number;
 };
+
+export function getCakeItemTypes(cake: Pick<PublicCake, "itemTypes">): ItemType[] {
+  return normalizeItemTypes(cake.itemTypes);
+}
 
 export type PopularitySource = "purchases" | "mixed" | "fallback";
 

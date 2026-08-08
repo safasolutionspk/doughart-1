@@ -11,16 +11,15 @@ import {
 } from "@/lib/catalog/client";
 import { CATEGORIES_REFRESH_EVENT } from "@/lib/catalog/events";
 import { isSystemCategory } from "@/lib/catalog/types";
-import { CatalogImage } from "@/components/catalog/CatalogImage";
 import { DescriptionTextarea } from "@/components/catalog/DescriptionTextarea";
-import { ImageUploadField } from "@/components/upload/ImageUploadField";
+import { ImageSettingField } from "@/components/upload/ImageSettingField";
 import {
   CATEGORY_DESCRIPTION_MAX,
   clampDescription,
   descriptionLengthError,
 } from "@/lib/catalog/description";
+import { normalizeImageDisplay, type ImageDisplay } from "@/lib/imageDisplay";
 import {
-  hasStoredImage,
   normalizeStoredImagePath,
 } from "@/lib/upload/path";
 
@@ -33,6 +32,7 @@ const emptyForm = {
   slug: "",
   description: "",
   image: "",
+  imageDisplay: undefined as ImageDisplay | undefined,
   isActive: true,
   sortOrder: 0,
 };
@@ -54,8 +54,6 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isProtected, setIsProtected] = useState(false);
-
-  const showPreview = hasStoredImage(form.image);
 
   useEffect(() => {
     if (!categoryId) {
@@ -79,6 +77,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
           slug: category.slug,
           description: category.description ?? "",
           image: category.image ?? "",
+          imageDisplay: normalizeImageDisplay(category.imageDisplay),
           isActive: category.isActive,
           sortOrder: category.sortOrder,
         });
@@ -109,30 +108,33 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
     setError(null);
 
     try {
+      const description = clampDescription(
+        form.description.trim(),
+        CATEGORY_DESCRIPTION_MAX,
+      );
+      const descriptionError = descriptionLengthError(
+        description,
+        CATEGORY_DESCRIPTION_MAX,
+      );
+      if (descriptionError) {
+        setError(descriptionError);
+        setIsSaving(false);
+        return;
+      }
+
       if (isProtected && isEdit && categoryId) {
         await updateCategory(categoryId, {
+          description: description || "",
           image: normalizeStoredImagePath(form.image) ?? "",
+          imageDisplay: form.imageDisplay ?? null,
         });
       } else {
-        const description = clampDescription(
-          form.description.trim(),
-          CATEGORY_DESCRIPTION_MAX,
-        );
-        const descriptionError = descriptionLengthError(
-          description,
-          CATEGORY_DESCRIPTION_MAX,
-        );
-        if (descriptionError) {
-          setError(descriptionError);
-          setIsSaving(false);
-          return;
-        }
-
         const payload = {
           name: form.name.trim(),
           slug: form.slug.trim() || undefined,
           description: description || undefined,
           image: normalizeStoredImagePath(form.image),
+          imageDisplay: form.imageDisplay ?? (isEdit ? null : undefined),
           isActive: form.isActive,
           sortOrder: Number(form.sortOrder) || 0,
         };
@@ -178,66 +180,74 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
         <div className="admin-card mt-6 space-y-6 !p-6 sm:!p-8">
           <div className="text-center">
             <p className="inline-flex rounded-full border border-brand-border/70 bg-brand-pink-lighter/60 px-2.5 py-0.5 text-[11px] font-semibold text-brand-muted">
-              System · Protected
+              System category
             </p>
             <h1 className="mt-3 font-display text-2xl font-bold text-brand-brown sm:text-3xl">
-              Edit Combo Offers Image
+              Edit Combo Offers
             </h1>
             <p className="mt-2 text-sm text-brand-muted">
-              Name, slug, and active state are locked. Only the category image
-              can be updated.
+              Name and slug are fixed. Description and image can be updated.
             </p>
-          </div>
-
-          <div className="rounded-2xl border border-brand-border/70 bg-brand-pink-lighter/40 px-4 py-3 text-sm text-brand-brown">
-            <p>
-              <span className="font-semibold">Name:</span> {form.name}
-            </p>
-            <p className="mt-1">
-              <span className="font-semibold">Slug:</span> /{form.slug}
-            </p>
-            <p className="mt-1">
-              <span className="font-semibold">Status:</span>{" "}
-              {form.isActive ? "Active" : "Inactive"}
-            </p>
-          </div>
-
-          <div
-            className={cn(
-              "relative mx-auto aspect-[4/3] w-full max-w-sm overflow-hidden rounded-2xl border-2 border-dashed bg-brand-pink-lighter/50",
-              showPreview ? "border-brand-primary/60" : "border-brand-primary",
-            )}
-          >
-            {showPreview ? (
-              <CatalogImage
-                image={form.image}
-                alt="Category preview"
-                fill
-                cacheKey={form.image || "empty"}
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-                <span className="text-4xl text-brand-primary/30" aria-hidden>
-                  🖼
-                </span>
-                <p className="text-sm font-medium text-brand-muted">
-                  No image yet — storefront uses the generic fallback
-                </p>
-              </div>
-            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <ImageUploadField
+            <div>
+              <label htmlFor="name" className={labelClassName}>
+                Category Name <span className="text-brand-primary">*</span>
+              </label>
+              <input
+                id="name"
+                value={form.name}
+                readOnly
+                disabled
+                className={fieldClassName}
+              />
+              <p className="mt-1.5 text-xs text-brand-muted">
+                This system name cannot be changed.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="slug" className={labelClassName}>
+                Slug
+              </label>
+              <input
+                id="slug"
+                value={form.slug}
+                readOnly
+                disabled
+                className={fieldClassName}
+              />
+            </div>
+
+            <DescriptionTextarea
+              id="description"
+              label="Description"
+              value={form.description}
+              maxLength={CATEGORY_DESCRIPTION_MAX}
+              onChange={(description) => setForm({ ...form, description })}
+              disabled={isSaving}
+              fieldClassName={fieldClassName}
+              labelClassName={labelClassName}
+            />
+
+            <ImageSettingField
               id="category-image"
-              label="Upload image"
-              value={form.image}
-              onChange={(image) =>
-                setForm({ ...form, image: normalizeStoredImagePath(image) ?? "" })
+              label="Image"
+              image={form.image}
+              imageDisplay={form.imageDisplay}
+              onImageChange={(image) =>
+                setForm((prev) => ({
+                  ...prev,
+                  image: normalizeStoredImagePath(image) ?? "",
+                }))
+              }
+              onImageDisplayChange={(imageDisplay) =>
+                setForm((prev) => ({ ...prev, imageDisplay }))
               }
               disabled={isSaving}
-              hideInlinePreview
+              aspectRatio="1 / 1"
+              frameShape="circle"
               fieldClassName={fieldClassName}
             />
 
@@ -252,7 +262,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
               disabled={isSaving}
               className="admin-btn-primary h-12 w-full rounded-2xl text-base font-semibold disabled:opacity-60"
             >
-              {isSaving ? "Saving…" : "Update Image"}
+              {isSaving ? "Saving…" : "Save Changes"}
             </button>
 
             <Link
@@ -280,32 +290,6 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
         <h1 className="text-center font-display text-2xl font-bold text-brand-brown sm:text-3xl">
           {isEdit ? "Edit Category" : "Create Category"}
         </h1>
-
-        <div
-          className={cn(
-            "relative mx-auto aspect-[4/3] w-full max-w-sm overflow-hidden rounded-2xl border-2 border-dashed bg-brand-pink-lighter/50",
-            showPreview ? "border-brand-primary/60" : "border-brand-primary",
-          )}
-        >
-          {showPreview ? (
-            <CatalogImage
-              image={form.image}
-              alt="Category preview"
-              fill
-              cacheKey={form.image || "empty"}
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-              <span className="text-4xl text-brand-primary/30" aria-hidden>
-                🖼
-              </span>
-              <p className="text-sm font-medium text-brand-muted">
-                No image yet — upload below
-              </p>
-            </div>
-          )}
-        </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -345,15 +329,23 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
             labelClassName={labelClassName}
           />
 
-          <ImageUploadField
+          <ImageSettingField
             id="category-image"
-            label="Upload image"
-            value={form.image}
-            onChange={(image) =>
-              setForm({ ...form, image: normalizeStoredImagePath(image) ?? "" })
+            label="Image"
+            image={form.image}
+            imageDisplay={form.imageDisplay}
+            onImageChange={(image) =>
+              setForm((prev) => ({
+                ...prev,
+                image: normalizeStoredImagePath(image) ?? "",
+              }))
+            }
+            onImageDisplayChange={(imageDisplay) =>
+              setForm((prev) => ({ ...prev, imageDisplay }))
             }
             disabled={isSaving}
-            hideInlinePreview
+            aspectRatio="1 / 1"
+            frameShape="circle"
             fieldClassName={fieldClassName}
           />
 

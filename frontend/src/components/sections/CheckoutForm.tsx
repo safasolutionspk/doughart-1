@@ -1,14 +1,16 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCustomerAuth } from "@/components/auth/CustomerAuthProvider";
 import { useCart } from "@/components/cart/CartProvider";
 import { CheckoutEmptyState } from "@/components/checkout/CheckoutEmptyState";
+import { CheckoutItemDetailsSections } from "@/components/checkout/CheckoutItemDetailsSections";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
 import { Button } from "@/components/ui/Button";
 import { OrderApiError, submitOrder } from "@/lib/api";
 import { getCartSubtotal, hasPricedItems } from "@/lib/cart/cart";
+import { getCartItemTypes } from "@/lib/cart/types";
 import { checkoutCopy } from "@/lib/checkout";
 import {
   clearCheckoutDraft,
@@ -26,12 +28,20 @@ import {
   getFirstCheckoutError,
   hasCheckoutErrors,
   mapApiFieldErrors,
-  validateCheckoutForm,
+  validateCheckoutLines,
+  validateContactForm,
   type CheckoutFieldErrors,
 } from "@/lib/checkoutValidation";
 import { cn } from "@/lib/cn";
-import { formatPrice, getCategoryRef, type PublicCake } from "@/lib/catalog";
-import { buildLoginRedirectUrl } from "@/lib/auth/returnUrl";
+import {
+  formatPrice,
+  getCakeItemTypes,
+  type PublicCake,
+} from "@/lib/catalog";
+import {
+  emptyLineDetailsForTypes,
+  type CheckoutLineDetails,
+} from "@/lib/itemTypes";
 import { COD_PAYMENT_LABEL } from "@/lib/payment";
 
 const inputClassName = cn(
@@ -63,22 +73,22 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-const AUTH_REQUIRED_MESSAGE =
-  "Please login or signup to place your order.";
-
 export function CheckoutForm({
   selectedCake,
   selectedCakeSlug,
 }: CheckoutFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { customer, hydrated: authHydrated, isAuthenticated } =
     useCustomerAuth();
-  const { items: cartItems, hydrated: cartHydrated, clear: clearCart, addItem } =
+  const { items: cartItems, hydrated: cartHydrated, clear: clearCart } =
     useCart();
   const draftRestored = useRef(false);
+  const customerPrefillDone = useRef(false);
 
   const [form, setForm] = useState<CheckoutDraftForm>({ ...emptyCheckoutForm });
+  const [lineDetails, setLineDetails] = useState<
+    Record<string, CheckoutLineDetails>
+  >({});
   const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -88,8 +98,7 @@ export function CheckoutForm({
   const checkoutFromCakeQuery =
     !checkoutFromCart && Boolean(selectedCakeSlug || selectedCake);
   const canCheckout = checkoutFromCart || checkoutFromCakeQuery;
-  const showEmptyState =
-    cartHydrated && !canCheckout;
+  const showEmptyState = cartHydrated && !canCheckout;
 
   const cartSubtotal = getCartSubtotal(cartItems);
   const showCartSubtotal = checkoutFromCart && hasPricedItems(cartItems);
@@ -101,6 +110,51 @@ export function CheckoutForm({
     showCartSubtotal ? cartSubtotal : singleCakeTotal > 0 ? singleCakeTotal : 0;
   const showPricing = orderTotal > 0;
 
+  const detailLines = useMemo(() => {
+    if (checkoutFromCart) {
+      return cartItems.map((item) => ({
+        key: item.id,
+        name: item.name,
+        itemTypes: getCartItemTypes(item),
+        showHeading: cartItems.length > 1,
+      }));
+    }
+
+    if (checkoutFromCakeQuery) {
+      const key = `direct:${selectedCakeSlug ?? selectedCake?.slug ?? "cake"}`;
+      return [
+        {
+          key,
+          name: selectedCake?.name ?? "Selected product",
+          itemTypes: getCakeItemTypes(selectedCake ?? {}),
+          showHeading: false,
+        },
+      ];
+    }
+
+    return [];
+  }, [
+    checkoutFromCart,
+    checkoutFromCakeQuery,
+    cartItems,
+    selectedCake,
+    selectedCakeSlug,
+  ]);
+
+  useEffect(() => {
+    setLineDetails((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const line of detailLines) {
+        if (!next[line.key]) {
+          next[line.key] = emptyLineDetailsForTypes(line.itemTypes);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [detailLines]);
+
   useEffect(() => {
     if (draftRestored.current) {
       return;
@@ -111,6 +165,9 @@ export function CheckoutForm({
     if (draft) {
       const timer = window.setTimeout(() => {
         setForm((prev) => mergeFormWithDraft(prev, draft.form));
+        if (draft.lineDetails) {
+          setLineDetails((prev) => ({ ...draft.lineDetails, ...prev }));
+        }
       }, 0);
       return () => window.clearTimeout(timer);
     }
@@ -120,8 +177,21 @@ export function CheckoutForm({
     if (!draftRestored.current) {
       return;
     }
-    saveCheckoutDraft({ form });
-  }, [form]);
+    saveCheckoutDraft({ form, lineDetails });
+  }, [form, lineDetails]);
+
+  useEffect(() => {
+    if (!authHydrated || !isAuthenticated || !customer || customerPrefillDone.current) {
+      return;
+    }
+    customerPrefillDone.current = true;
+    setForm((prev) => ({
+      ...prev,
+      name: prev.name.trim() ? prev.name : customer.name || prev.name,
+      phone: prev.phone.trim() ? prev.phone : customer.phone || prev.phone,
+      email: prev.email.trim() ? prev.email : customer.email || prev.email,
+    }));
+  }, [authHydrated, isAuthenticated, customer]);
 
   function updateField<K extends keyof CheckoutDraftForm>(
     key: K,
@@ -142,27 +212,6 @@ export function CheckoutForm({
     }
   }
 
-  function ensureSelectedCakeInCart() {
-    if (!selectedCake) {
-      return;
-    }
-    const category = getCategoryRef(selectedCake);
-    addItem({
-      cakeSlug: selectedCake.slug,
-      categorySlug: category.slug,
-      name: selectedCake.name,
-      image: selectedCake.image,
-      unitPrice: selectedCake.price,
-      quantity: 1,
-    });
-  }
-
-  function goToLoginForCheckout() {
-    saveCheckoutDraft({ form });
-    ensureSelectedCakeInCart();
-    router.push(buildLoginRedirectUrl("/checkout"));
-  }
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -170,12 +219,19 @@ export function CheckoutForm({
       return;
     }
 
-    if (authHydrated && !isAuthenticated) {
-      goToLoginForCheckout();
-      return;
-    }
+    const contactErrors = validateContactForm(form);
+    const lineErrorMap = validateCheckoutLines(
+      detailLines.map((line) => ({
+        key: line.key,
+        itemTypes: line.itemTypes,
+        details: lineDetails[line.key] ?? emptyLineDetailsForTypes(line.itemTypes),
+      })),
+    );
+    const validationErrors: CheckoutFieldErrors = {
+      ...contactErrors,
+      ...(Object.keys(lineErrorMap).length > 0 ? { lines: lineErrorMap } : {}),
+    };
 
-    const validationErrors = validateCheckoutForm(form);
     if (hasCheckoutErrors(validationErrors)) {
       setFieldErrors(validationErrors);
       setErrorMessage(getFirstCheckoutError(validationErrors));
@@ -188,11 +244,14 @@ export function CheckoutForm({
     setFieldErrors({});
 
     const payload = checkoutFromCart
-      ? buildOrderPayloadFromCart(form, cartItems)
+      ? buildOrderPayloadFromCart(form, cartItems, lineDetails)
       : buildOrderPayloadFromCake(
           form,
           selectedCake?.name ?? "Custom cake",
           selectedCakeSlug,
+          getCakeItemTypes(selectedCake ?? {}),
+          lineDetails[detailLines[0]?.key ?? ""] ??
+            emptyLineDetailsForTypes(getCakeItemTypes(selectedCake ?? {})),
         );
 
     try {
@@ -236,42 +295,8 @@ export function CheckoutForm({
     return <CheckoutEmptyState />;
   }
 
-  const showAuthBanner =
-    searchParams.get("authRequired") === "1" ||
-    (authHydrated && !isAuthenticated && canCheckout);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-8" noValidate>
-      {showAuthBanner ? (
-        <div
-          className="rounded-xl border border-brand-primary/30 bg-brand-pink-lighter/60 px-4 py-3 text-sm text-brand-brown"
-          role="status"
-        >
-          <p>{AUTH_REQUIRED_MESSAGE}</p>
-          <p className="mt-2">
-            <button
-              type="button"
-              onClick={goToLoginForCheckout}
-              className="font-semibold text-brand-primary hover:underline"
-            >
-              Sign in
-            </button>
-            {" · "}
-            <button
-              type="button"
-              onClick={() => {
-                saveCheckoutDraft({ form });
-                ensureSelectedCakeInCart();
-                router.push("/signup?returnUrl=%2Fcheckout");
-              }}
-              className="font-semibold text-brand-primary hover:underline"
-            >
-              Create account
-            </button>
-          </p>
-        </div>
-      ) : null}
-
       {customer && isAuthenticated ? (
         <p className="text-sm text-brand-muted">
           Placing order as{" "}
@@ -286,7 +311,7 @@ export function CheckoutForm({
       {selectedCake && !checkoutFromCart ? (
         <section className="rounded-2xl border border-brand-border bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-brown">
-            Your cake
+            Your item
           </h2>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
             <p className="font-display text-lg font-semibold text-brand-brown sm:text-xl">
@@ -353,7 +378,7 @@ export function CheckoutForm({
             <label htmlFor="checkout-email" className={labelClassName}>
               Email{" "}
               <span className="font-normal normal-case text-brand-muted">
-                (optional)
+                (Optional)
               </span>
             </label>
             <input
@@ -368,10 +393,6 @@ export function CheckoutForm({
               className={cn(inputClassName, fieldErrors.email && inputErrorClassName)}
             />
             <FieldError message={fieldErrors.email} />
-            <p className="mt-1 text-xs text-brand-muted">
-              Phone is required. Leave email blank if you prefer WhatsApp or SMS
-              contact only.
-            </p>
           </div>
         </div>
       </section>
@@ -426,89 +447,29 @@ export function CheckoutForm({
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-brown">
-          Cake details
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="checkout-size" className={labelClassName}>
-              Pounds <span className="text-brand-primary">*</span>
-            </label>
-            <input
-              id="checkout-size"
-              type="text"
-              required
-              maxLength={80}
-              value={form.size}
-              placeholder="e.g. 2 pounds"
-              disabled={status === "loading"}
-              onChange={(event) => updateField("size", event.target.value)}
-              aria-invalid={Boolean(fieldErrors.size)}
-              className={cn(inputClassName, fieldErrors.size && inputErrorClassName)}
-            />
-            <FieldError message={fieldErrors.size} />
-          </div>
-          <div>
-            <label htmlFor="checkout-flavor" className={labelClassName}>
-              Flavor <span className="text-brand-primary">*</span>
-            </label>
-            <input
-              id="checkout-flavor"
-              type="text"
-              required
-              maxLength={120}
-              value={form.flavor}
-              placeholder="e.g. Chocolate, Vanilla, Red Velvet"
-              disabled={status === "loading"}
-              onChange={(event) => updateField("flavor", event.target.value)}
-              aria-invalid={Boolean(fieldErrors.flavor)}
-              className={cn(inputClassName, fieldErrors.flavor && inputErrorClassName)}
-            />
-            <FieldError message={fieldErrors.flavor} />
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="checkout-message" className={labelClassName}>
-              Message on cake
-            </label>
-            <input
-              id="checkout-message"
-              type="text"
-              maxLength={200}
-              value={form.message}
-              disabled={status === "loading"}
-              onChange={(event) => updateField("message", event.target.value)}
-              aria-invalid={Boolean(fieldErrors.message)}
-              className={cn(
-                inputClassName,
-                fieldErrors.message && inputErrorClassName,
-              )}
-            />
-            <FieldError message={fieldErrors.message} />
-          </div>
-          <div className="sm:col-span-2">
-            <label htmlFor="checkout-notes" className={labelClassName}>
-              Additional notes
-            </label>
-            <textarea
-              id="checkout-notes"
-              rows={4}
-              maxLength={1000}
-              value={form.notes}
-              disabled={status === "loading"}
-              onChange={(event) => updateField("notes", event.target.value)}
-              placeholder="Allergies, design tweaks, delivery instructions…"
-              aria-invalid={Boolean(fieldErrors.notes)}
-              className={cn(
-                inputClassName,
-                "resize-y",
-                fieldErrors.notes && inputErrorClassName,
-              )}
-            />
-            <FieldError message={fieldErrors.notes} />
-          </div>
-        </div>
-      </section>
+      <div className="space-y-8">
+        {detailLines.map((line) => (
+          <CheckoutItemDetailsSections
+            key={line.key}
+            itemKey={line.key}
+            itemName={line.name}
+            itemTypes={line.itemTypes}
+            details={
+              lineDetails[line.key] ?? emptyLineDetailsForTypes(line.itemTypes)
+            }
+            errors={fieldErrors.lines?.[line.key]}
+            disabled={status === "loading"}
+            showItemHeading={line.showHeading}
+            onChange={(next) => {
+              setLineDetails((prev) => ({ ...prev, [line.key]: next }));
+              if (status === "error") {
+                setStatus("idle");
+                setErrorMessage(null);
+              }
+            }}
+          />
+        ))}
+      </div>
 
       <section className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-brown">

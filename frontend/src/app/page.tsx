@@ -13,21 +13,26 @@ import { OrderProcess } from "@/components/sections/OrderProcess";
 import { Reviews } from "@/components/sections/Reviews";
 import { contactInfo } from "@/lib/contact";
 import { siteImages } from "@/lib/images";
-import { buildPageMetadata, siteBrandName, siteUrl } from "@/lib/seo";
+import { buildPageMetadata, siteUrl } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 import { socialLinks } from "@/lib/site";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "DoughArt Bakers | Custom Cakes & Cake Delivery in Lahore",
-  description:
-    "DoughArt crafts custom cakes for birthdays, weddings, and celebrations in Lahore. Browse designs, place orders online, or request a bespoke cake.",
-  path: "/",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: `${businessName} | Custom Cakes & Cake Delivery in Lahore`,
+    description: `${businessName} crafts custom cakes for birthdays, weddings, and celebrations in Lahore. Browse designs, place orders online, or request a bespoke cake.`,
+    path: "/",
+    brandName: businessName,
+  });
+}
 
-export default function Home() {
+export default async function Home() {
+  const businessName = await getBusinessName();
   const bakeryStructuredData = {
     "@context": "https://schema.org",
     "@type": "Bakery",
-    name: siteBrandName,
+    name: businessName,
     url: siteUrl,
     image: new URL(siteImages.hero, siteUrl).toString(),
     logo: new URL(siteImages.logo, siteUrl).toString(),

@@ -1,5 +1,10 @@
 import { Cake, Order, type IOrderDocument } from "../models";
 import {
+  hasItemType,
+  normalizeItemTypes,
+  type ItemType,
+} from "../constants/itemTypes";
+import {
   notifyCustomerOrderConfirmed,
   notifyCustomerOrderCreated,
   notifyOwnerOrderCreated,
@@ -87,7 +92,25 @@ function toOrderEmailContext(order: {
   paymentMethod?: string;
   status?: string;
   createdAt?: Date;
-  items?: Array<{ cakeName: string; quantity: number; unitPrice: number; notes?: string }>;
+  items?: Array<{
+    cakeName: string;
+    quantity: number;
+    unitPrice: number;
+    notes?: string;
+    itemTypes?: string[];
+    cakeDetails?: {
+      pounds?: string;
+      flavor?: string;
+      messageOnCake?: string;
+      notes?: string;
+    };
+    giftDetails?: {
+      notes?: string;
+    };
+    productDetails?: {
+      notes?: string;
+    };
+  }>;
   eventDate?: Date;
 }): OrderEmailContext {
   return {
@@ -116,6 +139,10 @@ function toOrderEmailContext(order: {
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       notes: item.notes,
+      itemTypes: item.itemTypes,
+      cakeDetails: item.cakeDetails,
+      giftDetails: item.giftDetails,
+      productDetails: item.productDetails,
     })),
     eventDate: order.eventDate
       ? order.eventDate.toISOString().split("T")[0]
@@ -309,21 +336,61 @@ type CatalogLineRef = {
   cakeSlug: string;
   quantity: number;
   notes?: string;
+  cakeDetails?: {
+    pounds?: string;
+    flavor?: string;
+    messageOnCake?: string;
+    notes?: string;
+  };
+  giftDetails?: {
+    notes?: string;
+  };
+  productDetails?: {
+    notes?: string;
+  };
+};
+
+type ResolvedCatalogItem = {
+  cakeId: string;
+  cakeName: string;
+  quantity: number;
+  unitPrice: number;
+  notes?: string;
+  categorySlug?: string;
+  itemTypes: ItemType[];
+  cakeDetails?: {
+    pounds?: string;
+    flavor?: string;
+    messageOnCake?: string;
+    notes?: string;
+  };
+  giftDetails?: {
+    notes?: string;
+  };
+  productDetails?: {
+    notes?: string;
+  };
 };
 
 async function resolveCatalogOrderItems(
   catalogItems: CatalogLineRef[],
   cakeSlug?: string,
+  orderLevel?: {
+    cakeSize?: string;
+    flavour?: string;
+    messageOnCake?: string;
+    specialInstructions?: string;
+  },
 ): Promise<{
-  items: Array<{
-    cakeId: string;
-    cakeName: string;
-    quantity: number;
-    unitPrice: number;
-    notes?: string;
-  }>;
+  items: ResolvedCatalogItem[];
   cakeType: string;
   totalAmount: number;
+  /** Mirrored top-level cake fields for single cake-type items (legacy emails/admin). */
+  orderCakeFields: {
+    cakeSize?: string;
+    flavour?: string;
+    messageOnCake?: string;
+  };
 }> {
   const lineRefs: CatalogLineRef[] =
     catalogItems.length > 0
@@ -333,7 +400,7 @@ async function resolveCatalogOrderItems(
         : [];
 
   if (lineRefs.length === 0) {
-    return { items: [], cakeType: "", totalAmount: 0 };
+    return { items: [], cakeType: "", totalAmount: 0, orderCakeFields: {} };
   }
 
   const uniqueSlugs = [...new Set(lineRefs.map((line) => line.cakeSlug))];
@@ -342,6 +409,7 @@ async function resolveCatalogOrderItems(
     isActive: true,
   })
     .populate("categoryId", "slug")
+    .select("name slug price categoryId itemTypes")
     .lean();
 
   const cakeBySlug = new Map(cakes.map((cake) => [cake.slug, cake]));
@@ -352,9 +420,72 @@ async function resolveCatalogOrderItems(
     }
   }
 
-  const items = lineRefs.map((line) => {
+  const items: ResolvedCatalogItem[] = lineRefs.map((line, index) => {
     const cake = cakeBySlug.get(line.cakeSlug)!;
     const category = cake.categoryId as { slug?: string } | null | undefined;
+    const itemTypes = normalizeItemTypes(cake.itemTypes);
+
+    const cakeDetails = hasItemType(itemTypes, "cake")
+      ? {
+          pounds:
+            line.cakeDetails?.pounds?.trim() ||
+            (lineRefs.length === 1 ? orderLevel?.cakeSize?.trim() : undefined) ||
+            undefined,
+          flavor:
+            line.cakeDetails?.flavor?.trim() ||
+            (lineRefs.length === 1 ? orderLevel?.flavour?.trim() : undefined) ||
+            undefined,
+          messageOnCake:
+            line.cakeDetails?.messageOnCake?.trim() ||
+            (lineRefs.length === 1
+              ? orderLevel?.messageOnCake?.trim()
+              : undefined) ||
+            undefined,
+          notes: line.cakeDetails?.notes?.trim() || undefined,
+        }
+      : undefined;
+
+    if (hasItemType(itemTypes, "cake")) {
+      if (!cakeDetails?.pounds) {
+        throw ApiError.badRequest(
+          `Please enter cake pounds for "${cake.name}".`,
+        );
+      }
+      if (!cakeDetails?.flavor) {
+        throw ApiError.badRequest(
+          `Please enter cake flavor for "${cake.name}".`,
+        );
+      }
+    }
+
+    const giftDetails = hasItemType(itemTypes, "gift")
+      ? {
+          notes:
+            line.giftDetails?.notes?.trim() ||
+            (lineRefs.length === 1 &&
+            !hasItemType(itemTypes, "cake") &&
+            !hasItemType(itemTypes, "other")
+              ? orderLevel?.specialInstructions?.trim()
+              : undefined) ||
+            undefined,
+        }
+      : undefined;
+
+    const productDetails = hasItemType(itemTypes, "other")
+      ? {
+          notes:
+            line.productDetails?.notes?.trim() ||
+            (lineRefs.length === 1 &&
+            !hasItemType(itemTypes, "cake") &&
+            !hasItemType(itemTypes, "gift")
+              ? orderLevel?.specialInstructions?.trim()
+              : undefined) ||
+            undefined,
+        }
+      : undefined;
+
+    void index;
+
     return {
       cakeId: String(cake._id),
       cakeName: cake.name,
@@ -362,6 +493,16 @@ async function resolveCatalogOrderItems(
       unitPrice: cake.price,
       notes: line.notes,
       ...(category?.slug ? { categorySlug: category.slug } : {}),
+      itemTypes,
+      ...(cakeDetails &&
+      (cakeDetails.pounds ||
+        cakeDetails.flavor ||
+        cakeDetails.messageOnCake ||
+        cakeDetails.notes)
+        ? { cakeDetails }
+        : {}),
+      ...(giftDetails?.notes ? { giftDetails } : {}),
+      ...(productDetails?.notes ? { productDetails } : {}),
     };
   });
 
@@ -374,7 +515,23 @@ async function resolveCatalogOrderItems(
       ? items[0].cakeName
       : `Cart order (${items.length} items)`;
 
-  return { items, cakeType, totalAmount };
+  const firstCakeItem = items.find((item) => hasItemType(item.itemTypes, "cake"));
+  const orderCakeFields =
+    items.length === 1 && firstCakeItem?.cakeDetails
+      ? {
+          cakeSize: firstCakeItem.cakeDetails.pounds,
+          flavour: firstCakeItem.cakeDetails.flavor,
+          messageOnCake: firstCakeItem.cakeDetails.messageOnCake,
+        }
+      : items.length === 1 && firstCakeItem
+        ? {
+            cakeSize: firstCakeItem.cakeDetails?.pounds,
+            flavour: firstCakeItem.cakeDetails?.flavor,
+            messageOnCake: firstCakeItem.cakeDetails?.messageOnCake,
+          }
+        : {};
+
+  return { items, cakeType, totalAmount, orderCakeFields };
 }
 
 export async function createOrder(
@@ -390,12 +547,27 @@ export async function createOrder(
   const resolvedCatalog = await resolveCatalogOrderItems(
     catalogItems ?? [],
     cakeSlug,
+    {
+      cakeSize: orderInput.cakeSize,
+      flavour: orderInput.flavour,
+      messageOnCake: orderInput.messageOnCake,
+      specialInstructions: orderInput.specialInstructions,
+    },
   );
 
   if (resolvedCatalog.items.length > 0) {
     orderInput.cakeType = resolvedCatalog.cakeType;
     orderInput.totalAmount = resolvedCatalog.totalAmount;
     orderInput.items = resolvedCatalog.items;
+    if (resolvedCatalog.orderCakeFields.cakeSize) {
+      orderInput.cakeSize = resolvedCatalog.orderCakeFields.cakeSize;
+    }
+    if (resolvedCatalog.orderCakeFields.flavour) {
+      orderInput.flavour = resolvedCatalog.orderCakeFields.flavour;
+    }
+    if (resolvedCatalog.orderCakeFields.messageOnCake) {
+      orderInput.messageOnCake = resolvedCatalog.orderCakeFields.messageOnCake;
+    }
   }
 
   const items =

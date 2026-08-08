@@ -10,6 +10,7 @@ import { CategoryTabs } from "@/components/catalog/CategoryTabs";
 import { ShopEmptyState } from "@/components/catalog/ShopEmptyState";
 import { fetchPublicCakes, fetchPublicCategories } from "@/lib/catalog";
 import { buildPageMetadata, shopKeywords } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -36,7 +37,10 @@ function getCategoryTitle(
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const categories = await fetchPublicCategories();
+  const [categories, businessName] = await Promise.all([
+    fetchPublicCategories(),
+    getBusinessName(),
+  ]);
   const title = getCategoryTitle(slug, categories);
   const activeCategory =
     slug !== ALL_SLUG
@@ -44,13 +48,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       : undefined;
   const description =
     activeCategory?.description ??
-    `Shop ${title.toLowerCase()} at DoughArt — browse cakes, place your order online, or request customizations on WhatsApp.`;
+    `Shop ${title.toLowerCase()} at ${businessName} — browse cakes, place your order online, or request customizations on WhatsApp.`;
 
   return buildPageMetadata({
     title,
     description,
     path: `/cakes/${slug}`,
     keywords: [slug, title.toLowerCase(), ...shopKeywords],
+    brandName: businessName,
   });
 }
 

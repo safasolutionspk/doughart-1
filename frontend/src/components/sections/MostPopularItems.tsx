@@ -25,7 +25,7 @@ export async function MostPopularItems() {
           <SectionAnimatedHeader
             eyebrow="Customer favourites"
             title="Most Popular Items"
-            description="Ranked by successful orders — our most-loved cakes, ready for your celebration."
+            description="Ranked by ordered quantity — our most-loved cakes, ready for your celebration."
             titleAs="h2"
             titleId="most-popular-heading"
             align="start"

@@ -11,6 +11,7 @@ import {
 import { externalLinkProps, isExternalHref } from "@/lib/links";
 import { siteImages } from "@/lib/images";
 import { siteConfig, socialLinks } from "@/lib/site";
+import { getBusinessName } from "@/lib/settings";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/cn";
 
@@ -34,8 +35,9 @@ const footerSocialLinks = [
 const footerLinkClassName =
   "text-sm text-brand-muted transition-colors hover:text-brand-primary focus-visible:outline-none focus-visible:text-brand-primary";
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear();
+  const businessName = await getBusinessName();
 
   return (
     <footer
@@ -58,11 +60,11 @@ export function Footer() {
               <Link
                 href="/"
                 className="group inline-flex transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
-                aria-label={`${siteConfig.name} home`}
+                aria-label={`${businessName} home`}
               >
                 <Image
                   src={siteImages.logo}
-                  alt={siteConfig.name}
+                  alt={businessName}
                   width={210}
                   height={112}
                   unoptimized
@@ -199,7 +201,7 @@ export function Footer() {
       <div className="border-t border-brand-border/60 bg-[#FFF1F4]/70">
         <div className="section-container flex flex-col gap-1 py-3 text-xs text-brand-muted sm:flex-row sm:items-center sm:justify-between sm:py-3.5">
           <p>
-            &copy; {year} {siteConfig.name}. All rights reserved.
+            &copy; {year} {businessName}. All rights reserved.
           </p>
           <p className="italic text-brand-muted/90">{siteConfig.slogan}</p>
         </div>

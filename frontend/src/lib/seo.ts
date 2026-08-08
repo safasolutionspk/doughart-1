@@ -1,24 +1,17 @@
 import type { Metadata } from "next";
 import { siteImages } from "@/lib/images";
-import { siteConfig } from "@/lib/site";
-
-export const siteBrandName = "DoughArt Bakers";
+import { DEFAULT_BUSINESS_NAME } from "@/lib/settings";
 
 export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-const defaultTitle = "DoughArt Bakers | Custom Cakes & Cake Delivery in Lahore";
-const defaultDescription =
-  "Order handcrafted custom cakes for weddings, birthdays, and celebrations. DoughArt Bakers crafts premium cakes with fresh ingredients and designs made just for you.";
 const defaultOgImage = siteImages.hero;
 
-export const siteKeywords = [
+const baseKeywords = [
   "custom cakes",
   "bakery",
   "wedding cakes",
   "birthday cakes",
-  "DoughArt",
-  "DoughArt Bakers",
   "cake delivery",
   "celebration cakes",
   "handcrafted cakes",
@@ -32,41 +25,66 @@ export const shopKeywords = [
   "cake delivery",
 ] as const;
 
-export const siteMetadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: defaultTitle,
-    template: `%s | ${siteBrandName}`,
-  },
-  description: defaultDescription,
-  keywords: [...siteKeywords],
-  authors: [{ name: siteConfig.name }],
-  creator: siteConfig.name,
-  icons: {
-    icon: "/images/real/favicon.svg",
-    shortcut: "/images/real/favicon.svg",
-    apple: "/images/real/favicon-apple.png",
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: siteUrl,
-    siteName: siteBrandName,
-    title: defaultTitle,
+function buildDefaultTitle(brandName: string): string {
+  return `${brandName} | Custom Cakes & Cake Delivery in Lahore`;
+}
+
+function buildDefaultDescription(brandName: string): string {
+  return `Order handcrafted custom cakes for weddings, birthdays, and celebrations. ${brandName} crafts premium cakes with fresh ingredients and designs made just for you.`;
+}
+
+function buildKeywords(brandName: string): string[] {
+  return [...baseKeywords, brandName];
+}
+
+/** Build root site metadata from the configured business name. */
+export function buildSiteMetadata(brandName: string): Metadata {
+  const name = brandName.trim() || DEFAULT_BUSINESS_NAME;
+  const defaultTitle = buildDefaultTitle(name);
+  const defaultDescription = buildDefaultDescription(name);
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: defaultTitle,
+      template: `%s | ${name}`,
+    },
     description: defaultDescription,
-    images: [{ url: defaultOgImage }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: defaultTitle,
-    description: defaultDescription,
-    images: [defaultOgImage],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+    keywords: buildKeywords(name),
+    authors: [{ name }],
+    creator: name,
+    icons: {
+      icon: "/images/real/favicon.svg",
+      shortcut: "/images/real/favicon.svg",
+      apple: "/images/real/favicon-apple.png",
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: siteUrl,
+      siteName: name,
+      title: defaultTitle,
+      description: defaultDescription,
+      images: [{ url: defaultOgImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: defaultTitle,
+      description: defaultDescription,
+      images: [defaultOgImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
+/** Static fallback metadata (build-time / settings failure). Prefer generateMetadata. */
+export const siteMetadata: Metadata = buildSiteMetadata(DEFAULT_BUSINESS_NAME);
+
+/** @deprecated Prefer buildSiteMetadata / getBusinessName — kept for gradual migration. */
+export const siteBrandName = DEFAULT_BUSINESS_NAME;
 
 type PageMetadataOptions = {
   title: string;
@@ -74,6 +92,8 @@ type PageMetadataOptions = {
   path: string;
   keywords?: string[];
   noIndex?: boolean;
+  /** Configured business name; defaults to technical fallback. */
+  brandName?: string;
 };
 
 /** Build consistent SEO metadata for shop and transactional pages */
@@ -83,33 +103,39 @@ export function buildPageMetadata({
   path,
   keywords,
   noIndex = false,
+  brandName = DEFAULT_BUSINESS_NAME,
 }: PageMetadataOptions): Metadata {
+  const name = brandName.trim() || DEFAULT_BUSINESS_NAME;
+  const defaultTitle = buildDefaultTitle(name);
+  const root = buildSiteMetadata(name);
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
   const pageUrl = new URL(canonicalPath, siteUrl).toString();
   const socialTitle =
-    title === siteBrandName || title === defaultTitle
+    title === name || title === defaultTitle
       ? defaultTitle
-      : `${title} | ${siteBrandName}`;
+      : `${title} | ${name}`;
 
   return {
     title: title === defaultTitle ? { absolute: defaultTitle } : title,
     description,
-    keywords: keywords ? [...siteKeywords, ...keywords] : [...siteKeywords],
+    keywords: keywords
+      ? [...buildKeywords(name), ...keywords]
+      : buildKeywords(name),
     alternates: {
       canonical: canonicalPath,
     },
     openGraph: {
-      ...siteMetadata.openGraph,
+      ...root.openGraph,
       title: socialTitle,
       description,
       url: pageUrl,
-      images: siteMetadata.openGraph?.images,
+      images: root.openGraph?.images,
     },
     twitter: {
-      ...siteMetadata.twitter,
+      ...root.twitter,
       title: socialTitle,
       description,
-      images: siteMetadata.twitter?.images,
+      images: root.twitter?.images,
     },
     robots: noIndex
       ? { index: false, follow: false }

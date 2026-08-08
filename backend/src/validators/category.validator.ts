@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { normalizeStoredImagePath } from "../utils/imagePath";
+import { optionalImageDisplaySchema } from "./imageDisplay.validator";
 
 const slugSchema = z
   .string()
@@ -16,6 +17,7 @@ export const createCategorySchema = z.object({
     .max(500)
     .optional()
     .transform((val) => normalizeStoredImagePath(val)),
+  imageDisplay: optionalImageDisplaySchema,
   isActive: z.coerce.boolean().optional().default(true),
   sortOrder: z.coerce.number().int().min(0).optional().default(0),
 });
@@ -29,6 +31,7 @@ export const updateCategorySchema = z.object({
     .max(500)
     .optional()
     .transform((val) => normalizeStoredImagePath(val)),
+  imageDisplay: optionalImageDisplaySchema,
   isActive: z.coerce.boolean().optional(),
   sortOrder: z.coerce.number().int().min(0).optional(),
 });

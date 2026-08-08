@@ -2,18 +2,24 @@ import type { Metadata } from "next";
 import { SectionAnimatedHeader } from "@/components/animation/SectionAnimatedHeader";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { ReviewsGrid } from "@/components/sections/ReviewsGrid";
-import { getHomepageDisplayReviews, reviewsCopy } from "@/lib/reviews";
+import { getHomepageDisplayReviews, getReviewsCopy } from "@/lib/reviews";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Reviews",
-  description:
-    "Read what DoughArt customers say about our custom cakes — real stories from weddings, birthdays, and celebrations.",
-  path: "/reviews",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Reviews",
+    description: `Read what ${businessName} customers say about our custom cakes — real stories from weddings, birthdays, and celebrations.`,
+    path: "/reviews",
+    brandName: businessName,
+  });
+}
 
-export default function ReviewsPage() {
-  const reviews = getHomepageDisplayReviews();
+export default async function ReviewsPage() {
+  const businessName = await getBusinessName();
+  const reviewsCopy = getReviewsCopy(businessName);
+  const reviews = getHomepageDisplayReviews(businessName);
 
   return (
     <PublicPageLayout mainId="reviews-page" ariaLabel="Customer reviews">

@@ -4,6 +4,7 @@ import type {
   CakeListResponse,
   Category,
   CategoryListResponse,
+  ImageDisplay,
 } from "./types";
 
 function buildQuery(params: Record<string, string | number | boolean | undefined>) {
@@ -46,6 +47,7 @@ export async function createCategory(payload: {
   slug?: string;
   description?: string;
   image?: string;
+  imageDisplay?: ImageDisplay | null;
   isActive: boolean;
   sortOrder: number;
 }): Promise<Category> {
@@ -64,6 +66,7 @@ export async function updateCategory(
     slug: string;
     description: string;
     image: string;
+    imageDisplay: ImageDisplay | null;
     isActive: boolean;
     sortOrder: number;
   }>,
@@ -113,6 +116,8 @@ export async function createCake(payload: {
   description?: string;
   price: number;
   image?: string;
+  imageDisplay?: ImageDisplay | null;
+  itemTypes: Array<"cake" | "gift" | "other">;
   isActive: boolean;
   isFeatured: boolean;
   isCustomizable: boolean;
@@ -135,6 +140,8 @@ export async function updateCake(
     description: string;
     price: number;
     image: string;
+    imageDisplay: ImageDisplay | null;
+    itemTypes: Array<"cake" | "gift" | "other">;
     isActive: boolean;
     isFeatured: boolean;
     isCustomizable: boolean;
@@ -160,6 +167,8 @@ type ComboCakePayload = {
   description?: string;
   price: number;
   image?: string;
+  imageDisplay?: ImageDisplay | null;
+  itemTypes: Array<"cake" | "gift" | "other">;
   isActive: boolean;
   isFeatured: boolean;
   isCustomizable: boolean;

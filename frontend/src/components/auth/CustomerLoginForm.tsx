@@ -87,8 +87,8 @@ export function CustomerLoginForm() {
           className="rounded-xl border border-brand-primary/30 bg-brand-pink-lighter/60 px-4 py-3 text-sm text-brand-brown"
           role="status"
         >
-          Please login or signup to place your order. Your cart and form details
-          are saved.
+          Please sign in to continue. Login is optional for placing orders —
+          guests can checkout without an account.
         </p>
       ) : null}
       <div>

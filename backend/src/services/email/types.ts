@@ -36,6 +36,19 @@ export type OrderEmailContext = {
     quantity: number;
     unitPrice: number;
     notes?: string;
+    itemTypes?: string[];
+    cakeDetails?: {
+      pounds?: string;
+      flavor?: string;
+      messageOnCake?: string;
+      notes?: string;
+    };
+    giftDetails?: {
+      notes?: string;
+    };
+    productDetails?: {
+      notes?: string;
+    };
   }>;
   eventDate?: string;
   awaitingQuote: boolean;

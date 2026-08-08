@@ -1,7 +1,8 @@
 /**
- * Authoritative DoughArt public contact, WhatsApp, and social configuration.
- * All public frontend surfaces must read business contact details from here.
- * Do not store secrets in this file.
+ * Public contact, WhatsApp, and social configuration.
+ * `businessName` here is only the technical fallback when Admin settings
+ * cannot be loaded. Live customer UI should prefer getBusinessName() /
+ * useBusinessName() from settings.
  */
 export const contactInfo = {
   businessName: "DoughArt",

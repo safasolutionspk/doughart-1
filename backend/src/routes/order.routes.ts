@@ -12,7 +12,7 @@ import {
 } from "../controllers/order.controller";
 import { auditLog } from "../middleware/auditLog";
 import { authenticateAdmin } from "../middleware/auth";
-import { requireCustomerForOrder } from "../middleware/requireCustomerForOrder";
+import { optionalCustomer } from "../middleware/customerAuth";
 import { adminWriteLimiter, orderCreateLimiter } from "../middleware/rateLimiter";
 import { validate } from "../middleware/validate";
 import {
@@ -32,7 +32,8 @@ const router = Router();
 router.post(
   "/",
   orderCreateLimiter,
-  requireCustomerForOrder,
+  // Guest checkout is supported; attach customerId when a valid JWT is present.
+  optionalCustomer,
   validate(publicCreateOrderSchema),
   createOrder,
 );

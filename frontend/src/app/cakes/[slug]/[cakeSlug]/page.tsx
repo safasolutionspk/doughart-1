@@ -11,6 +11,7 @@ import {
 } from "@/lib/catalog";
 import { getCakeImageSrc } from "@/lib/media";
 import { buildPageMetadata, shopKeywords, siteUrl } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 import { siteConfig } from "@/lib/site";
 import { buildWhatsAppOrderUrl, getWhatsAppNumber } from "@/lib/whatsapp";
 
@@ -20,7 +21,10 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, cakeSlug } = await params;
-  const cake = await fetchPublicCakeBySlug(cakeSlug);
+  const [cake, businessName] = await Promise.all([
+    fetchPublicCakeBySlug(cakeSlug),
+    getBusinessName(),
+  ]);
 
   if (!cake) {
     return buildPageMetadata({
@@ -28,6 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: "This cake could not be found.",
       path: `/cakes/${slug}/${cakeSlug}`,
       noIndex: true,
+      brandName: businessName,
     });
   }
 
@@ -35,13 +40,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = cake.name;
   const description =
     cake.description ??
-    `Order ${cake.name} from DoughArt — ${formatPrice(cake.price)}. Place your order online or on WhatsApp.`;
+    `Order ${cake.name} from ${businessName} — ${formatPrice(cake.price)}. Place your order online or on WhatsApp.`;
 
   return buildPageMetadata({
     title,
     description,
     path: `/cakes/${category.slug}/${cake.slug}`,
     keywords: [cake.name, category.name, ...shopKeywords],
+    brandName: businessName,
   });
 }
 
@@ -60,7 +66,10 @@ export default async function CakeDetailPage({ params }: PageProps) {
 
   const { apiImage, fallback } = getCakeImageSrc(cake.image, category.slug);
   const displayImage = apiImage ?? fallback;
-  const waNumber = await getWhatsAppNumber();
+  const [waNumber, businessName] = await Promise.all([
+    getWhatsAppNumber(),
+    getBusinessName(),
+  ]);
   const whatsappHref = buildWhatsAppOrderUrl(cake.name, waNumber);
   const imageUrl = displayImage.startsWith("http")
     ? displayImage
@@ -82,7 +91,7 @@ export default async function CakeDetailPage({ params }: PageProps) {
         sku: cake._id,
         brand: {
           "@type": "Brand",
-          name: siteConfig.name,
+          name: businessName,
         },
         offers: {
           "@type": "Offer",
@@ -146,6 +155,7 @@ export default async function CakeDetailPage({ params }: PageProps) {
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority
                   objectFit="contain"
+                  imageDisplay={cake.imageDisplay}
                 />
               </div>
 
@@ -180,6 +190,7 @@ export default async function CakeDetailPage({ params }: PageProps) {
                     name: cake.name,
                     image: displayImage,
                     unitPrice: cake.price,
+                    itemTypes: cake.itemTypes,
                   }}
                   whatsappHref={whatsappHref}
                 />

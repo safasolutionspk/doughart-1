@@ -3,9 +3,10 @@ import Link from "next/link";
 import { Reveal } from "@/components/animation/Reveal";
 import { Button } from "@/components/ui/Button";
 import { siteImages } from "@/lib/images";
-import { siteConfig } from "@/lib/site";
+import { getBusinessName } from "@/lib/settings";
 
-export function AboutUs() {
+export async function AboutUs() {
+  const businessName = await getBusinessName();
   return (
     <section
       id="about"
@@ -26,7 +27,7 @@ export function AboutUs() {
                 Sweet moments, baked beautifully
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-brand-muted sm:text-base">
-                {siteConfig.name} is a custom cake bakery dedicated to turning
+                {businessName} is a custom cake bakery dedicated to turning
                 your celebrations into unforgettable memories. We combine elegant
                 design with delicious flavour — whether you need a wedding
                 showstopper, a birthday surprise, or a bespoke creation that is
@@ -62,7 +63,7 @@ export function AboutUs() {
                 <div className="relative h-full w-full">
                   <Image
                     src={siteImages.aboutUs}
-                    alt="DoughArt About Us"
+                    alt={`${businessName} About Us`}
                     fill
                     className="object-contain object-center"
                     sizes="(max-width: 1024px) 100vw, 520px"

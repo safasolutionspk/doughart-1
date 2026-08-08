@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useBusinessName } from "@/components/providers/BusinessNameProvider";
 import { SocialIcon } from "@/components/icons/SocialIcon";
 import { subscribeNewsletter } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -9,42 +10,49 @@ import { contactInfo } from "@/lib/contact";
 import { externalLinkProps } from "@/lib/links";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-const newsletterCopy = {
-  heading: "Subscribe to Our Newsletter",
-  description: "Get updates on offers, new cakes & more!",
-  placeholder: "Enter your email address",
-  buttonLabel: "Subscribe",
-  consentLabel: "I agree to receive marketing emails from DoughArt",
-  followLabel: "Follow Us",
-} as const;
-
-const newsletterSocialLinks = [
-  {
-    label: "Instagram",
-    href: contactInfo.social.instagram,
-    icon: "instagram" as const,
-  },
-  {
-    label: "Facebook",
-    href: contactInfo.social.facebook,
-    icon: "facebook" as const,
-  },
-  {
-    label: "WhatsApp",
-    href: buildWhatsAppUrl(
-      "Hello! I would like to know more about DoughArt cakes.",
-    ),
-    icon: "whatsapp" as const,
-  },
-] as const;
-
 export function Newsletter() {
+  const businessName = useBusinessName();
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle",
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const newsletterCopy = useMemo(
+    () => ({
+      heading: "Subscribe to Our Newsletter",
+      description: "Get updates on offers, new cakes & more!",
+      placeholder: "Enter your email address",
+      buttonLabel: "Subscribe",
+      consentLabel: `I agree to receive marketing emails from ${businessName}`,
+      followLabel: "Follow Us",
+    }),
+    [businessName],
+  );
+
+  const newsletterSocialLinks = useMemo(
+    () => [
+      {
+        label: "Instagram",
+        href: contactInfo.social.instagram,
+        icon: "instagram" as const,
+      },
+      {
+        label: "Facebook",
+        href: contactInfo.social.facebook,
+        icon: "facebook" as const,
+      },
+      {
+        label: "WhatsApp",
+        href: buildWhatsAppUrl(
+          `Hello! I would like to know more about ${businessName} cakes.`,
+        ),
+        icon: "whatsapp" as const,
+      },
+    ],
+    [businessName],
+  );
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

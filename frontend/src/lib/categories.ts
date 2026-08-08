@@ -13,6 +13,11 @@ export type HomepageCategory = {
   apiImage?: string;
   /** Per-slug fallback when API image is missing or fails to load */
   imageFallback: string;
+  imageDisplay?: {
+    zoom: number;
+    x: number;
+    y: number;
+  };
   href: string;
   sortOrder: number;
 };
@@ -68,6 +73,7 @@ function mapApiCategory(category: PublicCategory): HomepageCategory {
     description: category.description?.trim() || undefined,
     apiImage,
     imageFallback: fallback,
+    imageDisplay: category.imageDisplay,
     href: `/cakes/${category.slug}`,
     sortOrder: category.sortOrder ?? 0,
   };

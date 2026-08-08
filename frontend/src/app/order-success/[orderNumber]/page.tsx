@@ -8,6 +8,7 @@ import { fetchPublicOrderByNumber } from "@/lib/api";
 import { formatPrice } from "@/lib/catalog";
 import { formatPaymentMethod } from "@/lib/payment";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 import { buildWhatsAppOrderConfirmationUrl, getWhatsAppNumber } from "@/lib/whatsapp";
 
 type PageProps = {
@@ -17,12 +18,13 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { orderNumber } = await params;
+  const businessName = await getBusinessName();
   return buildPageMetadata({
     title: `Order ${orderNumber} confirmed`,
-    description:
-      "Your DoughArt cake order has been received. We'll confirm details shortly.",
+    description: `Your ${businessName} cake order has been received. We'll confirm details shortly.`,
     path: `/order-success/${orderNumber}`,
     noIndex: true,
+    brandName: businessName,
   });
 }
 

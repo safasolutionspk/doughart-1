@@ -1,32 +1,32 @@
-export const CHECKOUT_DRAFT_STORAGE_KEY = "sweetbite_checkout_draft_v1";
+import type { CheckoutLineDetails } from "@/lib/itemTypes";
+
+export const CHECKOUT_DRAFT_STORAGE_KEY = "sweetbite_checkout_draft_v2";
 
 export type CheckoutDraftForm = {
   name: string;
   phone: string;
   email: string;
-  flavor: string;
-  size: string;
-  message: string;
   deliveryDate: string;
   address: string;
-  notes: string;
+  /** @deprecated kept for draft migration from v1 */
+  flavor?: string;
+  size?: string;
+  message?: string;
+  notes?: string;
 };
 
 /** Payment method is not stored — public checkout is Cash on Delivery only. */
 export type CheckoutDraft = {
   form: Partial<CheckoutDraftForm>;
+  lineDetails?: Record<string, CheckoutLineDetails>;
 };
 
 export const emptyCheckoutForm: CheckoutDraftForm = {
   name: "",
   phone: "",
   email: "",
-  flavor: "",
-  size: "",
-  message: "",
   deliveryDate: "",
   address: "",
-  notes: "",
 };
 
 export function loadCheckoutDraft(): CheckoutDraft | null {
@@ -35,15 +35,32 @@ export function loadCheckoutDraft(): CheckoutDraft | null {
   }
 
   try {
-    const raw = window.sessionStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY);
-    if (!raw) {
+    const rawV2 = window.sessionStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2) as CheckoutDraft;
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
+    }
+
+    // Migrate legacy v1 draft contact fields if present.
+    const rawV1 = window.sessionStorage.getItem("sweetbite_checkout_draft_v1");
+    if (!rawV1) {
       return null;
     }
-    const parsed = JSON.parse(raw) as CheckoutDraft;
-    if (!parsed || typeof parsed !== "object") {
+    const legacy = JSON.parse(rawV1) as CheckoutDraft;
+    if (!legacy || typeof legacy !== "object") {
       return null;
     }
-    return parsed;
+    return {
+      form: {
+        name: legacy.form?.name,
+        phone: legacy.form?.phone,
+        email: legacy.form?.email,
+        deliveryDate: legacy.form?.deliveryDate,
+        address: legacy.form?.address,
+      },
+    };
   } catch {
     return null;
   }
@@ -71,6 +88,7 @@ export function clearCheckoutDraft(): void {
 
   try {
     window.sessionStorage.removeItem(CHECKOUT_DRAFT_STORAGE_KEY);
+    window.sessionStorage.removeItem("sweetbite_checkout_draft_v1");
   } catch {
     // ignore
   }
@@ -86,7 +104,7 @@ export function mergeFormWithDraft(
   }
 
   const next = { ...current };
-  (Object.keys(emptyCheckoutForm) as (keyof CheckoutDraftForm)[]).forEach(
+  (["name", "phone", "email", "deliveryDate", "address"] as const).forEach(
     (key) => {
       const existing = next[key].trim();
       const fromDraft = draft[key]?.trim();

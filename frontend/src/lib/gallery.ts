@@ -1,6 +1,7 @@
 import { contactInfo } from "@/lib/contact";
 import { siteImages } from "@/lib/images";
 import { resolveImageSrc } from "@/lib/media";
+import { getBusinessName } from "@/lib/settings";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
@@ -59,7 +60,10 @@ export const staticGalleryFallback: GalleryDisplayImage[] = [
 /** @deprecated Prefer fetchPublicGalleryImages — kept for any legacy imports. */
 export const galleryImages = staticGalleryFallback;
 
-function toDisplayImage(item: PublicGalleryApiItem): GalleryDisplayImage | null {
+function toDisplayImage(
+  item: PublicGalleryApiItem,
+  businessName: string,
+): GalleryDisplayImage | null {
   const resolved =
     resolveImageSrc(item.url) ??
     (item.url.startsWith("http://") || item.url.startsWith("https://")
@@ -74,7 +78,8 @@ function toDisplayImage(item: PublicGalleryApiItem): GalleryDisplayImage | null 
 
   return {
     id: item.id || item.filename,
-    alt: item.altText?.trim() || "DoughArt custom cake gallery photo",
+    alt:
+      item.altText?.trim() || `${businessName} custom cake gallery photo`,
     src: resolved,
     createdAt: item.createdAt,
   };
@@ -84,11 +89,17 @@ function toDisplayImage(item: PublicGalleryApiItem): GalleryDisplayImage | null 
  * Fetches dedicated GalleryImage records for the public `/gallery` page.
  * Newest-first. Empty when Admin has not uploaded Gallery images yet.
  * Never lists product, category, logo, or shared storage files.
+ * Uses no-store so Admin upload/delete is visible on the next page load
+ * without waiting for ISR revalidation or a redeploy.
  */
-export async function fetchPublicGalleryImages(): Promise<GalleryDisplayImage[]> {
+export async function fetchPublicGalleryImages(
+  businessName?: string,
+): Promise<GalleryDisplayImage[]> {
+  const name = businessName?.trim() || (await getBusinessName());
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/gallery/public`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
 
     let body: ApiSuccess<PublicGalleryApiItem[]> | ApiFailure;
@@ -108,7 +119,7 @@ export async function fetchPublicGalleryImages(): Promise<GalleryDisplayImage[]>
     const images: GalleryDisplayImage[] = [];
 
     for (const item of body.data) {
-      const display = toDisplayImage(item);
+      const display = toDisplayImage(item, name);
       if (!display || seen.has(display.id)) {
         continue;
       }

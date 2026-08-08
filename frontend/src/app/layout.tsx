@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Dancing_Script, Playfair_Display, Source_Sans_3 } from "next/font/google";
+import { OpeningLoader } from "@/components/OpeningLoader";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ScrollToTopOnNavigate } from "@/components/ScrollToTopOnNavigate";
-import { siteMetadata } from "@/lib/seo";
+import { buildSiteMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -25,13 +27,18 @@ const sourceSans = Source_Sans_3({
   display: "swap",
 });
 
-export const metadata: Metadata = siteMetadata;
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildSiteMetadata(businessName);
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const businessName = await getBusinessName();
+
   return (
     <html
       lang="en"
@@ -42,11 +49,12 @@ export default function RootLayout({
         <Link href="/" className="skip-link">
           Skip to main content
         </Link>
-        <AppProviders>
+        <AppProviders businessName={businessName}>
+          <OpeningLoader />
           <ScrollToTopOnNavigate />
           {children}
+          <ScrollToTop />
         </AppProviders>
-        <ScrollToTop />
       </body>
     </html>
   );

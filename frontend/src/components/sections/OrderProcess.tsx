@@ -3,9 +3,13 @@ import { SafeImage } from "@/components/ui/SafeImage";
 import { capStaggerDelay } from "@/lib/animation/constants";
 import { cn } from "@/lib/cn";
 import { siteImages } from "@/lib/images";
-import { whyChooseBenefits, whyChooseCopy } from "@/lib/orderProcess";
+import { getOrderProcessCopy, whyChooseBenefits } from "@/lib/orderProcess";
+import { getBusinessName } from "@/lib/settings";
 
-export function OrderProcess() {
+export async function OrderProcess() {
+  const businessName = await getBusinessName();
+  const whyChooseCopy = getOrderProcessCopy(businessName);
+
   return (
     <section
       id="order"

@@ -132,7 +132,7 @@ export async function uploadGalleryImage(
       storageProvider: storage.provider as GalleryStorageProvider,
       size: uploaded.size,
       mimeType: file.mimetype,
-      altText: "DoughArt custom cake gallery photo",
+      altText: "Custom cake gallery photo",
     });
 
     return toAdminDto(created.toObject());

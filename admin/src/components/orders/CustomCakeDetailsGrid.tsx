@@ -31,7 +31,7 @@ export function CustomCakeDetailsGrid({ order }: CustomCakeDetailsGridProps) {
       <DetailsSection title="Customer">
         <DetailItem label="Name" value={dashOr(order.customerName)} />
         <DetailItem label="Phone" value={dashOr(order.customerPhone)} />
-        <DetailItem label="Email" value={dashOr(order.customerEmail)} />
+        <DetailItem label="Email" value={order.customerEmail?.trim() ? order.customerEmail.trim() : "Not provided"} />
         <DetailItem label="Address" value={dashOr(order.deliveryAddress)} />
       </DetailsSection>
 

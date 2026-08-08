@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type MouseEvent } from "react";
+import { useBusinessName } from "@/components/providers/BusinessNameProvider";
 import { SocialIcon } from "@/components/icons/SocialIcon";
 import { cn } from "@/lib/cn";
 import { externalLinkProps } from "@/lib/links";
@@ -8,9 +9,6 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 const SHOW_AFTER_PX = 400;
 const FALLBACK_DURATION_MS = 650;
-
-const WHATSAPP_PREFILL =
-  "Hello DoughArt! I would like to ask about your cakes.";
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -64,8 +62,11 @@ const fabBaseClassName = cn(
  * WhatsApp stays visible at all times; scroll-to-top appears below it when scrolled.
  */
 export function ScrollToTop() {
+  const businessName = useBusinessName();
   const [visible, setVisible] = useState(false);
-  const whatsappHref = buildWhatsAppUrl(WHATSAPP_PREFILL);
+  const whatsappHref = buildWhatsAppUrl(
+    `Hello ${businessName}! I would like to ask about your cakes.`,
+  );
 
   useEffect(() => {
     const onScroll = () => {
@@ -94,8 +95,8 @@ export function ScrollToTop() {
           "bg-[#25D366] shadow-[#25D366]/40 hover:bg-[#1ebe57] hover:shadow-xl hover:shadow-[#25D366]/45",
           "focus-visible:ring-[#25D366]",
         )}
-        aria-label="Chat with DoughArt on WhatsApp"
-        title="Chat with DoughArt on WhatsApp"
+        aria-label={`Chat with ${businessName} on WhatsApp`}
+        title={`Chat with ${businessName} on WhatsApp`}
         {...externalLinkProps}
       >
         <SocialIcon name="whatsapp" className="h-6 w-6" />

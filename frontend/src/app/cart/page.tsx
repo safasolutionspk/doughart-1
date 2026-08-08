@@ -2,13 +2,18 @@ import type { Metadata } from "next";
 import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { CartPageContent } from "@/components/cart/CartPageContent";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Your Cart",
-  description: "Review cakes in your DoughArt cart before checkout.",
-  path: "/cart",
-  noIndex: true,
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Your Cart",
+    description: `Review cakes in your ${businessName} cart before checkout.`,
+    path: "/cart",
+    noIndex: true,
+    brandName: businessName,
+  });
+}
 
 export default function CartPage() {
   return (

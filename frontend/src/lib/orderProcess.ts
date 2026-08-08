@@ -4,9 +4,11 @@ export const orderProcessCopy = {
 } as const;
 
 /** Homepage trust section — replaces the old step-timeline presentation */
-export const whyChooseCopy = {
-  heading: "Why Choose DoughArt?",
-} as const;
+export function getOrderProcessCopy(businessName: string) {
+  return {
+    heading: `Why Choose ${businessName}?`,
+  };
+}
 
 export const whyChooseBenefits = [
   {

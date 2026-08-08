@@ -2,15 +2,17 @@ import { Reveal } from "@/components/animation/Reveal";
 import { capStaggerDelay } from "@/lib/animation/constants";
 import { features } from "@/lib/features";
 import { cn } from "@/lib/cn";
+import { getBusinessName } from "@/lib/settings";
 
-export function FeatureStrip() {
+export async function FeatureStrip() {
+  const businessName = await getBusinessName();
   return (
     <section
       className="section-anchor border-y border-brand-border/30 bg-[#FFF8FA]"
       aria-labelledby="features-heading"
     >
       <h2 id="features-heading" className="sr-only">
-        Why choose DoughArt
+        Why choose {businessName}
       </h2>
       <div className="section-container">
         <ul

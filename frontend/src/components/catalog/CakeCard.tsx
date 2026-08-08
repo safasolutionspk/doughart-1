@@ -52,6 +52,7 @@ export async function CakeCard({
     name: cake.name,
     image: displayImage,
     unitPrice: cake.price,
+    itemTypes: cake.itemTypes,
   };
 
   const imageClassName = compactPopular
@@ -84,6 +85,7 @@ export async function CakeCard({
             alt={cake.name}
             sizes="(max-width: 640px) 10rem, (max-width: 1280px) 33vw, 25vw"
             objectFit="contain"
+            imageDisplay={cake.imageDisplay}
           />
           <span className="pink-overlay" aria-hidden />
         </div>

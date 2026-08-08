@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useCustomerAuth } from "@/components/auth/CustomerAuthProvider";
 import { Button } from "@/components/ui/Button";
 import { OrderApiError, submitOrder, uploadReferenceImage } from "@/lib/api";
-import { buildLoginRedirectUrl } from "@/lib/auth/returnUrl";
 import {
   clearCustomCakeDraft,
   loadCustomCakeDraft,
@@ -47,9 +45,6 @@ const initialForm: CustomCakeDraftForm = {
   referenceLink: "",
   notes: "",
 };
-
-const AUTH_REQUIRED_MESSAGE =
-  "Please login or signup to place your order.";
 
 function formatFieldErrors(
   errors?: Record<string, string[] | undefined>,
@@ -108,10 +103,10 @@ export function CustomCakeOrderForm({
   selectedCakeName,
 }: CustomCakeOrderFormProps = {}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { customer, hydrated: authHydrated, isAuthenticated } =
     useCustomerAuth();
   const draftRestored = useRef(false);
+  const customerPrefillDone = useRef(false);
 
   const [form, setForm] = useState<CustomCakeDraftForm>({ ...initialForm });
   const [referenceFile, setReferenceFile] = useState<File | null>(null);
@@ -176,6 +171,20 @@ export function CustomCakeOrderForm({
     return () => window.clearTimeout(timer);
   }, [selectedCakeName, selectedCakeSlug]);
 
+  // Optional: pre-fill empty contact fields from the logged-in customer.
+  useEffect(() => {
+    if (!authHydrated || !isAuthenticated || !customer || customerPrefillDone.current) {
+      return;
+    }
+    customerPrefillDone.current = true;
+    setForm((prev) => ({
+      ...prev,
+      name: prev.name.trim() ? prev.name : customer.name || prev.name,
+      phone: prev.phone.trim() ? prev.phone : customer.phone || prev.phone,
+      email: prev.email.trim() ? prev.email : customer.email || prev.email,
+    }));
+  }, [authHydrated, isAuthenticated, customer]);
+
   function updateField<K extends keyof CustomCakeDraftForm>(
     key: K,
     value: CustomCakeDraftForm[K],
@@ -228,12 +237,6 @@ export function CustomCakeOrderForm({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (authHydrated && !isAuthenticated) {
-      saveCustomCakeDraft({ form, referenceFileName });
-      router.push(buildLoginRedirectUrl("/custom-cake"));
-      return;
-    }
-
     setStatus("loading");
     setErrorMessage(null);
 
@@ -255,6 +258,13 @@ export function CustomCakeOrderForm({
       return;
     }
 
+    const email = form.email.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus("error");
+      setErrorMessage("Enter a valid email address or leave this field blank.");
+      return;
+    }
+
     try {
       let referenceImage: string | undefined;
       if (referenceFile) {
@@ -267,7 +277,7 @@ export function CustomCakeOrderForm({
       await submitOrder({
         name: form.name.trim(),
         phone: form.phone.trim(),
-        email: form.email.trim(),
+        email: email || undefined,
         cakeType: form.cakeType,
         flavor: form.flavor.trim(),
         size: form.size.trim(),
@@ -293,10 +303,6 @@ export function CustomCakeOrderForm({
 
   const isLoading = status === "loading";
 
-  const showAuthBanner =
-    searchParams.get("authRequired") === "1" ||
-    (authHydrated && !isAuthenticated);
-
   return (
     <div
       id="custom-cake-order"
@@ -314,30 +320,6 @@ export function CustomCakeOrderForm({
           {orderFormCopy.description}
         </p>
       </header>
-
-      {showAuthBanner ? (
-        <div
-          className="mb-6 rounded-xl border border-brand-primary/30 bg-brand-pink-lighter/60 px-4 py-3 text-sm text-brand-brown"
-          role="status"
-        >
-          <p>{AUTH_REQUIRED_MESSAGE}</p>
-          <p className="mt-2">
-            <Link
-              href={buildLoginRedirectUrl("/custom-cake")}
-              className="font-semibold text-brand-primary hover:underline"
-            >
-              Sign in
-            </Link>
-            {" · "}
-            <Link
-              href="/signup?returnUrl=%2Fcustom-cake"
-              className="font-semibold text-brand-primary hover:underline"
-            >
-              Create account
-            </Link>
-          </p>
-        </div>
-      ) : null}
 
       {customer && isAuthenticated ? (
         <p className="mb-4 text-sm text-brand-muted">
@@ -387,17 +369,20 @@ export function CustomCakeOrderForm({
 
         <div className="sm:col-span-2">
           <label htmlFor="cc-email" className={labelClassName}>
-            Email <span className="text-brand-primary">*</span>
+            Email{" "}
+            <span className="font-normal normal-case text-brand-muted">
+              (Optional)
+            </span>
           </label>
           <input
             id="cc-email"
             name="email"
             type="email"
-            required
             autoComplete="email"
             disabled={isLoading}
             value={form.email}
             onChange={(e) => updateField("email", e.target.value)}
+            placeholder="Optional — for order updates"
             className={inputClassName}
           />
         </div>

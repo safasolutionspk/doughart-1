@@ -3,10 +3,12 @@ import {
   COMBO_OFFERS_CATEGORY,
   isComboOffersName,
   isComboOffersSlug,
+  isComboOffersSystemKey,
 } from "../constants/systemCategories";
 import { Category } from "../models";
 import type { RequestTenantContext } from "../types/tenantContext";
 import { ApiError } from "../utils/ApiError";
+import type { ImageDisplay } from "../types/imageDisplay";
 import {
   applyCatalogScope,
   applyLegacyCatalogFallback,
@@ -19,9 +21,11 @@ export type SystemCategoryDoc = {
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: ImageDisplay;
   isActive: boolean;
   sortOrder: number;
   isSystem: boolean;
+  systemKey?: string;
   tenantId?: mongoose.Types.ObjectId;
   workspaceId?: mongoose.Types.ObjectId;
 };
@@ -37,24 +41,44 @@ function buildScopedFilter(
 export function isProtectedSystemCategory(category: {
   isSystem?: boolean;
   slug?: string;
+  systemKey?: string;
 }): boolean {
-  return Boolean(category.isSystem) || isComboOffersSlug(category.slug);
+  return (
+    Boolean(category.isSystem) ||
+    isComboOffersSystemKey(category.systemKey) ||
+    isComboOffersSlug(category.slug)
+  );
 }
 
 export async function findComboOffersCategory(
   tenantContext?: RequestTenantContext,
 ): Promise<SystemCategoryDoc | null> {
-  const filter = buildScopedFilter(
-    { slug: COMBO_OFFERS_CATEGORY.slug },
+  const byKey = buildScopedFilter(
+    { systemKey: COMBO_OFFERS_CATEGORY.systemKey },
     tenantContext,
   );
+  let category = await Category.findOne(byKey).lean<SystemCategoryDoc | null>();
 
-  let category = await Category.findOne(filter).lean<SystemCategoryDoc | null>();
+  if (!category) {
+    const bySlug = buildScopedFilter(
+      { slug: COMBO_OFFERS_CATEGORY.slug },
+      tenantContext,
+    );
+    category = await Category.findOne(bySlug).lean<SystemCategoryDoc | null>();
+  }
 
   if (!category && resolveCatalogScope(tenantContext)) {
     category = await Category.findOne(
-      applyLegacyCatalogFallback({ slug: COMBO_OFFERS_CATEGORY.slug }),
+      applyLegacyCatalogFallback({
+        systemKey: COMBO_OFFERS_CATEGORY.systemKey,
+      }),
     ).lean<SystemCategoryDoc | null>();
+
+    if (!category) {
+      category = await Category.findOne(
+        applyLegacyCatalogFallback({ slug: COMBO_OFFERS_CATEGORY.slug }),
+      ).lean<SystemCategoryDoc | null>();
+    }
   }
 
   return category;
@@ -78,7 +102,7 @@ export async function requireComboOffersCategory(
 /**
  * Idempotent ensure for the protected Combo Offers category.
  * Safe to call repeatedly; does not create duplicates.
- * Preserves any existing owner-uploaded image.
+ * Preserves existing `_id`, description, and owner-uploaded image.
  */
 export async function ensureComboOffersCategory(
   tenantContext?: RequestTenantContext,
@@ -96,6 +120,10 @@ export async function ensureComboOffersCategory(
       doc.isSystem = true;
       dirty = true;
     }
+    if (doc.systemKey !== COMBO_OFFERS_CATEGORY.systemKey) {
+      doc.systemKey = COMBO_OFFERS_CATEGORY.systemKey;
+      dirty = true;
+    }
     if (doc.name !== COMBO_OFFERS_CATEGORY.name) {
       doc.name = COMBO_OFFERS_CATEGORY.name;
       dirty = true;
@@ -106,10 +134,6 @@ export async function ensureComboOffersCategory(
     }
     if (!doc.isActive) {
       doc.isActive = true;
-      dirty = true;
-    }
-    if (doc.sortOrder !== COMBO_OFFERS_CATEGORY.sortOrder) {
-      doc.sortOrder = COMBO_OFFERS_CATEGORY.sortOrder;
       dirty = true;
     }
     if (scope) {
@@ -141,6 +165,7 @@ export async function ensureComboOffersCategory(
     const created = await Category.create({
       name: COMBO_OFFERS_CATEGORY.name,
       slug: COMBO_OFFERS_CATEGORY.slug,
+      systemKey: COMBO_OFFERS_CATEGORY.systemKey,
       description: COMBO_OFFERS_CATEGORY.description,
       isActive: true,
       isSystem: true,
@@ -182,7 +207,7 @@ export function assertNotDuplicateSystemCategoryIdentity(input: {
 }
 
 export function assertSystemCategoryMutable(
-  category: { isSystem?: boolean; slug?: string; name?: string },
+  category: { isSystem?: boolean; slug?: string; name?: string; systemKey?: string },
   input: {
     name?: string;
     slug?: string;
@@ -194,26 +219,32 @@ export function assertSystemCategoryMutable(
   }
 
   if (input.name !== undefined && input.name !== COMBO_OFFERS_CATEGORY.name) {
-    throw ApiError.forbidden("The Combo Offers category name cannot be changed.");
+    throw ApiError.badRequest(
+      "Combo Offers is a system category and its name cannot be changed.",
+    );
   }
 
-  if (
-    input.slug !== undefined &&
-    !isComboOffersSlug(input.slug)
-  ) {
-    throw ApiError.forbidden("The Combo Offers category slug cannot be changed.");
+  if (input.slug !== undefined && !isComboOffersSlug(input.slug)) {
+    throw ApiError.badRequest(
+      "Combo Offers is a system category and its slug cannot be changed.",
+    );
   }
 
   if (input.isActive === false) {
-    throw ApiError.forbidden("The Combo Offers category cannot be deactivated.");
+    throw ApiError.badRequest(
+      "Combo Offers is a system category and cannot be deactivated.",
+    );
   }
 }
 
 export function assertSystemCategoryDeletable(category: {
   isSystem?: boolean;
   slug?: string;
+  systemKey?: string;
 }): void {
   if (isProtectedSystemCategory(category)) {
-    throw ApiError.forbidden("The Combo Offers category cannot be deleted.");
+    throw ApiError.forbidden(
+      "Combo Offers is a system category and cannot be deleted.",
+    );
   }
 }

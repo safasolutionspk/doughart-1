@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { optionalImageDisplaySchema } from "./imageDisplay.validator";
 
 export const createReviewSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
@@ -6,6 +7,7 @@ export const createReviewSchema = z.object({
   rating: z.coerce.number().int().min(1).max(5),
   text: z.string().min(1, "Review text is required").max(2000),
   image: z.string().max(500).optional(),
+  imageDisplay: optionalImageDisplaySchema,
   isActive: z.coerce.boolean().optional().default(true),
   sortOrder: z.coerce.number().int().min(0).optional().default(0),
 });

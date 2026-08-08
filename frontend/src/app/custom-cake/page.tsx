@@ -4,13 +4,17 @@ import { PublicPageLayout } from "@/components/layout/PublicPageLayout";
 import { CustomCakeOrderForm } from "@/components/sections/CustomCakeOrderForm";
 import { fetchPublicCakeBySlug } from "@/lib/catalog";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Custom cake order",
-  description:
-    "Request a custom cake from DoughArt with your preferred design, flavours, size, and delivery details.",
-  path: "/custom-cake",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Custom cake order",
+    description: `Request a custom cake from ${businessName} with your preferred design, flavours, size, and delivery details.`,
+    path: "/custom-cake",
+    brandName: businessName,
+  });
+}
 
 type PageProps = {
   searchParams: Promise<{ cake?: string }>;

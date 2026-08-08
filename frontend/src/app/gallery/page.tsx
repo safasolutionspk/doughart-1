@@ -10,17 +10,22 @@ import { cn } from "@/lib/cn";
 import { externalLinkProps } from "@/lib/links";
 import { realAssets } from "@/lib/realAssets";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "Gallery",
-  description:
-    "Browse DoughArt custom cake creations — weddings, birthdays, anniversaries, and celebration favourites.",
-  path: "/gallery",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "Gallery",
+    description: `Browse ${businessName} custom cake creations — weddings, birthdays, anniversaries, and celebration favourites.`,
+    path: "/gallery",
+    brandName: businessName,
+  });
+}
 
 export default async function GalleryPage() {
+  const businessName = await getBusinessName();
   const waveBg = realAssets.galleryWaveBg;
-  const images = await fetchPublicGalleryImages();
+  const images = await fetchPublicGalleryImages(businessName);
 
   return (
     <PublicPageLayout mainId="gallery-page" ariaLabel="Gallery">

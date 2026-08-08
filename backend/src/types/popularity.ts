@@ -1,4 +1,5 @@
 export const POPULARITY_ELIGIBLE_STATUSES = [
+  "pending",
   "confirmed",
   "baking",
   "out_for_delivery",
@@ -23,12 +24,18 @@ export type PublicPopularCake = {
   slug: string;
   description?: string;
   image?: string;
+  imageDisplay?: {
+    zoom: number;
+    x: number;
+    y: number;
+  };
   categoryId: {
     _id: string;
     name: string;
     slug: string;
   };
   price: number;
+  itemTypes?: string[];
   isCustomizable: boolean;
   isFeatured: boolean;
   sortOrder: number;

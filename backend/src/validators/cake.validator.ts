@@ -1,11 +1,26 @@
 import { z } from "zod";
+import { DEFAULT_ITEM_TYPES, ITEM_TYPES } from "../constants/itemTypes";
 import { normalizeStoredImagePath } from "../utils/imagePath";
+import { optionalImageDisplaySchema } from "./imageDisplay.validator";
 
 const slugSchema = z
   .string()
   .min(1)
   .max(120)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens");
+
+const itemTypesSchema = z
+  .array(z.enum(ITEM_TYPES))
+  .min(1, "Select at least one item type")
+  .superRefine((value, ctx) => {
+    if (new Set(value).size !== value.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Item types must be unique",
+      });
+    }
+  })
+  .transform((value) => [...new Set(value)]);
 
 const cakeBodySchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
@@ -19,6 +34,8 @@ const cakeBodySchema = z.object({
     .max(500)
     .optional()
     .transform((val) => normalizeStoredImagePath(val)),
+  imageDisplay: optionalImageDisplaySchema,
+  itemTypes: itemTypesSchema.optional().default([...DEFAULT_ITEM_TYPES]),
   isActive: z.coerce.boolean().optional().default(true),
   isFeatured: z.coerce.boolean().optional().default(false),
   isCustomizable: z.coerce.boolean().optional(),
@@ -35,6 +52,8 @@ function normalizeCakeInput(data: z.infer<typeof cakeBodySchema>) {
     description: data.description,
     price: data.price,
     image: data.image,
+    ...(data.imageDisplay != null ? { imageDisplay: data.imageDisplay } : {}),
+    itemTypes: data.itemTypes?.length ? data.itemTypes : [...DEFAULT_ITEM_TYPES],
     isActive: data.isActive ?? true,
     isFeatured: data.isFeatured ?? false,
     isCustomizable: data.isCustomizable ?? data.customizable ?? false,
@@ -61,6 +80,8 @@ const updateCakeBodySchema = z.object({
     .max(500)
     .optional()
     .transform((val) => normalizeStoredImagePath(val)),
+  imageDisplay: optionalImageDisplaySchema,
+  itemTypes: itemTypesSchema.optional(),
   isActive: z.coerce.boolean().optional(),
   isFeatured: z.coerce.boolean().optional(),
   isCustomizable: z.coerce.boolean().optional(),
@@ -77,6 +98,10 @@ export const updateCakeSchema = updateCakeBodySchema.transform((data) => {
     ...(data.description !== undefined ? { description: data.description } : {}),
     ...(data.price !== undefined ? { price: data.price } : {}),
     ...(data.image !== undefined ? { image: data.image } : {}),
+    ...(data.imageDisplay !== undefined
+      ? { imageDisplay: data.imageDisplay }
+      : {}),
+    ...(data.itemTypes !== undefined ? { itemTypes: data.itemTypes } : {}),
     ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
     ...(data.isFeatured !== undefined ? { isFeatured: data.isFeatured } : {}),
     ...(data.isCustomizable !== undefined || data.customizable !== undefined
@@ -125,6 +150,10 @@ export const createComboCakeSchema = comboCakeBodySchema.transform((data) => ({
   description: data.description,
   price: data.price,
   image: data.image,
+  ...(data.imageDisplay != null
+    ? { imageDisplay: data.imageDisplay }
+    : {}),
+  itemTypes: data.itemTypes?.length ? data.itemTypes : [...DEFAULT_ITEM_TYPES],
   isActive: data.isActive ?? true,
   isFeatured: data.isFeatured ?? false,
   isCustomizable: data.isCustomizable ?? data.customizable ?? false,
@@ -139,6 +168,10 @@ export const updateComboCakeSchema = updateCakeBodySchema
     ...(data.description !== undefined ? { description: data.description } : {}),
     ...(data.price !== undefined ? { price: data.price } : {}),
     ...(data.image !== undefined ? { image: data.image } : {}),
+    ...(data.imageDisplay !== undefined
+      ? { imageDisplay: data.imageDisplay }
+      : {}),
+    ...(data.itemTypes !== undefined ? { itemTypes: data.itemTypes } : {}),
     ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
     ...(data.isFeatured !== undefined ? { isFeatured: data.isFeatured } : {}),
     ...(data.isCustomizable !== undefined || data.customizable !== undefined

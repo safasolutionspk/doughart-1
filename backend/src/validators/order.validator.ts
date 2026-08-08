@@ -10,19 +10,29 @@ const orderItemSchema = z.object({
   notes: z.string().optional(),
 });
 
+/** Optional customer email: empty/null → undefined; non-empty must be valid. */
+const optionalCustomerEmailSchema = z.preprocess(
+  (val) => {
+    if (val === undefined || val === null) {
+      return undefined;
+    }
+    const trimmed = String(val).trim().toLowerCase();
+    return trimmed.length === 0 ? undefined : trimmed;
+  },
+  z
+    .string()
+    .max(160)
+    .regex(
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      "Enter a valid email address or leave this field blank.",
+    )
+    .optional(),
+);
+
 /** Internal shape stored in MongoDB */
 export const createOrderSchema = z.object({
   customerName: z.string().min(2, "Customer name is required").max(120),
-  customerEmail: z
-    .string()
-    .max(160)
-    .optional()
-    .default("")
-    .transform((val) => val.trim().toLowerCase())
-    .refine(
-      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
-      "Enter a valid email address or leave this field blank.",
-    ),
+  customerEmail: optionalCustomerEmailSchema,
   customerPhone: z
     .string()
     .min(7, "Valid phone number is required")
@@ -44,6 +54,27 @@ export const createOrderSchema = z.object({
 });
 
 /** Client catalog line identifiers only — name/price resolved server-side */
+const catalogCakeDetailsSchema = z
+  .object({
+    pounds: z.string().max(80).optional(),
+    flavor: z.string().max(120).optional(),
+    messageOnCake: z.string().max(200).optional(),
+    notes: z.string().max(1000).optional(),
+  })
+  .optional();
+
+const catalogGiftDetailsSchema = z
+  .object({
+    notes: z.string().max(1000).optional(),
+  })
+  .optional();
+
+const catalogProductDetailsSchema = z
+  .object({
+    notes: z.string().max(1000).optional(),
+  })
+  .optional();
+
 const publicCatalogItemSchema = z.object({
   cakeSlug: z
     .string()
@@ -52,6 +83,9 @@ const publicCatalogItemSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid cake slug"),
   quantity: z.coerce.number().int().min(1).max(99).default(1),
   notes: z.string().max(500).optional(),
+  cakeDetails: catalogCakeDetailsSchema,
+  giftDetails: catalogGiftDetailsSchema,
+  productDetails: catalogProductDetailsSchema,
 });
 
 /** Public website form payload */
@@ -59,16 +93,7 @@ export const publicCreateOrderSchema = z
   .object({
     name: z.string().min(2, "Name is required").max(120),
     phone: z.string().min(7, "Valid phone number is required").max(30),
-    email: z
-      .string()
-      .max(160)
-      .optional()
-      .default("")
-      .transform((val) => val.trim().toLowerCase())
-      .refine(
-        (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
-        "Enter a valid email address or leave this field blank.",
-      ),
+    email: optionalCustomerEmailSchema,
     cakeType: z.string().min(1, "Cake type is required").max(120),
     flavor: z.string().max(120).optional(),
     size: z.string().max(80).optional(),
@@ -111,6 +136,16 @@ export const publicCreateOrderSchema = z
       data.notes?.includes("[Cart order]") ||
       data.cakeType.trim().startsWith("Cart order");
 
+    if (!data.address?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter your address.",
+        path: ["address"],
+      });
+    }
+
+    // Custom cake / non-catalog requests still require cake pounds + flavor.
+    // Catalog checkout validates cake fields per product itemTypes in the service.
     if (!isCatalogCheckout) {
       if (!data.size?.trim()) {
         ctx.addIssue({
@@ -127,45 +162,12 @@ export const publicCreateOrderSchema = z
           path: ["flavor"],
         });
       }
-
-      if (!data.address?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter your address.",
-          path: ["address"],
-        });
-      }
-      return;
-    }
-
-    if (!data.address?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter your address.",
-        path: ["address"],
-      });
-    }
-
-    if (!data.size?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter cake pounds.",
-        path: ["size"],
-      });
-    }
-
-    if (!data.flavor?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter cake flavor.",
-        path: ["flavor"],
-      });
     }
   })
   .transform((data) => ({
     customerName: data.name.trim(),
     customerPhone: data.phone.trim(),
-    customerEmail: data.email || "",
+    customerEmail: data.email,
     cakeType: data.cakeType.trim(),
     cakeSize: data.size?.trim() || undefined,
     flavour: data.flavor?.trim() || undefined,
@@ -181,6 +183,24 @@ export const publicCreateOrderSchema = z
         cakeSlug: item.cakeSlug.trim(),
         quantity: item.quantity,
         notes: item.notes?.trim() || undefined,
+        cakeDetails: item.cakeDetails
+          ? {
+              pounds: item.cakeDetails.pounds?.trim() || undefined,
+              flavor: item.cakeDetails.flavor?.trim() || undefined,
+              messageOnCake: item.cakeDetails.messageOnCake?.trim() || undefined,
+              notes: item.cakeDetails.notes?.trim() || undefined,
+            }
+          : undefined,
+        giftDetails: item.giftDetails
+          ? {
+              notes: item.giftDetails.notes?.trim() || undefined,
+            }
+          : undefined,
+        productDetails: item.productDetails
+          ? {
+              notes: item.productDetails.notes?.trim() || undefined,
+            }
+          : undefined,
       }))
       .filter((item) => item.cakeSlug.length > 0),
     items: [] as z.infer<typeof createOrderSchema>["items"],

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Category, Cake } from "../models";
+import { COMBO_OFFERS_CATEGORY } from "../constants/systemCategories";
 import type { RequestTenantContext } from "../types/tenantContext";
 import { ApiError } from "../utils/ApiError";
 import { slugify } from "../utils/slugify";
@@ -42,7 +43,7 @@ async function resolveUniqueSlug(baseSlug: string, excludeId?: string): Promise<
 }
 
 const ADMIN_CATEGORY_SELECT =
-  "name slug description image isActive sortOrder isSystem createdAt updatedAt";
+  "name slug description image imageDisplay isActive sortOrder isSystem systemKey createdAt updatedAt";
 
 export async function listCategories(
   query: ListCategoriesQuery,
@@ -209,20 +210,31 @@ export async function updateCategory(
   });
 
   if (isProtectedSystemCategory(targetCategory)) {
-    const forbiddenKeys = (
-      ["name", "slug", "description", "isActive", "sortOrder"] as const
-    ).filter((key) => input[key] !== undefined);
-    if (forbiddenKeys.length > 0) {
-      throw ApiError.forbidden(
-        "Only the Combo Offers category image can be updated.",
-      );
+    // System identity fields stay locked; description/image remain editable.
+    if (input.description !== undefined) {
+      targetCategory.description = input.description;
     }
-    if (!Object.prototype.hasOwnProperty.call(input, "image")) {
-      throw ApiError.badRequest(
-        "Provide an image field to update the Combo Offers category.",
-      );
+    if (input.image !== undefined) {
+      targetCategory.image = input.image;
     }
-    targetCategory.image = input.image;
+    if (input.imageDisplay !== undefined) {
+      if (input.imageDisplay === null) {
+        targetCategory.imageDisplay = undefined;
+        targetCategory.markModified("imageDisplay");
+      } else {
+        targetCategory.imageDisplay = input.imageDisplay;
+      }
+    }
+    if (!targetCategory.isSystem) {
+      targetCategory.isSystem = true;
+    }
+    if (targetCategory.systemKey !== COMBO_OFFERS_CATEGORY.systemKey) {
+      targetCategory.systemKey = COMBO_OFFERS_CATEGORY.systemKey;
+    }
+    targetCategory.name = COMBO_OFFERS_CATEGORY.name;
+    targetCategory.slug = COMBO_OFFERS_CATEGORY.slug;
+    targetCategory.isActive = true;
+
     try {
       await targetCategory.save();
       return targetCategory.toObject();
@@ -247,6 +259,14 @@ export async function updateCategory(
   }
   if (input.image !== undefined) {
     targetCategory.image = input.image;
+  }
+  if (input.imageDisplay !== undefined) {
+    if (input.imageDisplay === null) {
+      targetCategory.imageDisplay = undefined;
+      targetCategory.markModified("imageDisplay");
+    } else {
+      targetCategory.imageDisplay = input.imageDisplay;
+    }
   }
   if (input.isActive !== undefined) {
     targetCategory.isActive = input.isActive;
@@ -286,13 +306,13 @@ export async function listPublicCategories(tenantContext?: RequestTenantContext)
 
   let categories = await Category.find(filter)
     .sort({ sortOrder: 1, name: 1 })
-    .select("name slug description image sortOrder")
+    .select("name slug description image imageDisplay sortOrder")
     .lean();
 
   if (categories.length === 0 && scope) {
     categories = await Category.find(applyLegacyCatalogFallback({ isActive: true }))
       .sort({ sortOrder: 1, name: 1 })
-      .select("name slug description image sortOrder")
+      .select("name slug description image imageDisplay sortOrder")
       .lean();
   }
 
@@ -312,6 +332,7 @@ export async function listPublicCategories(tenantContext?: RequestTenantContext)
         slug: combo.slug,
         description: combo.description,
         image: combo.image,
+        imageDisplay: combo.imageDisplay,
         sortOrder: combo.sortOrder,
       },
     ].sort(

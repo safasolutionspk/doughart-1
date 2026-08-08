@@ -42,6 +42,19 @@ export type Order = {
     quantity: number;
     unitPrice: number;
     notes?: string;
+    itemTypes?: Array<"cake" | "gift" | "other">;
+    cakeDetails?: {
+      pounds?: string;
+      flavor?: string;
+      messageOnCake?: string;
+      notes?: string;
+    };
+    giftDetails?: {
+      notes?: string;
+    };
+    productDetails?: {
+      notes?: string;
+    };
   }>;
   totalAmount: number;
   quotedAmount?: number;

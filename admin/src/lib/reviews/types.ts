@@ -1,3 +1,5 @@
+import type { ImageDisplay } from "@/lib/catalog/types";
+
 export type Review = {
   _id: string;
   name: string;
@@ -5,6 +7,7 @@ export type Review = {
   rating: number;
   text: string;
   image?: string;
+  imageDisplay?: ImageDisplay;
   isActive: boolean;
   sortOrder: number;
   createdAt?: string;

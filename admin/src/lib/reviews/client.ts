@@ -42,6 +42,7 @@ export async function createReview(payload: {
   rating: number;
   text: string;
   image?: string;
+  imageDisplay?: import("@/lib/catalog/types").ImageDisplay | null;
   isActive: boolean;
   sortOrder: number;
 }): Promise<Review> {
@@ -61,6 +62,7 @@ export async function updateReview(
     rating: number;
     text: string;
     image: string;
+    imageDisplay: import("@/lib/catalog/types").ImageDisplay | null;
     isActive: boolean;
     sortOrder: number;
   }>,

@@ -11,17 +11,23 @@ import { capStaggerDelay } from "@/lib/animation/constants";
 import { siteImages } from "@/lib/images";
 import { orderProcessSteps } from "@/lib/orderProcess";
 import { buildPageMetadata } from "@/lib/seo";
+import { getBusinessName } from "@/lib/settings";
 
-export const metadata: Metadata = buildPageMetadata({
-  title: "About Us",
-  description:
-    "Learn about DoughArt — handcrafted custom cakes, fresh ingredients, and a caring team behind every celebration.",
-  path: "/about",
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const businessName = await getBusinessName();
+  return buildPageMetadata({
+    title: "About Us",
+    description: `Learn about ${businessName} — handcrafted custom cakes, fresh ingredients, and a caring team behind every celebration.`,
+    path: "/about",
+    brandName: businessName,
+  });
+}
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const businessName = await getBusinessName();
+
   return (
-    <PublicPageLayout mainId="about-page" ariaLabel="About DoughArt">
+    <PublicPageLayout mainId="about-page" ariaLabel={`About ${businessName}`}>
       <section className="section-padding bg-gradient-to-b from-brand-pink-lighter via-white to-brand-cream">
         <div className="section-container">
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
@@ -30,7 +36,7 @@ export default function AboutPage() {
                 <SectionAnimatedHeader
                   eyebrow="Our Story"
                   title="Sweet moments, baked beautifully"
-                  description="DoughArt is a custom cake bakery dedicated to turning your celebrations into unforgettable memories. We combine elegant design with delicious flavour — whether you need a wedding showstopper, a birthday surprise, or a bespoke creation that is entirely your own."
+                  description={`${businessName} is a custom cake bakery dedicated to turning your celebrations into unforgettable memories. We combine elegant design with delicious flavour — whether you need a wedding showstopper, a birthday surprise, or a bespoke creation that is entirely your own.`}
                   titleAs="h1"
                   align="start"
                   className="max-w-none"
@@ -50,7 +56,7 @@ export default function AboutPage() {
               <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl border border-brand-border/60 bg-brand-pink-lighter/50 p-2 shadow-lg shadow-brand-primary/15 lg:max-w-none sm:p-3">
                 <Image
                   src={siteImages.aboutUs}
-                  alt="DoughArt About Us"
+                  alt={`${businessName} About Us`}
                   fill
                   className="object-contain object-center"
                   sizes="(max-width: 1024px) 100vw, 480px"
@@ -66,7 +72,7 @@ export default function AboutPage() {
         <div className="section-container">
           <SectionAnimatedHeader
             eyebrow="Why choose us"
-            title="The DoughArt difference"
+            title={`The ${businessName} difference`}
             align="center"
             className="max-w-xl"
           />

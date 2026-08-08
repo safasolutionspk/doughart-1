@@ -16,12 +16,22 @@ import {
 import type { Category } from "@/lib/catalog/types";
 import { getCategoryId } from "@/lib/catalog/types";
 import { DescriptionTextarea } from "@/components/catalog/DescriptionTextarea";
-import { ImageUploadField } from "@/components/upload/ImageUploadField";
+import { ImageSettingField } from "@/components/upload/ImageSettingField";
 import {
   CAKE_DESCRIPTION_MAX,
   clampDescription,
   descriptionLengthError,
 } from "@/lib/catalog/description";
+import { normalizeImageDisplay, type ImageDisplay } from "@/lib/imageDisplay";
+import {
+  DEFAULT_ITEM_TYPES,
+  ITEM_TYPES,
+  ITEM_TYPE_LABELS,
+  normalizeItemTypes,
+  parsePriceInput,
+  sanitizePriceInput,
+  type ItemType,
+} from "@/lib/itemTypes";
 import { normalizeStoredImagePath } from "@/lib/upload/path";
 import { inputClassName, labelClassName, textareaClassName } from "@/lib/form";
 
@@ -36,8 +46,10 @@ const emptyForm = {
   slug: "",
   categoryId: "",
   description: "",
-  price: 0,
+  priceInput: "0",
   image: "",
+  imageDisplay: undefined as ImageDisplay | undefined,
+  itemTypes: [...DEFAULT_ITEM_TYPES] as ItemType[],
   isActive: true,
   isFeatured: false,
   isCustomizable: false,
@@ -73,8 +85,10 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
               slug: cake.slug,
               categoryId: getCategoryId(cake.categoryId),
               description: cake.description ?? "",
-              price: cake.price,
+              priceInput: String(cake.price ?? 0),
               image: cake.image ?? "",
+              imageDisplay: normalizeImageDisplay(cake.imageDisplay),
+              itemTypes: normalizeItemTypes(cake.itemTypes),
               isActive: cake.isActive,
               isFeatured: cake.isFeatured ?? false,
               isCustomizable: cake.isCustomizable,
@@ -101,8 +115,10 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
               slug: cake.slug,
               categoryId: getCategoryId(cake.categoryId),
               description: cake.description ?? "",
-              price: cake.price,
+              priceInput: String(cake.price ?? 0),
               image: cake.image ?? "",
+              imageDisplay: normalizeImageDisplay(cake.imageDisplay),
+              itemTypes: normalizeItemTypes(cake.itemTypes),
               isActive: cake.isActive,
               isFeatured: cake.isFeatured ?? false,
               isCustomizable: cake.isCustomizable,
@@ -155,14 +171,24 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
       return;
     }
 
+    if (form.itemTypes.length === 0) {
+      setError("Select at least one item type.");
+      setIsSaving(false);
+      return;
+    }
+
+    const price = parsePriceInput(form.priceInput);
+
     try {
       if (isCombo) {
         const payload = {
           name: form.name.trim(),
           slug: form.slug.trim() || undefined,
           description: description || undefined,
-          price: Number(form.price),
+          price,
           image: normalizeStoredImagePath(form.image),
+          imageDisplay: form.imageDisplay ?? (isEdit ? null : undefined),
+          itemTypes: form.itemTypes,
           isActive: form.isActive,
           isFeatured: form.isFeatured,
           isCustomizable: form.isCustomizable,
@@ -179,8 +205,10 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
           slug: form.slug.trim() || undefined,
           categoryId: form.categoryId,
           description: description || undefined,
-          price: Number(form.price),
+          price,
           image: normalizeStoredImagePath(form.image),
+          imageDisplay: form.imageDisplay ?? (isEdit ? null : undefined),
+          itemTypes: form.itemTypes,
           isActive: form.isActive,
           isFeatured: form.isFeatured,
           isCustomizable: form.isCustomizable,
@@ -303,14 +331,23 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
             </label>
             <input
               id="cake-price"
-              type="number"
-              min={0}
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               required
-              value={form.price}
+              value={form.priceInput}
               onChange={(event) =>
-                setForm({ ...form, price: Number(event.target.value) })
+                setForm({
+                  ...form,
+                  priceInput: sanitizePriceInput(event.target.value),
+                })
               }
+              onBlur={() => {
+                const parsed = parsePriceInput(form.priceInput);
+                setForm((prev) => ({
+                  ...prev,
+                  priceInput: String(parsed),
+                }));
+              }}
               className={inputClassName}
             />
           </div>
@@ -332,6 +369,53 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
           </div>
         </div>
 
+        <fieldset>
+          <legend className={labelClassName}>
+            Item type <span className="text-red-500">*</span>
+          </legend>
+          <p className="mb-3 text-xs text-brand-muted">
+            Select every type that applies. Checkout fields change based on these
+            choices.
+          </p>
+          <div className="flex flex-wrap gap-5">
+            {ITEM_TYPES.map((type) => {
+              const checked = form.itemTypes.includes(type);
+              return (
+                <label
+                  key={type}
+                  className="flex items-center gap-2 text-sm text-brand-brown"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => {
+                      setForm((prev) => {
+                        if (event.target.checked) {
+                          return {
+                            ...prev,
+                            itemTypes: normalizeItemTypes([
+                              ...prev.itemTypes,
+                              type,
+                            ]),
+                          };
+                        }
+                        return {
+                          ...prev,
+                          itemTypes: prev.itemTypes.filter(
+                            (value) => value !== type,
+                          ),
+                        };
+                      });
+                    }}
+                    className="h-4 w-4 rounded border-brand-border text-brand-primary"
+                  />
+                  {ITEM_TYPE_LABELS[type]}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <DescriptionTextarea
           id="cake-description"
           label="Description"
@@ -343,14 +427,23 @@ export function CakeForm({ cakeId, mode = "cake" }: CakeFormProps) {
           labelClassName={labelClassName}
         />
 
-        <ImageUploadField
+        <ImageSettingField
           id="cake-image"
           label="Image"
-          value={form.image}
-          onChange={(image) =>
-            setForm({ ...form, image: normalizeStoredImagePath(image) ?? "" })
+          image={form.image}
+          imageDisplay={form.imageDisplay}
+          onImageChange={(image) =>
+            setForm((prev) => ({
+              ...prev,
+              image: normalizeStoredImagePath(image) ?? "",
+            }))
+          }
+          onImageDisplayChange={(imageDisplay) =>
+            setForm((prev) => ({ ...prev, imageDisplay }))
           }
           disabled={isSaving}
+          aspectRatio="1 / 1"
+          frameShape="square"
         />
 
         <div className="flex flex-wrap gap-6">

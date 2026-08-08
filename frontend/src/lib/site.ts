@@ -1,5 +1,9 @@
 import { contactInfo } from "@/lib/contact";
 
+/**
+ * Static site chrome defaults. `name` is the fallback brand only —
+ * prefer getBusinessName() / useBusinessName() for customer-visible text.
+ */
 export const siteConfig = {
   name: contactInfo.businessName,
   tagline: "Custom Cakes",

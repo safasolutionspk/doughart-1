@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CustomerHeaderAuth } from "@/components/auth/CustomerHeaderAuth";
 import { CartIconLink } from "@/components/cart/CartIconLink";
+import { useBusinessName } from "@/components/providers/BusinessNameProvider";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { siteImages } from "@/lib/images";
-import { navLinks, siteConfig } from "@/lib/site";
+import { navLinks } from "@/lib/site";
 
 export function Header() {
+  const businessName = useBusinessName();
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -81,11 +83,11 @@ export function Header() {
             href="/"
             className="relative z-10 flex shrink-0 items-center self-center"
             onClick={closeMenu}
-            aria-label={`${siteConfig.name} home`}
+            aria-label={`${businessName} home`}
           >
             <Image
               src={siteImages.logo}
-              alt={siteConfig.name}
+              alt={businessName}
               width={167}
               height={89}
               unoptimized

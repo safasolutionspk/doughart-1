@@ -2,10 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useCustomerAuth } from "@/components/auth/CustomerAuthProvider";
 import { useCart } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
-import { buildLoginRedirectUrl } from "@/lib/auth/returnUrl";
 import { cn } from "@/lib/cn";
 import type { AddToCartInput } from "@/lib/cart/types";
 
@@ -18,8 +16,8 @@ type OrderNowButtonProps = {
 };
 
 /**
- * Adds the product to the persisted cart first, then routes to checkout
- * (or login with returnUrl=/checkout when the guest is not signed in).
+ * Adds the product to the persisted cart first, then routes to checkout.
+ * Guest checkout is supported — login is not required.
  */
 export function OrderNowButton({
   item,
@@ -30,7 +28,6 @@ export function OrderNowButton({
 }: OrderNowButtonProps) {
   const router = useRouter();
   const { addItem } = useCart();
-  const { hydrated: authHydrated, isAuthenticated } = useCustomerAuth();
   const [pending, setPending] = useState(false);
 
   function handleClick() {
@@ -44,16 +41,7 @@ export function OrderNowButton({
       quantity: item.quantity ?? 1,
     });
 
-    const checkoutPath = "/checkout";
-
-    if (authHydrated && !isAuthenticated) {
-      router.push(buildLoginRedirectUrl(checkoutPath));
-      return;
-    }
-
-    // Auth still loading: go to checkout; CheckoutForm prompts login if needed
-    // with the cart already persisted.
-    router.push(checkoutPath);
+    router.push("/checkout");
   }
 
   return (

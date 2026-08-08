@@ -380,6 +380,132 @@ body {
   }
 }
 
+/* Opening loader — customer storefront first paint only */
+@keyframes opening-loader-spin-cw {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes opening-loader-spin-ccw {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes opening-loader-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes opening-loader-logo-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes opening-loader-dot {
+  0%,
+  20% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.opening-loader-glow {
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    transparent 70%
+  );
+}
+
+.opening-loader-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 55% 50% at 50% 42%, black 10%, transparent 75%);
+}
+
+.opening-loader-logo-wrap {
+  animation: opening-loader-logo-in 0.7s ease-out both;
+}
+
+.opening-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+}
+
+.opening-loader-ring-1 {
+  inset: 2%;
+  border: 1.5px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.85);
+  border-right-color: rgba(255, 241, 244, 0.45);
+  border-bottom-color: transparent;
+  border-left-color: rgba(252, 232, 236, 0.35);
+  animation: opening-loader-spin-cw 6s linear infinite;
+}
+
+.opening-loader-ring-2 {
+  inset: 9%;
+  border: 1.5px solid transparent;
+  border-top-color: transparent;
+  border-right-color: rgba(255, 255, 255, 0.55);
+  border-bottom-color: rgba(255, 241, 244, 0.7);
+  border-left-color: transparent;
+  animation: opening-loader-spin-ccw 9s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
+}
+
+.opening-loader-ring-3 {
+  inset: 16%;
+  border: 1px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.35);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  border-left-color: rgba(252, 232, 236, 0.55);
+  animation: opening-loader-spin-cw 12s linear infinite;
+}
+
+.opening-loader-progress {
+  width: 100%;
+  transform: translateX(-100%);
+  animation: opening-loader-progress 1.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+}
+
+.opening-loader-dots span {
+  display: inline-block;
+  animation: opening-loader-dot 1.2s ease-in-out infinite;
+}
+
+.opening-loader-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.opening-loader-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-word-reveal,
   .animate-reveal-text,
@@ -418,6 +544,28 @@ body {
   .group:hover .image-zoom-wrap img,
   .group:hover .image-zoom-target {
     @apply scale-100 transition-none;
+  }
+
+  .opening-loader-logo-wrap,
+  .opening-loader-ring-1,
+  .opening-loader-ring-2,
+  .opening-loader-ring-3,
+  .opening-loader-progress,
+  .opening-loader-dots span {
+    animation: none;
+  }
+
+  .opening-loader-logo-wrap {
+    opacity: 1;
+    transform: none;
+  }
+
+  .opening-loader-progress {
+    transform: translateX(0);
+  }
+
+  .opening-loader-dots span {
+    opacity: 0.85;
   }
 }
 

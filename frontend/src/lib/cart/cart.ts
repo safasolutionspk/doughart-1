@@ -38,6 +38,12 @@ export function normalizeCartItem(raw: unknown): CartItem | null {
     unitPrice,
     quantity,
     notes: typeof item.notes === "string" ? item.notes : undefined,
+    itemTypes: Array.isArray(item.itemTypes)
+      ? (item.itemTypes.filter(
+          (value): value is NonNullable<CartItem["itemTypes"]>[number] =>
+            value === "cake" || value === "gift" || value === "other",
+        ) as CartItem["itemTypes"])
+      : undefined,
   };
 }
 
@@ -80,6 +86,7 @@ export function addToCart(
             unitPrice: input.unitPrice ?? item.unitPrice,
             categorySlug: input.categorySlug ?? item.categorySlug,
             notes: input.notes ?? item.notes,
+            itemTypes: input.itemTypes ?? item.itemTypes,
           }
         : item,
     );
@@ -94,6 +101,7 @@ export function addToCart(
     unitPrice: input.unitPrice,
     quantity: addQty,
     notes: input.notes,
+    itemTypes: input.itemTypes,
   };
 
   return [...cart, next];
